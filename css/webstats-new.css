@@ -1,0 +1,129 @@
+/* for webstats-new.php */
+
+main {
+  width: 100%;
+  position: relative;
+}
+button {
+  -webkit-border-radius: .5rem;
+  -moz-border-radius: .5rem;
+  border-radius: .5rem;
+  font-size: 1.2em;
+  margin-bottom: .5rem;
+}
+/* The country of the ip */
+.country {
+  border: 1px solid black;
+  padding: .3rem;
+  background-color: #8dbdd8;
+}
+/* The value in table 1 */
+.blpip {
+  color: red;
+}
+/* No New Data found in table */
+.noNewData {
+  color: red;
+}
+/* Hourly update messages */
+.h-update {
+  color: pink;
+}
+/* The rows with my ip address */
+.blp-row {
+  color: red;
+}
+th, td {
+  padding: .5rem;
+}
+/* page */
+#counter td:first-child {
+        word-break: break-all;
+        width: 40rem;
+}
+/* page */
+#counter2 td:first-child {
+        word-break: break-all;
+        width: 40rem;
+}
+/* all to left */
+#daycount * {
+        text-align: right;
+}
+#tracker {
+  width: 100%;
+}
+/* first-child=ip */
+#tracker td:first-child:hover {
+  cursor: pointer;
+}
+/* 1=ip */
+#tracker td:first-child {
+  width: 10rem;
+}
+/* 2=page */
+#tracker td:nth-child(2):hover {
+  cursor: pointer;
+}
+/* 2=page */
+#tracker td:nth-child(2) {
+  width: 25rem;
+  word-break: break-all;
+}
+/* 3=agent */
+#tracker td:nth-child(3) {
+  width: 40rem;
+  word-break: break-all;
+}
+/* 4=starttime, 5=endtime */
+#tracker td:nth-child(4), #tracker td:nth-child(5) {
+  width: 10rem;
+}
+/* 6=difftime */
+#tracker td:nth-child(6) {
+  width: 5rem;
+}
+/* last=js */
+#tracker td:last-child {
+  width: 1rem;
+}
+div {
+  padding: .5rem 0;
+}
+#robots {
+  width: 100%;
+}
+#robots td {
+  width: 5rem;
+}
+/* 2=agent */
+#robots td:nth-child(2) {
+  font-size: .7em;
+  width: 20rem;
+  word-break: break-all;
+}
+/* 3=bots */
+#robots td:nth-child(3) {
+  width: 1rem;
+}
+#showhide {
+  color: pink;
+}
+/* 4=lasttime */
+#logagent td:nth-child(4) {
+  width: 10rem;
+}
+/* make all tablesorterr icoms bigger */
+table .header {
+  background-size: 1.2rem;
+}
+#ip, #page {
+  color: red;
+}
+/* make the tablesorter icons bigger */
+#os1 thead th:first-child, #os2 thead th:first-child,
+#browser1 thead th:first-child, #browser2 thead th:first-child {
+  padding: .5rem 2rem .5rem 2rem;
+}
+
+        

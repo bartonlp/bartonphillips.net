@@ -1,0 +1,269 @@
+/* The height in html and body should be 100% so we can scroll the main section.
+  I have the extra code to force the head and footer to always be on the page and add a scroll bar when the text area
+  becomes large. This is commented out and I can let Walid decide what he wants.
+*/
+/* BLP 2016-08-12 -- changed .icon-menu to .xicon-menu due to conflicts with
+   social/css/font-awesome.css
+*/
+@font-face {
+        font-family: liberation;
+        src: url(http://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.woff),
+             url(http://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.ttf);
+        font-weight: normal;
+        font-style: normal;
+}
+
+/* Font Face for the Menu ICON */
+
+@font-face {
+        font-family: 'icomoon';
+        src: url(http://bartonphillips.net/fonts/icomoon.eot);
+        src: url(http://bartonphillips.net/fonts/icomoon.woff) format('woff'),
+             url(http://bartonphillips.net/fonts/icomoon.eot) format('embedded-opentype'),
+             url(http://bartonphillips.net/fonts/icomoon.ttf) format('truetype'),
+             url(http://bartonphillips.net/fonts/icomoon.svg) format('svg');
+        font-weight: normal;
+        font-style: normal;
+}
+
+* {
+        box-sizing: border-box;
+}
+html {
+        display: block;
+        font-size: 25px;
+        font-family: liberation;
+        margin: 0;
+        min-height: 100%;
+        background-color: #FBF5E6;
+}
+body {
+        background-color: #EBECE4;
+        height: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+}
+#logo, #dummyimg {
+        display: none;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        padding: 0;
+}
+#noscript p {
+        color: red;
+        background-color: #FFE4E1;
+        padding: 10px;
+        z-index: 50;
+}
+#noscript img {
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        padding: 0;
+}      
+header {
+        display: block;
+        background-color: white;
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        padding: 0;
+        width: 100%;
+}
+header img {
+        height: 1.5rem;
+        vertical-align: top;
+        padding-left: .2rem;
+}
+header > div {
+        display: inline-block;
+}
+header .phone {
+        color: red;
+        margin-left: 5px; /*1rem;*/
+}
+header ul:first-of-type {
+        display: inline-flex;
+        justify-content: space-between;
+        list-style-type: none;
+        padding: 0;
+        margin-top: 0;       /* -webkit-margin-before is set to 1em so make margin-top equal zero */
+        margin-left: 5px; /*1rem;*/
+        font-size: .8rem;
+}
+header ul:first-of-type >li {
+        background: url('http://bartonphillips.net/images/header-bg.png') right top no-repeat;
+        background-size: 3px; /*.1rem;*/
+}
+header ul:first-of-type >li:last-of-type {
+        background-image: none;
+}
+/*header a {
+        text-decoration: none;
+}*/
+header ul:first-of-type li a, .dropbtn {
+        display: block;
+        z-index: 100;
+        color: black;
+        text-align: left;
+        padding: .2rem .5rem 0 .5rem;
+        text-decoration: none;
+}
+/*
+Home | Services | Info | Contact
+I want Home and Contact to turn red when hovered over but not Services and Info
+*/
+header ul:first-of-type >li:hover >a:hover {
+        color: red;
+}
+/* Here I want the sub menues of Services and Info to turn red when they are hovered over */
+header .dropbtn:hover {                                                
+        color: red;
+}
+header li.dropdown {
+        display: inline-block;
+        padding: .2rem .5rem 0 .5rem;
+        z-index: 100;
+}
+header .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+header .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        text-align: left;
+}
+header .dropdown-content a:hover {
+        background-color: white
+}
+header .dropdown:hover .dropdown-content {
+        display: block;
+}
+
+/* This is the icon.fonts for the menu icon. */
+
+.xicon-menu {
+        position: absolute;
+        top: 4px;
+        right: 10px;
+
+        font-family: 'icomoon';
+        font-style: normal;
+        font-weight: normal;
+        font-variant: normal;
+        text-transform: none;
+        line-height: 1;
+        cursor: pointer;
+        background-color: #003984; 
+        color: white;
+        border-radius: 0.3125rem;
+        padding: 3px;
+        font-size: 1rem;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+}
+.xicon-menu:before {
+        content: '\e600'; /* the menu icon */
+}
+
+/* Small menu bar */
+
+#smallnavbar {
+        display: none;
+        margin-left: 2%;
+}
+#smenu {
+        display: none;
+        position: absolute;
+        right: 0px;
+        text-decoration: none;
+        font-size: 1rem;
+        color: white;
+        background-color: gray;
+        list-style: none;
+        padding: 0.625rem;
+        margin-top: 2px;
+        line-height: 2rem;
+        z-index: 100;
+}
+#smenu a, #smenu:visited {
+        color: white;
+}
+/* Hide checkbox. Used to toggle the smenu */
+#smallnavbar input[type=checkbox] {
+        display: none;
+        background-color: gray;
+}
+/*Show smenu when invisible checkbox is checked*/
+#smallnavbar input[type=checkbox]:checked ~ #smenu {
+        display: block;
+}
+
+/* Footer section */
+footer {
+        text-align: center;
+        height: 2.5rem;
+        width: 100%;
+        background-color: lightgray;
+}
+/* General button type */
+button {
+  border-radius: .5rem;
+  padding: .2rem;
+  font-size: 1rem;
+}
+/* General input type */
+input {
+  font-size: 1rem;
+  padding: 0 .1rem;
+}
+/* Genreal textarea type */
+textarea {
+  height: 3rem;
+  font-size: 1rem;
+  padding: 0 .1rem;
+}
+
+/* Media queries */
+
+@media (max-width: 1275px) {
+        html {
+                font-size: 20px;
+        }
+}
+@media (max-width: 1050px) {
+        #header ul:first-of-type {
+                display: none;
+        }
+        #smallnavbar {
+                display: inline-block;
+        }
+        #header ul:first-of-type >li {
+                background-image: none;
+        }
+}        
+@media (max-width: 760px) {
+        html {
+                font-size: 16px;
+        }
+        footer {
+                font-size: .6rem;
+        }
+}
+@media (max-width: 550px) {
+        #header .phone {
+                display: block;
+                margin-left: 0;
+        }
+}
+@media (max-width: 450px) {
+        html {
+                font-size: 14px;
+        }
+}

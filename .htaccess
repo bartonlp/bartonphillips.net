@@ -1,0 +1,89 @@
+Options +Indexes
+
+Header set Access-Control-Allow-Origin "*"
+
+order allow,deny
+allow from all
+
+# HOME is only needed by siteautoload and will be removed once everything is autoload.php ready
+SetEnv HOME /var/www
+SetEnv SITELOAD /var/www/vendor/bartonlp/site-class/includes
+
+Header unset Pragma
+FileETag None
+Header unset ETag
+
+# BEGIN EXPIRES
+<IfModule mod_expires.c>
+  ExpiresActive On
+<Files *.php>
+  ExpiresByType text/html A0
+</Files>
+  ExpiresDefault "access plus 10 days"
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType text/plain "access plus 0 seconds"
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType application/x-javascript "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType application/x-icon "access plus 1 year"
+</IfModule>
+# END EXPIRES
+
+# BEGIN NO Cookies for static items
+<FilesMatch "\.(js|css|jpg|png|jpeg|gif|xml|json|txt|pdf|mov|avi|otf|woff|ico|swf)$">
+ 	RequestHeader unset Cookie
+ 	Header unset Cookie
+ 	Header unset Set-Cookie
+</FilesMatch>
+# END NO Cookies
+
+AddType application/x-javascript .js
+AddType text/css .css
+AddType text/xml .xml
+AddType text/cache-manifest .manifest
+AddType application/x-font-woff .woff
+AddType application/x-font-ttf .ttf
+
+AddDefaultCharset UTF-8
+
+RewriteEngine on
+RewriteCond %{HTTP_USER_AGENT} "baiduspider" [NC]
+RewriteRule (.*) - [F,L]
+
+# BLP 2014-09-14 -- track robots that look at robots.txt
+RewriteRule ^robots\.txt$ robots.php [L,NC]
+RewriteRule ^Sitemap\.xml$ sitemap.php [L,NC]
+
+# Do compression of the followin types
+
+AddOutputFilterByType DEFLATE \
+  "application/atom+xml" \
+  "application/javascript" \
+  "application/x-javascript" \
+  "application/json" \
+  "application/ld+json" \
+  "application/manifest+json" \
+  "application/rdf+xml" \
+  "application/rss+xml" \
+  "application/schema+json" \
+  "application/vnd.geo+json" \
+  "application/vnd.ms-fontobject" \
+  "application/x-font-ttf" \
+  "application/x-font-woff" \
+  "application/x-web-app-manifest+json" \
+  "application/xhtml+xml" \
+  "application/xml" \
+  "font/opentype" \
+  "image/svg+xml" \
+  "image/x-icon" \
+  "text/cache-manifest" \
+  "text/css" \
+  "text/html" \
+  "text/javascript" \
+  "text/plain" \
+  "text/vtt" \
+  "text/x-component" \
+  "text/xml"
+ 

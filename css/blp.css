@@ -1,0 +1,74 @@
+/* Barton Phillips CSS */
+/* This file is used by bartonphillips.com and by bartonlp.com */
+
+@font-face {
+        font-family: liberation;
+        src: url(../fonts/truetype/liberation/LiberationSans-Regular.ttf);
+}
+
+* {
+        box-sizing: border-box;
+}
+html {
+        margin: auto;
+        font-size: 25px;
+}
+body {
+        background-color: white; 
+        font-family: liberation, serif;
+        padding: .5rem;
+}
+footer {
+        text-align: center;
+}
+.center {
+        text-align: center;
+}
+ul {
+        line-height: 150%;
+}
+/*
+  The #hitCounter... are for the SiteClass::getCounterWigget() which can be at the bottom of the page.
+  #F5DEB3==rgb(245,222,179) is 'wheat' for the background
+  rgb(123, 16, 66) is a burgundy for the number
+*/  
+#hitCounter {
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+        text-align: center;
+}
+#hitCountertbl {
+        font-size: 1em;
+        width: 0;
+        border: 8px ridge yellow;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: #F5DEB3
+}
+#hitCountertr {
+        width: 0;
+        border: 8px ridge yellow;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: #F5DEB3
+}
+#hitCounterth {
+        color: rgb(123, 16, 66);
+}
+/* media layout */
+@media (min-width: 1776px) {
+        html {
+                font-size: 30px;
+        }
+}
+@media (max-width: 1200px) {
+        html {
+                font-size: 20px;
+        }
+}
+@media (max-width: 400px) {
+        html {
+                font-size: 16px;
+        }
+}
