@@ -84,7 +84,7 @@ jQuery(document).ready(function($) {
            }
     });
   });
-
+  
   $(window).on("unload", function(e) {
     $.ajax({
       url: trackerUrl,
@@ -116,7 +116,7 @@ jQuery(document).ready(function($) {
   });
 
   // We will use beacon also
-  
+
   if(navigator.sendBeacon) {
     $(window).on("pagehide", function() {
       navigator.sendBeacon('/beacon.php', JSON.stringify({'id':lastId, 'which': 1}));
