@@ -141,7 +141,7 @@ jQuery(document).ready(function($) {
 
   function runtimer() {
     if($cnt++ < 20) {
-      $time += 2000;
+      $time += 10000;
     }
     $.ajax({
       url: trackerUrl,
