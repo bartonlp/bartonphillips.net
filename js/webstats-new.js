@@ -148,9 +148,13 @@ jQuery(document).ready(function($) {
     });
 
     // To start Webmaster is hidden
-
+    // BLP 2016-11-27 -- myIp is now a string. It could be
+    // "123.123.123.123,12.3.4.4" or just a single entry. This is
+    // because $S->myUrl can now be an array and therefore $S->myIp can
+    // be either a string or an array.
+    
     $("#tracker tbody td:nth-child(1) span.co-ip").each(function(i, v) {
-      if($(v).text() == myIp) {
+      if(myIp.indexOf($(v).text()) !== -1) {
         $(v).parent().css("color", "green").parent().addClass("webmaster").hide();
       }
     });
@@ -435,7 +439,7 @@ jQuery(document).ready(function($) {
         var ypos = e.pageY;
 
         $.ajax({
-          url: "webstats-new.php",
+          url: directory+"/webstats-new.php",
           data: {page: 'curl', ip: ip},
           type: "POST",
           success: function(data) {
@@ -459,7 +463,7 @@ jQuery(document).ready(function($) {
         var ypos = e.pageY;
 
         $.ajax({
-          url: "webstats-new.php",
+          url: directory+"/webstats-new.php",
           data: {page: 'findbot', ip: ip},
           type: "POST",
           success: function(data) {
