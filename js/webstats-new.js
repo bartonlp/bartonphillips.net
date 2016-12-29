@@ -140,7 +140,7 @@ jQuery(document).ready(function($) {
   function dotracker() {
     // To start js = 0 is hidden
 
-    $("#tracker tbody td:last-child").each(function(i, v) {
+    $("#tracker tbody td:nth-child(7)").each(function(i, v) {
       if($(v).text() == '0') {
         $(v).parent().addClass("all").hide();
         $(v).parent().find("span.co-ip").css("color", "pink");

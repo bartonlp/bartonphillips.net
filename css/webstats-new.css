@@ -84,8 +84,12 @@ th, td {
   width: 5rem;
 }
 /* last=js */
-#tracker td:last-child {
+#tracker td:nth-child(7) {
   width: 1rem;
+}
+#tracker td:nth-child(8) {
+        width: 10rem;
+        word-break: break-all;
 }
 div {
   padding: .5rem 0;

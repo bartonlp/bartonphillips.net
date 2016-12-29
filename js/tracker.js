@@ -138,20 +138,21 @@ jQuery(document).ready(function($) {
 
   // Now lets try a timer to update the endtime
 
-  var $time = 5000,
-  $cnt = 0;
-
+  var cnt = 0;
+  var time = 0;
+  
   function runtimer() {
-    if($cnt++ < 20) {
-      $time += 10000;
+    if(cnt++ < 50) {
+      // Time should increase to about 8 plus minutes
+      time += 10000;
     }
     $.ajax({
       url: trackerUrl,
-      data: {page: 'timer', id: lastId },
+      data: {page: 'timer', id: lastId, time: time, filename: document.location.pathname},
       type: 'post',
       success: function(data) {
         console.log(data);
-        setTimeout(runtimer, $time)
+        setTimeout(runtimer, time)
       },
       error: function(err) {
         console.log(err);
