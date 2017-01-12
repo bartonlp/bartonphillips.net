@@ -1,0 +1,188 @@
+/* Applied Tehcnology Resources, Inc. Style Sheet */
+
+html {
+  font-size: 16px;
+  margin: auto;
+}
+body {
+  background-image: url(http://bartonphillips.net/images/Strip5.png);
+  background-size: 45px;
+  background-repeat: repeat-y;
+  background-color: rgb(255,255,239);
+  
+  margin-left: 43px;
+  margin-right: 5px;
+  margin-top: 0;
+}
+body, p, h1, h2, h3, font, table, form, td, th, tr, li, ul {
+  font-family: serif;
+}
+
+/*Xmas
+main, #appservEE, #appservPD, #appservCAD {
+        background-image: url(http://bartonphillips.net/images/bksnoscene.jpg);
+        background-repeat: repeat-y;
+        background-position:top; 
+        background-size: 100%;
+        background-attachment: fixed;
+}
+*/
+
+main {
+        padding: 10px;
+}
+footer {
+        padding: 10px;
+}
+.atri {
+        color: #800080;
+        font-size: +1;
+}
+address {
+  text-align: center;
+}
+a {
+	text-decoration: none;
+}
+a:hover {
+	color: red;
+	text-decoration: underline;
+}
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.5rem;
+}
+h3 {
+  font-size: 1.2rem;
+}
+#maintitle {
+        padding-left: .5rem;
+}
+.header {
+  color: blue;
+}
+.white {
+  color:white;
+}
+.yellow {
+  color:yellow;
+}
+.red {
+  color:red;
+}
+.center {
+  text-align:center;
+}
+.specialnote {
+  color: red;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: center;
+}
+.inline {
+  display: inline;
+}
+/* index.php */
+#applitecServices {
+  border: 0;
+  padding-bottom: 1rem;
+}
+#applitecServices h1 {
+  text-align: center;
+}
+#appservEE {
+  background-color: #F8F8D2;
+  border: 2px solid black;
+  padding-left: 2rem;
+}
+#appservPD {
+  background-color: #F0DEDF;
+  border: 2px solid black;
+  padding-left: 2rem;
+}
+#appservSCSI {
+  background-color: olive;
+  border: 2px solid black;
+  padding-left: 2rem;
+
+}
+#appservCAD {
+  background-color: silver;
+  color: black;
+  border: 2px solid black;
+  padding-left: 2rem;
+
+}
+#appservINT {
+  background-color: gray;
+  color: white;
+  border: 2px solid black;
+  padding-left: 2rem;
+
+}
+#appservSW {
+  background-color: #cdcfec;
+  color: black;
+  border: 2px solid black;
+  padding-left: 2rem;
+
+}
+/*
+  The #hitCounter... are for the SiteClass::getCounterWigget() which can be at the bottom of the page.
+  #F5DEB3==rgb(245,222,179) is 'wheat' for the background
+  rgb(123, 16, 66) is a burgundy for the number
+*/  
+#hitCounter {
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+        text-align: center;
+}
+#hitCountertbl {
+        font-size: 1em;
+        width: 0;
+        border: 8px ridge yellow;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: #F5DEB3
+}
+#hitCountertr {
+        width: 0;
+        border: 8px ridge yellow;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: #F5DEB3
+}
+#hitCounterth {
+        color: rgb(123, 16, 66);
+}
+/* media layout */
+@media (min-width: 1024px) {
+        html {
+                font-size: 24px;
+        }
+}
+@media (max-width: 740px) {
+        #navMap {
+                display: none;
+        }
+        #smallNavMap {
+                display: block;
+        }
+        img[src="http://bartonphillips.net/images/back.gif"],
+        img[src="http://bartonphillips.net/images/butmail.gif"] {
+                display: none;
+        }
+        main > img {
+                width: 100%;
+        }
+        #topTitleDiv a {
+                font-size: 1.5rem;
+        }
+        nav {
+                margin-bottom: 35px;
+        }
+}
