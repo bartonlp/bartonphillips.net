@@ -1,4 +1,4 @@
-/* for webstats-new.php */
+/* webstats.js for http://www.bartonphillips.com/webstats.php */
 
 jQuery(document).ready(function($) {
   var path = document.location.pathname;
@@ -172,7 +172,8 @@ jQuery(document).ready(function($) {
 
   // Put a couple of buttons before the tracker table
 
-  $("#tracker").before("<p>Double Click on IP to <span id='ip'>Show Only ip</span>.<br>"+
+  $("#tracker").before("<p>Ctrl Click on IP to <span id='ip'>Show Only ip</span>.<br>"+
+                       "Alt Click on IP to <span class='red'>Show http://ipinfo.io info</span><br>"+
                        "Double Click on Page to <span id='page'>Show Only page</span>.<br>"+
                        "Average stay time: <span id='average'></span> (times over two hours are discarded.)</p>"+
                        "<button id='webmaster'>Show webmaster</button>"+
@@ -225,7 +226,7 @@ jQuery(document).ready(function($) {
   
   $("#update").click(function() {
     $.ajax({
-      url: directory+'/webstats-new.php',
+      url: directory+'/webstats-ajax.php',
       data: {page: 'gettracker', ipcountry: ipcountry, site: thesite},
       type: 'post',
       success: function(data) {
@@ -254,38 +255,6 @@ jQuery(document).ready(function($) {
              console.log(err);
            }
     });
-  });
-
-  // We deligate the two double clicks to the 'body' because the
-  // tracker table can be updated.
-  // Page dbl clicked
-
-  var flag0;
-
-  $("body").on('dblclick', "#tracker tbody td:first-child", function() {
-    if(flag0) {
-      flags.ip = false;
-      $(".page").removeClass("page").hide();
-      for(var f in flags) {
-        if(flags[f] == true) {
-          $("."+f).show();
-        }
-      }
-      $(".normal").show();
-      msg = "Show Only page";
-    } else {
-      var page = $(this).text();
-      $("#tracker tbody tr td:first-child").each(function(i, v) {
-        if($(v).text() == page) {
-          $(v).parent().addClass('page');
-        }
-      });
-      flags.ip = true;
-      $("#tracker tbody tr").not(".page").hide();
-      msg = "Show All page";
-    }
-    $("#page").text(msg);
-    flag0 = !flag0;
   });
 
   // IP address dbl clicked
@@ -359,69 +328,11 @@ jQuery(document).ready(function($) {
   if(typeof site != 'undefined') {
     $("#siteanalysis").html("<p>Showing "+site+"</p>"+selectIt);
   }
+
+  // A click anywhere will remove #FindBot which is used for the bots
+  // info and for the isJavaScript 'human' info and ipinfo.io. There can only be one
+  // of these Id's at a time.
   
-  // Now deligate the click on the 'mysite' button
-  
-  $("body").on("click", "#mysite", function(e) {
-    var site = $("#siteanalysis select").val(),
-    msg;
-
-    $("#analysis").html("<div class='center'>"+
-                        "<img src='http://bartonphillips.net/images/loading.gif'>"+
-                        "<p>Please Wait While Loading Analysis</p></div>");
-
-    msg = "<p>Showing "+site+"</p>"+selectIt;
-
-    // Do the ajax 'GET' to the analysis.php file. That file has a GET
-    // and a POST. The GET is for this file.
-    
-    $.ajax({
-      url: directory+'/analysis.php',
-      data: {site: site},
-      type: 'get',
-      success: function(data) {
-             $("#analysis").html(data);
-             $("#os1, #os2, #browser1, #browser2")
-                 .tablesorter({ headers: { 1: {sorter: 'strnum'}, 2: {sorter: false}, 3: {sorter: false}}, sortList: [[1,1]]})
-                 .addClass('tablesorter');
-
-             $("#siteanalysis").html(msg);
-           },
-           error: function(err) {
-             $("#analysis").html("<h2>Error getting analysis</h2>");
-             console.log(err);
-           }
-    });
-    e.preventDefault();
-  });
-
-  // hourly-update
-  // 'hourly' is from make-webstats.php
-  
-  $("#hourly").append(" <button id='getnew'>Get New Data</button>");
-
-  $("body").on('click', '#getnew', function() {
-    $("#hourly-update").html("<hr><br><div class='center'><img src='http://bartonphillips.net/images/loading.gif'><br>" +
-                             "<h2>Please Wait While Loading</h2></div><br><hr>")
-    $.ajax({
-      url: directory+'/webstats-new.php',
-      data: {page: 'getnewhourly', site: thesite},
-      type: 'post',
-      success: function(data) {
-             $("#hourly-update").html(data);
-             $("#logip, #logagent, #counter, #counter2").tablesorter()
-                 .addClass('tablesorter');
-             $("#hourly").append(" <button id='getnew'>Get New Data</button>");
-           },
-           error: function(err) {
-             $("#hourly-update").html("<h2>Error getting 'hourly-update'</h2>");
-             console.log(err);
-           }
-    });
-  });
-
-  // On ctrl mousedown put results of bot search
-
   var mouseflag = true;
 
   $("body").on("click", function(e) {
@@ -430,8 +341,45 @@ jQuery(document).ready(function($) {
       mouseflag = !mouseflag;
     }
   });
-      
+
+  // Click on the ip address of any of the tables.
+  // Look for ctrlKey and does show only ip.
+  // Looks for altKey and does http://ipinfo.io via curl to get info on
+  // ip.
+  // If mouseflag and not altKey then do 'findbot' to show if the ip is
+  // in the bots table.
+
+
+  var flag0;
+
   $("#logagent, #tracker, #robots, #robots2").on("click", "td:first-child", function(e) {
+    if(e.ctrlKey) {
+      if(flag0) {
+        flags.ip = false;
+        $(".page").removeClass("page").hide();
+        for(var f in flags) {
+          if(flags[f] == true) {
+            $("."+f).show();
+          }
+        }
+        $(".normal").show();
+        msg = "Show Only page";
+      } else {
+        var page = $(this).text();
+        $("#tracker tbody tr td:first-child").each(function(i, v) {
+          if($(v).text() == page) {
+            $(v).parent().addClass('page');
+          }
+        });
+        flags.ip = true;
+        $("#tracker tbody tr").not(".page").hide();
+        msg = "Show All page";
+      }
+      $("#page").text(msg);
+      flag0 = !flag0;
+      return;
+    }
+
     if(mouseflag) { // Show
       if(e.altKey) { // Alt key?
         var ip = $(this).text();
@@ -439,7 +387,7 @@ jQuery(document).ready(function($) {
         var ypos = e.pageY;
 
         $.ajax({
-          url: directory+"/webstats-new.php",
+          url: directory+"/webstats-ajax.php",
           data: {page: 'curl', ip: ip},
           type: "POST",
           success: function(data) {
@@ -454,16 +402,16 @@ jQuery(document).ready(function($) {
                },
                error: function(err) {
                  console.log(err);
-               }
+          }
         });
-    } else { // No alt.
+      } else { // No alt.
         var ip = $(this).text();
         ip = ip.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0];
         var bottom = $(this).offset()['top'] + $(this).height();
         var ypos = e.pageY;
 
         $.ajax({
-          url: directory+"/webstats-new.php",
+          url: directory+"/webstats-ajax.php",
           data: {page: 'findbot', ip: ip},
           type: "POST",
           success: function(data) {
@@ -508,8 +456,8 @@ jQuery(document).ready(function($) {
       } else {
         human = {
           1: "Start", 2: "Load", 4: "Script", 8: "Normal",
-             0x10: "NoScript", 0x20: "B-Ph", 0x40: "B-Un", 0x80: "B-BUl",
-             0x100: "T-BUl", 0x200: "T-Ul", 0x400: "T-Ph",
+             0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
+             0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
              0x1000: "Timer", 0x2000: "Bot"
         };
         xpos = e.pageX - 200;

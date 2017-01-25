@@ -129,5 +129,6 @@ table .header {
 #browser1 thead th:first-child, #browser2 thead th:first-child {
   padding: .5rem 2rem .5rem 2rem;
 }
-
+.red { color: red; }
+        
         
