@@ -32,6 +32,9 @@ body {
         font-family: liberation, serif;
         padding: .5rem;
 }
+header {
+        text-align: center;
+}      
 footer {
         text-align: center;
 }
