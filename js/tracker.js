@@ -33,7 +33,10 @@ function postAjaxMsg(msg) {
 
 jQuery(document).ready(function($) {
   console.log("LocalPath: " +LocalPath);
-  $("#logo").attr('src', LocalPath +"/tracker.php?page=script&id="+lastId);
+
+  // Now if LocalPath is null we get 'tracker.php...' without a leading
+  // '/'
+  $("#logo").attr('src', LocalPath +"tracker.php?page=script&id="+lastId);
 });
 
 // The rest of this is for everybody!
