@@ -5,9 +5,8 @@ Header set Access-Control-Allow-Origin "*"
 order allow,deny
 allow from all
 
-# HOME is only needed by siteautoload and will be removed once everything is autoload.php ready
-SetEnv HOME /var/www
 SetEnv SITELOAD /var/www/vendor/bartonlp/site-class/includes
+SetEnv SITELOADNAME /var/www/vendor/bartonlp/site-class/includes/siteload.php
 
 Header unset Pragma
 FileETag None
