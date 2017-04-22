@@ -44,8 +44,8 @@ jQuery(document).ready(function($) {
 (function($) {
   console.log("lastId: " + lastId);
   
-  var trackerUrl = LocalPath + "/tracker.php";
-  var beaconUrl = LocalPath + "/beacon.php";
+  var trackerUrl = LocalPath + "tracker.php";
+  var beaconUrl = LocalPath + "beacon.php";
   
   // 'start' is done weather or not 'load' happens.
 
