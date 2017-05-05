@@ -1,3 +1,5 @@
+// BLP 2017-05-03 -- FIX T option
+
 function date(format, timestamp) {
   //   example 1: date('H:m:s \\m \\i\\s \\m\\o\\n\\t\\h', 1062402400);
   //   returns 1: '09:09:40 m is month'
@@ -22,7 +24,7 @@ function date(format, timestamp) {
   var that = this;
   var jsdate, f;
   // Keep this here (works, but for code commented-out below for file size reasons)
-  // var tal= [];
+  //var tal= [];
   var txt_words = [
                    'Sun', 'Mon', 'Tues', 'Wednes', 'Thurs', 'Fri', 'Satur',
                    'January', 'February', 'March', 'April', 'May', 'June',
@@ -195,9 +197,8 @@ function date(format, timestamp) {
       // Timezone identifier; e.g. Atlantic/Azores, ...
       // The following works, but requires inclusion of the very large
       // timezone_abbreviations_list() function.
-      /*              return that.date_default_timezone_get();
-       */
-         throw 'Not supported (see source code of date() for timezone on how to add support)';
+      /*return that.date_default_timezone_get();*/
+        throw 'Not supported (see source code of date() for timezone on how to add support)';
        },
        I: function () {
       // DST observed?; 0 or 1
@@ -228,10 +229,15 @@ function date(format, timestamp) {
       // Timezone abbreviation; e.g. EST, MDT, ...
       // The following works, but requires inclusion of the very
       // large timezone_abbreviations_list() function.
-      /*              var abbr, i, os, _default;
-      if (!tal.length) {
+      // var abbr, i, os, _default;
+      /*if (!tal.length) {
         tal = that.timezone_abbreviations_list();
       }
+      */
+      // This works with Chrome.
+      
+      var zone = jsdate.toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
+/*      
       if (that.php_js && that.php_js.default_timezone) {
         _default = that.php_js.default_timezone;
         for (abbr in tal) {
@@ -250,8 +256,8 @@ function date(format, timestamp) {
           }
         }
       }
-      */
-         return 'UTC';
+*/
+         return zone;
        },
        Z: function () {
       // Timezone offset in seconds (-43200...50400)
