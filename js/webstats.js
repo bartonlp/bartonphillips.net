@@ -57,10 +57,17 @@ jQuery(document).ready(function($) {
       var t = $(this).text();
       if(!t) return true; // Continue, don't count blank
 
-      var ar = t.match(/^(\d{2}):(\d{2}):(\d{2})$/);
+      //console.log("t", t);
+      
+      var ar = t.match(/^(\d+):(\d{2}):(\d{2})$/);
+      //console.log("ar: " + ar);
       t = parseInt(ar[1], 10) * 3600 + parseInt(ar[2],10) * 60 + parseInt(ar[3],10);
-      if(t > 7200) return true; // Continue if over two hours 
-
+      //console.log("t: " +t);
+      
+      if(t > 7200) {
+        //console.log("Don't count: " + t);
+        return true; // Continue if over two hours 
+      }
       av += t;
       ++cnt;      
     });
