@@ -264,7 +264,7 @@ jQuery(document).ready(function($) {
     });
   });
 
-  // IP address dbl clicked
+  // Second field (url) dbl clicked
 
   var flag1;
 
@@ -389,8 +389,9 @@ jQuery(document).ready(function($) {
 
     if(mouseflag) { // Show
       if(e.altKey) { // Alt key?
-        var ip = $(this).text();
-        ip = ip.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0];
+        var ip = $(this).html();
+        ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
+
         var ypos = e.pageY;
 
         $.ajax({
@@ -412,8 +413,8 @@ jQuery(document).ready(function($) {
           }
         });
       } else { // No alt.
-        var ip = $(this).text();
-        ip = ip.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)[0];
+        var ip = $(this).html();
+        ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
         var bottom = $(this).offset()['top'] + $(this).height();
         var ypos = e.pageY;
 
