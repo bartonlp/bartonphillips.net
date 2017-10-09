@@ -13,11 +13,11 @@ var bannerImages = new Array, binx = 0;
 
 function dobanner(path, recursive, seq) {
   $.ajax({
-    url: 'http://www.bartonphillips.dyndns.org/glob.proxy.php',
+    url: 'http://www.bartonphillips.dyndns.org:8080/glob.proxy.php',
     type: 'get',
     data: {path: path, recursive: recursive},
     success: function(data) {
-      //console.log("data", data);
+      console.log("data", data);
       bannerImages = data.split("\n");
       $("#show").html("<h3 class='center'>" + path + "</h3><img>");
       bannershow(seq);

@@ -186,7 +186,8 @@ jQuery(document).ready(function($) {
                        "<button id='webmaster'>Show webmaster</button>"+
                        "<button id='bots'>Show bots</button>"+
                        "<button id='all'>Show All</button><br>"+
-                       "<button id='update'>Update Fields</button>"
+                       "<button id='update'>Update Fields</button>"+
+                       "<button id='ip6only'>Show only IPV6</button>"                       
                       );
 
   // Do this after the 'average' id is set.
@@ -217,6 +218,17 @@ jQuery(document).ready(function($) {
     }
   });
 
+  // Ip6only
+  
+  $("#ip6only").click(function(e) {
+    $("#tracker tbody tr").hide();
+    $("#tracker tbody tr td:nth-child(1)").each(function(i, v) {
+      if($(this).text().match(/:/) != null ) {
+        $(this).parent().show();
+      }
+    });
+  });
+  
   // ShowHideBots clicked
 
   $("#bots").click(function() {
