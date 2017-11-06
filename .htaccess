@@ -1,6 +1,7 @@
 Options +Indexes
 
 Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Expose-Headers: Content-Length
 
 order allow,deny
 allow from all
