@@ -2,16 +2,19 @@
 // Start main jQuery logic after document ready
 
 if(!localStorage.length) {
-        // Load the big image. This is about 1.6 Meg. Even when this is cached it still is a big load!
-      // So this first time we load the full 1.6 Meg but on subsequent loads the base64 URI is much
-      // smaller. The product of the width and height is about 8 Meg.
+  // Load the big image. This is about 1.6 Meg. Even when this is cached it still is a big load!
+  // So this first time we load the full 1.6 Meg but on subsequent loads the base64 URI is much
+  // smaller. The product of the width and height is about 8 Meg.
 
   var image = new Image;
   var d = new Date(); 
-  image.src = "images/CIMG0020.JPG?_="+d.getTime(); // do not cache
-
-      // Wait till the image is fully loaded which may be after READY
-      // above.
+  image.src = "https://bartonphillips.net/images/CIMG0020.JPG?_="+d.getTime(); // do not cache
+  // This is NEEDED to be able to do a toDataUrl() on an image that is
+  // not on our site!
+  image.crossOrigin = "Anonymous";
+  
+  // Wait till the image is fully loaded which may be after READY
+  // above.
 
   $(image).load(function() {
     localStorage.orgsize = this.width * this.height;
@@ -22,11 +25,11 @@ if(!localStorage.length) {
 
     localStorage.imgsize = this.width * this.height;
 
-        // Now use a canvas to get the URI image
+    // Now use a canvas to get the URI image
 
     var canvas = document.createElement("canvas");
 
-        // make the canvas big enough for our image
+    // make the canvas big enough for our image
 
     canvas.width = this.width;
     canvas.height = this.height;
@@ -34,31 +37,31 @@ if(!localStorage.length) {
     var ctx = canvas.getContext("2d");
     ctx.drawImage(this, 0, 0, this.width, this.height);
 
-        // Some ancient browsers (like IE) have a small limit to the URI size.
+    // Some ancient browsers (like IE) have a small limit to the URI size.
 
+    
     try {
       var dataUri = canvas.toDataURL();
       localStorage.base64size = dataUri.length;
-
       var img = $('#image');
       img.css({'width': this.width, 'height': this.height});
       img.attr('src', dataUri);
     } catch(e) {
-      localStorage.warnings += "dataUri problem:" + e + "<br>\n";
+      localStorage.warnings += "<br>dataUri problem1: " + e + "<br>\n";
     }
 
-        // Local Storage is only 5 Meg so we could get an error if the resized image is too big.
+    // Local Storage is only 5 Meg so we could get an error if the resized image is too big.
 
     try {
       localStorage.setItem('img', dataUri);
     } catch (e) {
-      localStorage.warnings += "localStorage Problem: " + e + "<br>\n";
+      localStorage.warnings += " localStorage Problem: " + e + "<br>\n";
     }
 
     img = localStorage.getItem('img');
-
+    
     $("#image").attr('src', img);
-  }); // End of onload image
+  }); // End of load image
 }
 
 jQuery(document).ready(function($) {
@@ -68,7 +71,7 @@ jQuery(document).ready(function($) {
   
   // Do we have loalStorage?
 
-  if(typeof(Storage)==="undefined") {
+  if(typeof(Storage) === "undefined") {
     // If we don't have local Storage it doesn't make much sense going
     // on. So just show the warning and that is it!
     $("#warnings").html("<p class='error'>" +
@@ -90,8 +93,8 @@ jQuery(document).ready(function($) {
 
       $("#image").attr('src', img);
 
-// ***************************************
-// The rest of this is for messages etc.
+      // ***************************************
+      // The rest of this is for messages etc.
       
       msg = "You have been here "+localStorage.clickcount+" times";
 
@@ -114,71 +117,13 @@ jQuery(document).ready(function($) {
                       localStorage.imgsize +
                       "<br>base64 size: " +
                       localStorage.base64size);
-// ***************************************
+      // ***************************************
     } else {
       // This is the first time we have been to this page so initialize the local storage with the
       // resized image.
 
       localStorage.clickcount = '1'; // init clickcount
-/*      
-      // Load the big image. This is about 1.6 Meg. Even when this is cached it still is a big load!
-      // So this first time we load the full 1.6 Meg but on subsequent loads the base64 URI is much
-      // smaller. The product of the width and height is about 8 Meg.
-
-      var image = new Image;
-      var d = new Date(); 
-      image.src = "../images/CIMG0020.JPG?_="+d.getTime(); // do not cache
-
-      // Wait till the image is fully loaded which may be after READY
-      // above.
       
-      $(image).load(function() {
-        localStorage.orgsize = this.width * this.height;
-
-        var ratio = 500 / this.width;
-        this.width = this.width * ratio;
-        this.height = this.height * ratio;
-
-        localStorage.imgsize = this.width * this.height;
-
-        // Now use a canvas to get the URI image
-
-        var canvas = document.createElement("canvas");
-
-        // make the canvas big enough for our image
-
-        canvas.width = this.width;
-        canvas.height = this.height;
-
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(this, 0, 0, this.width, this.height);
-
-        // Some ancient browsers (like IE) have a small limit to the URI size.
-
-        try {
-          var dataUri = canvas.toDataURL();
-          localStorage.base64size = dataUri.length;
-
-          var img = $('#image');
-          img.css({'width': this.width, 'height': this.height});
-          img.attr('src', dataUri);
-        } catch(e) {
-          localStorage.warnings += "dataUri problem:" + e + "<br>\n";
-        }
-
-        // Local Storage is only 5 Meg so we could get an error if the resized image is too big.
-
-        try {
-          localStorage.setItem('img', dataUri);
-        } catch (e) {
-          localStorage.warnings += "localStorage Problem: " + e + "<br>\n";
-        }
-
-        img = localStorage.getItem('img');
-
-        $("#image").attr('src', img);
-      }); // End of onload image
-*/
 // ********************************************
 // The rest of this is putting up messages etc.        
 
@@ -187,7 +132,7 @@ jQuery(document).ready(function($) {
       // Get the file size of the image, that is the transmition size over the net.
 
       xhr = $.ajax({
-        url: "images/CIMG0020.JPG",
+        url: "https://bartonphillips.net/images/CIMG0020.JPG",
         type: "HEAD",
         dataType: 'text',
         cache: false
@@ -210,7 +155,7 @@ jQuery(document).ready(function($) {
       // Get the JavaScript source
         
       $.ajax({
-        url: "js/localstorage.js",
+        url: "https://bartonphillips.net/js/localstorage.js",
         cache: false,
         dataType: 'text', // if not text the script will be executed.
         success: function(data) {
@@ -227,7 +172,7 @@ jQuery(document).ready(function($) {
       $("#warnings").html("<p id='warning'>WARNINGS<br>\n" + localStorage.warnings + "</p>");
     }
 
-    $("span.cnt").html(msg);
+    $("div.cnt").html(msg);
   
     $("#showsource").hide();
     $("#showjs").hide();
@@ -257,7 +202,7 @@ jQuery(document).ready(function($) {
 
     $("body > pre").addClass("brush: js");
   }
-// ********************************************
+  // ********************************************
 });
 
 // Display the size of the image at various stages

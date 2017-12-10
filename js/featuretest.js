@@ -97,13 +97,14 @@ function doit() {
   // we need the full path here too as this is called from other sites
   
   $.ajax({
-    url: 'http://www.bartonphillips.com/postfeatures.php?callback=?',
-    data: { features: notok.join(','), audio: audio.join(','), video: video.join(',') },
+    //url: 'http://www.bartonphillips.com/postfeatures.php?callback=?',
+    url: 'testmodernizer.php',
+    data: { page: 'post', features: notok.join(','), audio: audio.join(','), video: video.join(',') },
+    type: 'post',
     success: function(data) {
-           if(/^Error:/.test(data.err)) console.log("Not Ok: :"+data.err);
-         },           
-         error: function(x, status, y) { console.log("Error:"+status);},
-         dataType: 'jsonp'
+      console.log("success: ", data);
+    },           
+    error: function(x, status, y) { console.log("Error:"+status);}
   });
 
   ok.push("Audio: " +audio);
@@ -116,6 +117,6 @@ function doit() {
 
 // This is used by my other sites so we need the full path!
 
-var jqXHR = jQuery.getScript("http://www.bartonphillips.com/js/modernizr.custom.20263.extras.js", function() {
+var jqXHR = jQuery.getScript("https://bartonphillips.net/js/modernizr-custom.js", function() {
   doit();
 });
