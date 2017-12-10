@@ -7,8 +7,8 @@
 */
 @font-face {
         font-family: liberation;
-        src: url(http://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.woff),
-             url(http://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.ttf);
+        src: url(https://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.woff),
+             url(https://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.ttf);
         font-weight: normal;
         font-style: normal;
 }
@@ -17,11 +17,11 @@
 
 @font-face {
         font-family: 'icomoon';
-        src: url(http://bartonphillips.net/fonts/icomoon.eot);
-        src: url(http://bartonphillips.net/fonts/icomoon.woff) format('woff'),
-             url(http://bartonphillips.net/fonts/icomoon.eot) format('embedded-opentype'),
-             url(http://bartonphillips.net/fonts/icomoon.ttf) format('truetype'),
-             url(http://bartonphillips.net/fonts/icomoon.svg) format('svg');
+        src: url(https://bartonphillips.net/fonts/icomoon.eot);
+        src: url(https://bartonphillips.net/fonts/icomoon.woff) format('woff'),
+             url(https://bartonphillips.net/fonts/icomoon.eot) format('embedded-opentype'),
+             url(https://bartonphillips.net/fonts/icomoon.ttf) format('truetype'),
+             url(https://bartonphillips.net/fonts/icomoon.svg) format('svg');
         font-weight: normal;
         font-style: normal;
 }
@@ -92,7 +92,7 @@ header ul:first-of-type {
         font-size: .8rem;
 }
 header ul:first-of-type >li {
-        background: url('http://bartonphillips.net/images/header-bg.png') right top no-repeat;
+        background: url('https://bartonphillips.net/images/header-bg.png') right top no-repeat;
         background-size: 3px; /*.1rem;*/
 }
 header ul:first-of-type >li:last-of-type {
