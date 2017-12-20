@@ -1,3 +1,5 @@
+// Goes with the east_text2a.html
+
 function movepic(img_name,img_src){
   document[img_name].src=img_src;
 }

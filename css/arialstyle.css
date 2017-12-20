@@ -1,0 +1,18 @@
+body {font-family: Arial}
+
+a:link    {color: #0000FF; text-decoration: none}
+a:active  {color: #FF00FF; text-decoration: none}
+a:visited {color: #0000FF; text-decoration: none}
+a:hover   {color: #0099FF; text-decoration: none}
+
+h1 {font-family: Arial}
+h2 {font-family: Arial}
+h3 {font-family: Arial}
+h4 {font-family: Arial}
+h5 {font-family: Arial}
+h6 {font-family: Arial}
+h7 {font-family: Arial}
+h8 {font-family: Arial}
+h9 {font-family: Arial}
+
+div.image250 {clear: center; float: right; font-size=smaller; width: 230px}
