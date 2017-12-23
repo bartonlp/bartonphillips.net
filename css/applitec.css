@@ -4,6 +4,21 @@ html {
         font-size: 16px;
 }
 body {
+/* Xmas (must change all Xmas sections) */
+        background-image: url(https://bartonphillips.net/images/bksnoscene.jpg);
+        background-repeat: repeat-y;
+        background-position:top; 
+        background-size: 100%;
+        background-attachment: fixed;
+/**/
+/* NewYears
+        background-image: url(https://bartonphillips.net/images/happy6.gif);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 30%;
+        background-attachment: fixed;
+/**/  
+        
         margin: 0;
 }
 body, p, h1, h2, h3, font, table, form, td, th, tr, li, ul {
@@ -13,7 +28,9 @@ header {
         text-align: center;
 }
 main {
-        background-color: #FEFEF2; /* eggshell */
+/* Xmas         
+        background-color: #FEFEF2;
+/**/        
         margin: .5rem;
 }
 h1 {
@@ -49,18 +66,24 @@ h3 {
 #appservEE {
         width: 33%;
         padding: .5rem;
+/* Xmas        
         background-color: #F8F8D2;
+/**/        
 }
 #appservPD {
         width: 33%;
         padding: .5rem;
+/* Xmas        
         background-color: #F0DEDF;
+/**/    
 }
 #appservCAD {
         width: 33%;
         padding: .5rem;
-        background-color: #698B69; /* darkseagreen4	 */
+/* Xmas         
+        background-color: #698B69;
         color: white;
+/**/        
 }
 /****************/
 /* banner.i.php */

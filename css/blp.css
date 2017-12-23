@@ -14,21 +14,21 @@ html {
         font-size: 25px;
 }
 body {
-        /*Xmas
+/* Xmas */
         background-image: url(https://bartonphillips.net/images/bksnoscene.jpg);
         background-repeat: repeat-y;
         background-position:top; 
         background-size: 100%;
         background-attachment: fixed;
-        */
-        /*NewYears
+/**/
+/*NewYears
         background-image: url(https://bartonphillips.net/images/happy6.gif);
-        background-position: center;
+        background-position: 50% 4%;
         background-repeat: no-repeat;
         background-size: 30%;
-        background-attachment: fixed;
-        */  
-        /*background-color: white; */
+        background-attachment: scroll;
+
+/**/  
         background-color: hsla(144, 100%, 95%, 0.6); /*#e6fff0;*/
         font-family: liberation, serif;
         padding: .5rem;
