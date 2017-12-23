@@ -1,4 +1,4 @@
-Options +Indexes
+Options -Indexes
 
 Header set Access-Control-Allow-Origin "*"
 Header set Access-Control-Expose-Headers: Content-Length

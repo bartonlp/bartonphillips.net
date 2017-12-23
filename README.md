@@ -1,5 +1,7 @@
-# COOKIEless Domain. http://bartonphillips.net
+# COOKIEless Domain. https://bartonphillips.net
 
-This is set up to use http and https
+This is set up to use http and https and serve data to my websites. It is used to serve
+*images*, *css* files and *javascript* file.
+This is a **COOKIEless** domain.
 
-This is a COOKIEless domain for serving images, css and javascript.
+## Contact me: [bartonphillips@gmail.com](mailto:bartonphillips@gmail.com)
