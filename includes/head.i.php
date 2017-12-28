@@ -15,6 +15,9 @@ return <<<EOF
   <link rel="canonical" href="http://www.bartonphillips.com">
   <!-- CSS -->
   <link rel="stylesheet" href="https://bartonphillips.net/css/blp.css">
+  <!-- css is not css but a link to tracker via .htaccess RewriteRule. -->
+  <link rel="stylesheet" href="/csstest.css?id=$this->LAST_ID" title="blp test">
+
   {$arg['link']}
   <!-- Custom Scripts -->
 {$arg['extra']}

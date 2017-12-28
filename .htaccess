@@ -56,6 +56,9 @@ RewriteRule (.*) - [F,L]
 RewriteRule ^robots\.txt$ robots.php [L,NC]
 RewriteRule ^Sitemap\.xml$ sitemap.php [L,NC]
 
+# rewrite the address of csstest.css to tracker.php?csstest
+RewriteRule ^csstest\.css(.*)(.*)$ tracker.php?$2&csstest [L,QSA]
+
 # Do compression of the followin types
 
 AddOutputFilterByType DEFLATE \

@@ -4,6 +4,40 @@ jQuery(document).ready(function($) {
   var path = document.location.pathname;
   var directory = path.substring(path.indexOf('/'), path.lastIndexOf('/'));
 
+  //var directory = "https://www.bartonphillips.com";
+
+  function getcountry() {
+    var ip = $("#tracker tr td:first-child");
+    var ar = new Array;
+
+    ip.each(function() {
+      var ipval = $(this).text();
+      if(!ar[ipval]) {
+        ar[ipval] = 1;
+      }
+    });
+    ar = JSON.stringify(Object.keys(ar));
+
+    $.ajax(directory+'/webstats-ajax.php', {
+      type: 'post',
+      data: {list: ar},
+      success: function(co) {
+        var com = JSON.parse(co);
+
+        ip.each(function(i) {
+          ip = $(this).text();
+          co = com[ip];
+          //console.log(co);
+
+          $(this).html("<span class='co-ip'>"+ip+"</span><br><div class='country'>"+co+
+                       "</div>");
+        });
+      },
+      error: function(err) {
+        console.log("ERROR:", err);
+      }
+    });
+  }
   // For 'tracker'
   
   function hideIt(f) {
@@ -55,14 +89,16 @@ jQuery(document).ready(function($) {
 
     $("#tracker tbody :not(:hidden) td:nth-child(6)").each(function(i, v) {
       var t = $(this).text();
-      if(!t) return true; // Continue, don't count blank
-
+      if(t == '' || t == 0 || (typeof t == 'undefined')) {
+        //console.log("t:", t);
+        return true; // Continue, don't count blank
+      }
+      
       //console.log("t", t);
       
       var ar = t.match(/^(\d+):(\d{2}):(\d{2})$/);
-      //console.log("ar: " + ar);
+      //console.log("ar: " + ar + "t:", t);
       t = parseInt(ar[1], 10) * 3600 + parseInt(ar[2],10) * 60 + parseInt(ar[3],10);
-      //console.log("t: " +t);
       
       if(t > 7200) {
         //console.log("Don't count: " + t);
@@ -158,11 +194,14 @@ jQuery(document).ready(function($) {
     // BLP 2016-11-27 -- myIp is now a string. It could be
     // "123.123.123.123,12.3.4.4" or just a single entry. This is
     // because $S->myUrl can now be an array and therefore $S->myIp can
-    // be either a string or an array.
+    // be either a string or an array. The Javascript variable myIp is
+    // made from $S->myIp which is an array by doing $myIp = implode(',',
+    // $S->myIP) and then in webstats.php adding it as a Javascript
+    // varible.
     
     $("#tracker tbody td:nth-child(1) span.co-ip").each(function(i, v) {
       if(myIp.indexOf($(v).text()) !== -1) {
-        $(v).parent().css("color", "green").parent().addClass("webmaster").hide();
+        $(v).parent().css("color", "red").parent().addClass("webmaster").hide();
       }
     });
 
@@ -191,7 +230,8 @@ jQuery(document).ready(function($) {
                       );
 
   // Do this after the 'average' id is set.
-  
+
+  getcountry();
   dotracker();
 
   // ShowHide all where js == 0
@@ -246,12 +286,13 @@ jQuery(document).ready(function($) {
   $("#update").click(function() {
     $.ajax({
       url: directory+'/webstats-ajax.php',
-      data: {page: 'gettracker', ipcountry: ipcountry, site: thesite},
+      data: {page: 'gettracker', site: thesite},
       type: 'post',
       success: function(data) {
              $("#tracker").html(data);
              $("#tracker").tablesorter({headers: {6: {sorter: 'hex'}}});
 
+             getcountry();
              dotracker();
 
              for(f in flags) {
@@ -411,7 +452,7 @@ jQuery(document).ready(function($) {
           data: {page: 'curl', ip: ip},
           type: "POST",
           success: function(data) {
-                 console.log(data);
+                 //console.log(data);
 
                    // For mobile devices there is NO ctrKey! so we don't
                    // need to worry about position fixed not working!
@@ -435,7 +476,7 @@ jQuery(document).ready(function($) {
           data: {page: 'findbot', ip: ip},
           type: "POST",
           success: function(data) {
-                 console.log(data);
+                 //console.log(data);
 
                  // For mobile devices there is NO ctrKey! so we don't
                  // need to worry about position fixed not working!
@@ -478,15 +519,15 @@ jQuery(document).ready(function($) {
           1: "Start", 2: "Load", 4: "Script", 8: "Normal",
              0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
              0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
-             0x1000: "Timer", 0x2000: "Bot"
+             0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest"
         };
         xpos = e.pageX - 200;
       }
 
       ypos = e.pageY;
 
-      for(var k in human) {
-        h += (js & k) ? human[k] + "<br>" : '';
+      for(var [k, v] of Object.entries(human)) {
+        h += (js & k) ? v + "<br>" : '';
       }
 
       $("#FindBot").remove();
