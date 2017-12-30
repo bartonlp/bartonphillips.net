@@ -452,17 +452,16 @@ jQuery(document).ready(function($) {
           data: {page: 'curl', ip: ip},
           type: "POST",
           success: function(data) {
-                 //console.log(data);
+            //console.log(data);
+            // For mobile devices there is NO ctrKey! so we don't
+            // need to worry about position fixed not working!
 
-                   // For mobile devices there is NO ctrKey! so we don't
-                   // need to worry about position fixed not working!
-
-                 $("#FindBot").remove();
-                 $("<div id='FindBot' style='position: absolute;top: "+ypos+"px; "+
-                     "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
-               },
-               error: function(err) {
-                 console.log(err);
+            $("#FindBot").remove();
+            $("<div id='FindBot' style='position: absolute;top: "+ypos+"px; "+
+                "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
+          },
+          error: function(err) {
+            console.log(err);
           }
         });
       } else { // No alt.
@@ -476,24 +475,24 @@ jQuery(document).ready(function($) {
           data: {page: 'findbot', ip: ip},
           type: "POST",
           success: function(data) {
-                 //console.log(data);
+            //console.log(data);
 
-                 // For mobile devices there is NO ctrKey! so we don't
-                 // need to worry about position fixed not working!
+            // For mobile devices there is NO ctrKey! so we don't
+            // need to worry about position fixed not working!
 
-                 $("#FindBot").remove();
-                 $("<div id='FindBot' style='position: fixed;top: 10px; "+
-                     "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
+            $("#FindBot").remove();
+            $("<div id='FindBot' style='position: fixed;top: 10px; "+
+                "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
 
-                 if($("#FindBot").height() > window.innerHeight) {
-                   $("#FindBot").remove();
-                   $("<div id='FindBot' style='position: absolute;top: "+bottom+"px; "+
-                       "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
-                 }
-               },
-               error: function(err) {
-                 console.log(err);
-               }
+            if($("#FindBot").height() > window.innerHeight) {
+              $("#FindBot").remove();
+              $("<div id='FindBot' style='position: absolute;top: "+bottom+"px; "+
+                  "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
+            }
+          },
+          error: function(err) {
+            console.log(err);
+          }
         });
       }
       e.stopPropagation();
@@ -512,7 +511,7 @@ jQuery(document).ready(function($) {
       // prents up.
       
       if($(this).closest("table").attr("id") != 'tracker') {
-        human = {3: "Robots", 0xc: "SiteClass", 0x30: "Sitemap", 0xc0: "Cron"};
+        human = {3: "Robots", 0xc: "SiteClass", 0x30: "Sitemap", 0xc0: "Cron", 0x100: "Zero"};
         xpos = e.pageX;
       } else {
         human = {
