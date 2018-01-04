@@ -38,17 +38,17 @@ th, td {
 }
 /* page */
 #counter td:first-child {
-        word-break: break-all;
-        width: 40rem;
+  word-break: break-all;
+  width: 40rem;
 }
 /* page */
 #counter2 td:first-child {
-        word-break: break-all;
-        width: 40rem;
+  word-break: break-all;
+  width: 40rem;
 }
 /* all to left */
 #daycount * {
-        text-align: right;
+  text-align: right;
 }
 #tracker {
   width: 100%;
@@ -109,6 +109,13 @@ div {
 /* 3=bots */
 #robots td:nth-child(3) {
   width: 1rem;
+}
+#robots2 {
+  width: 100%;
+}
+#robots2 td:first-child {
+  word-break: break-all;
+  width: 10rem;
 }
 #showhide {
   color: pink;

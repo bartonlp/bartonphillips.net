@@ -4,7 +4,7 @@ html {
         font-size: 16px;
 }
 body {
-/* Xmas (must change all Xmas sections) */
+/* Xmas (must change all Xmas sections) 
         background-image: url(https://bartonphillips.net/images/bksnoscene.jpg);
         background-repeat: repeat-y;
         background-position:top; 
@@ -28,7 +28,7 @@ header {
         text-align: center;
 }
 main {
-/* Xmas         
+/* Xmas */
         background-color: #FEFEF2;
 /**/        
         margin: .5rem;
@@ -66,21 +66,21 @@ h3 {
 #appservEE {
         width: 33%;
         padding: .5rem;
-/* Xmas        
+/* Xmas */       
         background-color: #F8F8D2;
 /**/        
 }
 #appservPD {
         width: 33%;
         padding: .5rem;
-/* Xmas        
+/* Xmas */
         background-color: #F0DEDF;
 /**/    
 }
 #appservCAD {
         width: 33%;
         padding: .5rem;
-/* Xmas         
+/* Xmas */      
         background-color: #698B69;
         color: white;
 /**/        

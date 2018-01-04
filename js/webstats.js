@@ -414,32 +414,34 @@ jQuery(document).ready(function($) {
 
   $("#logagent, #tracker, #robots, #robots2").on("click", "td:first-child", function(e) {
     if(e.ctrlKey) {
-      if(flag0) {
-        flags.ip = false;
-        $(".page").removeClass("page").hide();
-        for(var f in flags) {
-          if(flags[f] == true) {
-            $("."+f).show();
+      if(e.delegateTarget.id == 'tracker') {
+        if(flag0) {
+          flags.ip = false;
+          $(".page").removeClass("page").hide();
+          for(var f in flags) {
+            if(flags[f] == true) {
+              $("."+f).show();
+            }
           }
+          $(".normal").show();
+          msg = "Show Only page";
+        } else {
+          var page = $(this).text();
+          $("#tracker tbody tr td:first-child").each(function(i, v) {
+            if($(v).text() == page) {
+              $(v).parent().addClass('page');
+            }
+          });
+          flags.ip = true;
+          $("#tracker tbody tr").not(".page").hide();
+          msg = "Show All page";
         }
-        $(".normal").show();
-        msg = "Show Only page";
-      } else {
-        var page = $(this).text();
-        $("#tracker tbody tr td:first-child").each(function(i, v) {
-          if($(v).text() == page) {
-            $(v).parent().addClass('page');
-          }
-        });
-        flags.ip = true;
-        $("#tracker tbody tr").not(".page").hide();
-        msg = "Show All page";
+        $("#page").text(msg);
+        flag0 = !flag0;
+        return;
       }
-      $("#page").text(msg);
-      flag0 = !flag0;
-      return;
     }
-
+        
     if(mouseflag) { // Show
       if(e.altKey) { // Alt key?
         var ip = $(this).html();
@@ -458,7 +460,8 @@ jQuery(document).ready(function($) {
 
             $("#FindBot").remove();
             $("<div id='FindBot' style='position: absolute;top: "+ypos+"px; "+
-                "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
+                "background-color: white; border: 5px solid black;padding: 10px'>"+
+                data+"</div>").appendTo("body");
           },
           error: function(err) {
             console.log(err);
@@ -482,12 +485,14 @@ jQuery(document).ready(function($) {
 
             $("#FindBot").remove();
             $("<div id='FindBot' style='position: fixed;top: 10px; "+
-                "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
+                "background-color: white; border: 5px solid black;padding: 10px'>"+
+                data+"</div>").appendTo("body");
 
             if($("#FindBot").height() > window.innerHeight) {
               $("#FindBot").remove();
               $("<div id='FindBot' style='position: absolute;top: "+bottom+"px; "+
-                  "background-color: white; border: 5px solid black;padding: 10px'>"+data+"</div>").appendTo("body");
+                  "background-color: white; border: 5px solid black;padding: 10px'>"+
+                  data+"</div>").appendTo("body");
             }
           },
           error: function(err) {
@@ -516,25 +521,29 @@ jQuery(document).ready(function($) {
       } else {
         human = {
           1: "Start", 2: "Load", 4: "Script", 8: "Normal",
-             0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
-             0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
-             0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest"
+          0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
+          0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
+          0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest"
         };
         xpos = e.pageX - 200;
       }
 
       ypos = e.pageY;
 
-      for(var [k, v] of Object.entries(human)) {
-        h += (js & k) ? v + "<br>" : '';
+      if(js == 0) {
+        h = 'curl';
+      } else {
+        for(var [k, v] of Object.entries(human)) {
+          h += (js & k) ? v + "<br>" : '';
+        }
       }
-
+      
       $("#FindBot").remove();
       $("body").append("<div id='FindBot' style='position: absolute; top: "+ypos+"px; left: "+xpos+"px; "+
                        "background-color: white; border: 5px solid black; "+
                        "padding: 10px;'>"+h+"</div>");
-      e.stopPropagation();
-      mouseflag = !mouseflag;
     }
+    e.stopPropagation();
+    mouseflag = !mouseflag;
   });
 });
