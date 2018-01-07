@@ -393,22 +393,14 @@ jQuery(document).ready(function($) {
   // info and for the isJavaScript 'human' info and ipinfo.io. There can only be one
   // of these Id's at a time.
   
-  var mouseflag = true;
-
   $("body").on("click", function(e) {
-    if(mouseflag == false) {
-      $("#FindBot").remove();
-      mouseflag = !mouseflag;
-    }
+    $("#FindBot").remove();
   });
 
   // Click on the ip address of any of the tables.
   // Look for ctrlKey and does show only ip.
   // Looks for altKey and does http://ipinfo.io via curl to get info on
   // ip.
-  // If mouseflag and not altKey then do 'findbot' to show if the ip is
-  // in the bots table.
-
 
   var flag0;
 
@@ -442,108 +434,103 @@ jQuery(document).ready(function($) {
       }
     }
         
-    if(mouseflag) { // Show
-      if(e.altKey) { // Alt key?
-        var ip = $(this).html();
-        ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
+    if(e.altKey) { // Alt key?
+      var ip = $(this).html();
+      ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
 
-        var ypos = e.pageY;
+      var ypos = e.pageY;
 
-        $.ajax({
-          url: directory+"/webstats-ajax.php",
-          data: {page: 'curl', ip: ip},
-          type: "POST",
-          success: function(data) {
-            //console.log(data);
-            // For mobile devices there is NO ctrKey! so we don't
-            // need to worry about position fixed not working!
+      $.ajax({
+        url: directory+"/webstats-ajax.php",
+        data: {page: 'curl', ip: ip},
+        type: "POST",
+        success: function(data) {
+          //console.log(data);
+          // For mobile devices there is NO ctrKey! so we don't
+          // need to worry about position fixed not working!
 
+          $("#FindBot").remove();
+          $("<div id='FindBot' style='position: absolute;top: "+ypos+"px; "+
+              "background-color: white; border: 5px solid black;padding: 10px'>"+
+              data+"</div>").appendTo("body");
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
+    } else { // No alt.
+      var ip = $(this).html();
+      ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
+      var bottom = $(this).offset()['top'] + $(this).height();
+      var ypos = e.pageY;
+
+      $.ajax({
+        url: directory+"/webstats-ajax.php",
+        data: {page: 'findbot', ip: ip},
+        type: "POST",
+        success: function(data) {
+          //console.log(data);
+
+          // For mobile devices there is NO ctrKey! so we don't
+          // need to worry about position fixed not working!
+
+          $("#FindBot").remove();
+          $("<div id='FindBot' style='position: fixed;top: 10px; "+
+              "background-color: white; border: 5px solid black;padding: 10px'>"+
+              data+"</div>").appendTo("body");
+
+          if($("#FindBot").height() > window.innerHeight) {
             $("#FindBot").remove();
-            $("<div id='FindBot' style='position: absolute;top: "+ypos+"px; "+
+            $("<div id='FindBot' style='position: absolute;top: "+bottom+"px; "+
                 "background-color: white; border: 5px solid black;padding: 10px'>"+
                 data+"</div>").appendTo("body");
-          },
-          error: function(err) {
-            console.log(err);
           }
-        });
-      } else { // No alt.
-        var ip = $(this).html();
-        ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
-        var bottom = $(this).offset()['top'] + $(this).height();
-        var ypos = e.pageY;
-
-        $.ajax({
-          url: directory+"/webstats-ajax.php",
-          data: {page: 'findbot', ip: ip},
-          type: "POST",
-          success: function(data) {
-            //console.log(data);
-
-            // For mobile devices there is NO ctrKey! so we don't
-            // need to worry about position fixed not working!
-
-            $("#FindBot").remove();
-            $("<div id='FindBot' style='position: fixed;top: 10px; "+
-                "background-color: white; border: 5px solid black;padding: 10px'>"+
-                data+"</div>").appendTo("body");
-
-            if($("#FindBot").height() > window.innerHeight) {
-              $("#FindBot").remove();
-              $("<div id='FindBot' style='position: absolute;top: "+bottom+"px; "+
-                  "background-color: white; border: 5px solid black;padding: 10px'>"+
-                  data+"</div>").appendTo("body");
-            }
-          },
-          error: function(err) {
-            console.log(err);
-          }
-        });
-      }
-      e.stopPropagation();
-      mouseflag = !mouseflag;
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
     }
+    e.stopPropagation();
   });
 
   // Popup a human version of 'isJavaScript'
 
   $("body").on("click", "#tracker td:nth-child(7), #robots td:nth-child(4)", function(e) {
-    if(mouseflag) {
-      var js = parseInt($(this).text(), 16),
-      human, h = '', ypos, xpos;
+    var js = parseInt($(this).text(), 16),
+    human, h = '', ypos, xpos;
 
-      // The td is in a tr which in in a tbody, so table is three
-      // prents up.
-      
-      if($(this).closest("table").attr("id") != 'tracker') {
-        human = {3: "Robots", 0xc: "SiteClass", 0x30: "Sitemap", 0xc0: "Cron", 0x100: "Zero"};
-        xpos = e.pageX;
-      } else {
-        human = {
-          1: "Start", 2: "Load", 4: "Script", 8: "Normal",
-          0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
-          0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
-          0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest"
-        };
-        xpos = e.pageX - 200;
-      }
+    // The td is in a tr which in in a tbody, so table is three
+    // prents up.
 
-      ypos = e.pageY;
-
-      if(js == 0) {
-        h = 'curl';
-      } else {
-        for(var [k, v] of Object.entries(human)) {
-          h += (js & k) ? v + "<br>" : '';
-        }
-      }
-      
-      $("#FindBot").remove();
-      $("body").append("<div id='FindBot' style='position: absolute; top: "+ypos+"px; left: "+xpos+"px; "+
-                       "background-color: white; border: 5px solid black; "+
-                       "padding: 10px;'>"+h+"</div>");
+    if($(this).closest("table").attr("id") != 'tracker') {
+      human = {3: "Robots", 0xc: "SiteClass", 0x30: "Sitemap", 0xc0: "Cron", 0x100: "Zero"};
+      xpos = e.pageX;
+    } else {
+      human = {
+        1: "Start", 2: "Load", 4: "Script", 8: "Normal",
+        0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
+        0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
+        0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest"
+      };
+      xpos = e.pageX - 200;
     }
+
+    ypos = e.pageY;
+
+    if(js == 0) {
+      h = 'curl';
+    } else {
+      for(var [k, v] of Object.entries(human)) {
+        h += (js & k) ? v + "<br>" : '';
+      }
+    }
+
+    $("#FindBot").remove();
+    $("body").append("<div id='FindBot' style='position: absolute; top: "+ypos+"px; left: "+xpos+"px; "+
+                     "background-color: white; border: 5px solid black; "+
+                     "padding: 10px;'>"+h+"</div>");
+
     e.stopPropagation();
-    mouseflag = !mouseflag;
   });
 });
