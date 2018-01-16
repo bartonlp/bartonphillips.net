@@ -21,9 +21,9 @@ function dobanner(path, obj) {
   let recursive = obj.recursive;
   let size = obj.size;
   let mode = obj.mode;
-
+  
   $.ajax({
-    url: 'http://www.bartonphillips.dyndns.org:8080/glob.proxy.php',
+    url: 'https://www.bartonlp.com/proxy-glob.php',
     type: 'get',
     data: {path: path, recursive: recursive, size: size, mode: mode},
     success: function(data) {
@@ -38,9 +38,6 @@ function dobanner(path, obj) {
   });
 }
 
-// This is from /js/random.js which MUST be loaded by 'index.php'
-var m = new MersenneTwister();
-
 // Called from above. It displayes the image in "#show" and then sets a
 // timer and does it again and again.
 
@@ -52,6 +49,7 @@ function bannershow() {
   var image = new Image;
   image.src = bannerImages[binx];
   $(image).load(function() {
+    console.log(image.src);
     $("#show img").attr('src', image.src);
     setTimeout(function() { bannershow(); }, 5000);
   });
