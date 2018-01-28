@@ -117,6 +117,6 @@ function doit() {
 
 // This is used by my other sites so we need the full path!
 
-var jqXHR = jQuery.getScript("https://bartonphillips.net/js/modernizr-custom.js", function() {
+var jqXHR = jQuery.getScript("https://bartonphillips.net/js/modernizr-custom.min.js", function() {
   doit();
 });
