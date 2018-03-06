@@ -1,49 +1,71 @@
 /* Barton Phillips CSS */
 /* This file is used by bartonphillips.com and by bartonlp.com */
 
-@font-face {
-        font-family: liberation;
-        src: url(../fonts/truetype/liberation/LiberationSans-Regular.ttf);
-}
+/* This is a 'Reset' css */
 
+@import 'normalize.css';
+
+/*
+:root
+If you have another css file with the same var but different values that will take precidence 
+(just like everything else)
+*/
+:root {
+  --blpBodyBgColor:  hsla(144, 100%, 95%, 0.6); /*#e6fff0;*/
+  --blpHitcntrBgColor: #F5DEB3;
+  --blpHitcntrBorder: 8px ridge yellow;
+  --blpHitcntrColor: rgb(123, 16, 66);
+  --blpFontSizeBig: 30px;
+  --blpFontSizeMedium: 20px;
+  --blpFontSizeSmall: 16px;
+  --blpFontSizeNormal: 25px;
+}
+/*
+font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
+font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+font-family: 'IBM Plex Sans Condensed', 'Helvetica Neue', Arial, sans-serif;
+font-family: 'IBM Plex Serif', 'Georgia', Times, serif;
+*/
+@font-face {
+  font-family: 'FontFace';
+/*  src:
+  url(https://bartonphillips.net/fonts/truetype/liberation/LiberationSans-Regular.ttf);
+  */
+/*  src:
+  url(https://bartonphillips.net/fonts/IBM-Plex/Web/IBM-Plex-Sans/fonts/split/woff2/IBMPlexSans-Regular-Latin1.woff2);
+*/
+/*  src:
+  url(https://bartonphillips.net/fonts/IBM-Plex/Web/IBM-Plex-Serif/fonts/split/woff2/IBMPlexSerif-Regular-Latin1.woff2);
+*/
+src:
+url(https://bartonphillips.net/fonts/ibm-plex-otf/IBMPlexSans-Regular.otf);
+/*  src:
+  url("https://bartonphillips.net//fonts/truetype/msttcorefonts/Times_New_Roman.ttf");
+*/
+}
 * {
-        box-sizing: border-box;
+  box-sizing: border-box;
 }
 html {
-        margin: auto;
-        font-size: 25px;
+  margin: auto;
+  font-size: var(--blpFontSize); /*var(--blpFontSizeNormal);*/
 }
 body {
-/* Xmas 
-        background-image: url(https://bartonphillips.net/images/bksnoscene.jpg);
-        background-repeat: repeat-y;
-        background-position:top; 
-        background-size: 100%;
-        background-attachment: fixed;
-/**/
-/*NewYears
-        background-image: url(https://bartonphillips.net/images/happy6.gif);
-        background-position: 50% 4%;
-        background-repeat: no-repeat;
-        background-size: 30%;
-        background-attachment: scroll;
-
-/**/  
-        background-color: hsla(144, 100%, 95%, 0.6); /*#e6fff0;*/
-        font-family: liberation, serif;
-        padding: .5rem;
+  background-color: var(--blpBodyBgColor); /*#e6fff0;*/
+  font-family: 'FontFace'; 
+  padding: .5rem;
 }
 header {
-        text-align: center;
+  text-align: center;
 }      
 footer {
-        text-align: center;
+  text-align: center;
 }
 .center {
-        text-align: center;
+  text-align: center;
 }
 ul {
-        line-height: 150%;
+  line-height: 150%;
 }
 /*
   The #hitCounter... are for the SiteClass::getCounterWigget() which can be at the bottom of the page.
@@ -51,42 +73,42 @@ ul {
   rgb(123, 16, 66) is a burgundy for the number
 */  
 #hitCounter {
-        margin-left: auto;
-        margin-right: auto;
-        width: 50%;
-        text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  text-align: center;
 }
 #hitCountertbl {
-        font-size: 1em;
-        width: 0;
-        border: 8px ridge yellow;
-        margin-left: auto;
-        margin-right: auto;
-        background-color: #F5DEB3
+  font-size: 1em;
+  width: 0;
+  border: var(--blpHitcntrBorder); /*8px ridge yellow;*/
+  margin-left: auto;
+  margin-right: auto;
+  background-color: var(--blpHitcntrBgColor); /*#F5DEB3*/
 }
 #hitCountertr {
-        width: 0;
-        border: 8px ridge yellow;
-        margin-left: auto;
-        margin-right: auto;
-        background-color: #F5DEB3
+  width: 0;
+  border: var(--blpHitcntrBorder);
+  margin-left: auto;
+  margin-right: auto;
+  background-color: var(--blpHitcntrBgColor) /*#F5DEB3*/
 }
 #hitCounterth {
-        color: rgb(123, 16, 66);
+  color: var(--blpHitcntrColor); /*rgb(123, 16, 66);*/
 }
-/* media layout */
+/* media layout: we use three font sizes */
 @media (min-width: 1776px) {
-        html {
-                font-size: 30px;
-        }
+  html {
+    --blpFontSize: var(--blpFontSizeBig); 
+  }
 }
 @media (max-width: 1200px) {
-        html {
-                font-size: 20px;
-        }
+  html {
+    --blpFontSize: var(--blpFontSizeMedium);
+  }
 }
 @media (max-width: 400px) {
-        html {
-                font-size: 16px;
-        }
+  html {
+    --blpFontSize: var(--blpFontSizeSmall);
+  }
 }

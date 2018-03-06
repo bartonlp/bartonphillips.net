@@ -45,12 +45,12 @@ var m = new MersenneTwister();
 // timer and does it again and again.
 
 function bannershow() {
-  if(binx++ > (bannerImages.length - 1)) {
+  if(binx > (bannerImages.length - 1)) {
     binx = 0;
   }
     
   var image = new Image;
-  image.src = bannerImages[binx];
+  image.src = bannerImages[binx++];
   $(image).load(function() {
     $("#show img").attr('src', image.src);
     setTimeout(function() { bannershow(); }, 5000);
