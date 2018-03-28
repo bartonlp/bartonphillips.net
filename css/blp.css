@@ -15,40 +15,25 @@ If you have another css file with the same var but different values that will ta
   --blpHitcntrBgColor: #F5DEB3;
   --blpHitcntrBorder: 8px ridge yellow;
   --blpHitcntrColor: rgb(123, 16, 66);
-  --blpFontSizeBig: 30px;
-  --blpFontSizeMedium: 20px;
-  --blpFontSizeSmall: 16px;
-  --blpFontSizeNormal: 25px;
+  --blpFontSize: calc(16px + .3vw);
 }
-/*
-font-family: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', Courier, monospace;
-font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
-font-family: 'IBM Plex Sans Condensed', 'Helvetica Neue', Arial, sans-serif;
-font-family: 'IBM Plex Serif', 'Georgia', Times, serif;
-*/
+
 @font-face {
   font-family: 'FontFace';
-/*  src:
-  url(https://bartonphillips.net/fonts/truetype/liberation/LiberationSans-Regular.ttf);
-  */
-/*  src:
-  url(https://bartonphillips.net/fonts/IBM-Plex/Web/IBM-Plex-Sans/fonts/split/woff2/IBMPlexSans-Regular-Latin1.woff2);
-*/
-/*  src:
-  url(https://bartonphillips.net/fonts/IBM-Plex/Web/IBM-Plex-Serif/fonts/split/woff2/IBMPlexSerif-Regular-Latin1.woff2);
-*/
-src:
-url(https://bartonphillips.net/fonts/ibm-plex-otf/IBMPlexSans-Regular.otf);
-/*  src:
-  url("https://bartonphillips.net//fonts/truetype/msttcorefonts/Times_New_Roman.ttf");
-*/
+  src: url(../fonts/ibm-plex-otf/IBMPlexSans-Regular.otf);
+  /*url(https://bartonphillips.net/fonts/ibm-plex-otf/IBMPlexSans-Regular.otf);*/
 }
 * {
   box-sizing: border-box;
 }
+/* Get RID of the blue border around the following */
+/* If you really want it add it in your css! */
+input:focus, button:focus, a:focus, textarea:focus {
+  outline: none;
+}
 html {
   margin: auto;
-  font-size: var(--blpFontSize); /*var(--blpFontSizeNormal);*/
+  font-size: var(--blpFontSize);
 }
 body {
   background-color: var(--blpBodyBgColor); /*#e6fff0;*/
@@ -84,31 +69,21 @@ ul {
   border: var(--blpHitcntrBorder); /*8px ridge yellow;*/
   margin-left: auto;
   margin-right: auto;
-  background-color: var(--blpHitcntrBgColor); /*#F5DEB3*/
+  background-color: var(--blpHitcntrBgColor);
 }
 #hitCountertr {
   width: 0;
   border: var(--blpHitcntrBorder);
   margin-left: auto;
   margin-right: auto;
-  background-color: var(--blpHitcntrBgColor) /*#F5DEB3*/
+  background-color: var(--blpHitcntrBgColor) 
 }
 #hitCounterth {
-  color: var(--blpHitcntrColor); /*rgb(123, 16, 66);*/
+  color: var(--blpHitcntrColor);
 }
-/* media layout: we use three font sizes */
-@media (min-width: 1776px) {
+/* for BIG screens */
+@media (min-width: 1800px) {
   html {
-    --blpFontSize: var(--blpFontSizeBig); 
-  }
-}
-@media (max-width: 1200px) {
-  html {
-    --blpFontSize: var(--blpFontSizeMedium);
-  }
-}
-@media (max-width: 400px) {
-  html {
-    --blpFontSize: var(--blpFontSizeSmall);
+    font-size: calc(24px + .4vw);
   }
 }

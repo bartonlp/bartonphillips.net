@@ -1,5 +1,7 @@
 // BLP 2014-03-06 -- track user activity
 
+'use strict';
+
 // Kluge! For weewx only. LocalPath is defined in the head.i.php file
 // as '/weewx'. Otherwise LocalPath is always 'undefined' and we set
 // it to ''.

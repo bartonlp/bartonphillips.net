@@ -236,7 +236,7 @@ jQuery(document).ready(function($) {
 
   // ShowHide all where js == 0
 
-  $("#all").click(function(e) {
+  $("#all").on("click", function(e) {
     if(flags.all) {
       hideIt('all');
     } else {
@@ -249,7 +249,7 @@ jQuery(document).ready(function($) {
 
   // ShwoHide Webmaster clicked
 
-  $("#webmaster").click(function(e) {
+  $("#webmaster").on("click", function(e) {
     if(flags.webmaster) {
       hideIt('webmaster');
     } else {
@@ -260,7 +260,7 @@ jQuery(document).ready(function($) {
 
   // Ip6only
   
-  $("#ip6only").click(function(e) {
+  $("#ip6only").on("click", function(e) {
     $("#tracker tbody tr").hide();
     $("#tracker tbody tr td:nth-child(1)").each(function(i, v) {
       if($(this).text().match(/:/) != null ) {
@@ -271,7 +271,7 @@ jQuery(document).ready(function($) {
   
   // ShowHideBots clicked
 
-  $("#bots").click(function() {
+  $("#bots").on("click", function() {
     if(flags.bots) {
       // hide
       hideIt('bots');
@@ -283,7 +283,7 @@ jQuery(document).ready(function($) {
 
   // Update the tracker info.
   
-  $("#update").click(function() {
+  $("#update").on("click", function() {
     $.ajax({
       url: directory+'/webstats-ajax.php',
       data: {page: 'gettracker', site: thesite},
@@ -351,7 +351,7 @@ jQuery(document).ready(function($) {
   
   $("#robots").before("<p>Double Click the Agents row to <span id='showhide'>Show Only</span> Agent</p>");
 
-  $("#robots td:nth-child(2)").dblclick(function() {
+  $("#robots td:nth-child(2)").on("dblclick", function() {
     if(!this.flag) {
       var agent = $(this).text();
       $("#robots td:nth-child(2)").each(function(i, v) {

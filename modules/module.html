@@ -1,0 +1,40 @@
+<!-- This is a module -->
+<script>
+console.log("module.html");
+  
+function requestTime() {
+  // If the browser supports the Navigation Timing 2 and HR Time APIs, use
+  // them, otherwise fall back to the Navigation Timing 1 API.
+  if (window.PerformanceNavigationTiming && performance.timeOrigin) {
+    const t = performance.getEntriesByType('navigation');
+    const ntEntry = t[0];
+    console.log("ntEntry:", ntEntry);
+    return (ntEntry.startTime + performance.timeOrigin) / 1000;
+  } else {
+    return performance.timing.navigationStart / 1000;
+  }
+}
+function wasFetchedViaSpdy() {
+  // SPDY is deprecated in favor of HTTP/2, but this implementation returns
+  // true for HTTP/2 or HTTP2+QUIC/39 as well.
+  if (window.PerformanceNavigationTiming) {
+    const ntEntry = performance.getEntriesByType('navigation')[0];
+    return ['h2', 'hq'].includes(ntEntry.nextHopProtocol);
+  }
+}
+function wasNpnNegotiated() {
+  // NPN is deprecated in favor of ALPN, but this implementation returns true
+  // for HTTP/2 or HTTP2+QUIC/39 requests negotiated via ALPN.
+  if (window.PerformanceNavigationTiming) {
+    const ntEntry = performance.getEntriesByType('navigation')[0];
+    return ['h2', 'hq'].includes(ntEntry.nextHopProtocol);
+  }
+}
+
+start = requestTime();
+npn = wasNpnNegotiated();
+spdy = wasFetchedViaSpdy();
+
+console.log("IN MODULE: start: %d, npn: %s, spdy: %s", start, npn, spdy);
+</script>
+<h4>This is a module</h4>

@@ -1,7 +1,10 @@
 /* Applied Tehcnology Resources, Inc. Style Sheet */
 
+:root {
+  --applitecFontSize: calc(16px + .3vw);
+}
 html {
-        font-size: 16px;
+  font-size: var(--applitecFontSize);
 }
 body {
 /* Xmas (must change all Xmas sections) 
@@ -208,12 +211,13 @@ rgb(123, 16, 66) is a burgundy for the number
 /****************/
 /* media layout */
 /****************/
-
+/*
 @media (min-width: 1024px) {
         html {
                 font-size: 24px;
         }
 }
+*/
 @media (max-width: 650px) {
         #navMap {
                 display: none;

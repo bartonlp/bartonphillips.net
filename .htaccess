@@ -20,13 +20,13 @@ Header unset ETag
   ExpiresByType text/html A0
 </Files>
   ExpiresDefault "access plus 10 days"
-  ExpiresByType text/css "access plus 1 week"
-  ExpiresByType text/plain "access plus 0 seconds"
+  ExpiresByType text/css A0
+  ExpiresByType text/plain A0
   ExpiresByType image/gif "access plus 1 month"
   ExpiresByType image/png "access plus 1 month"
   ExpiresByType image/jpeg "access plus 1 month"
-  ExpiresByType application/x-javascript "access plus 1 month"
-  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType application/x-javascript A0
+  ExpiresByType application/javascript A0 
   ExpiresByType application/x-icon "access plus 1 year"
 </IfModule>
 # END EXPIRES
