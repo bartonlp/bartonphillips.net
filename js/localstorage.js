@@ -1,7 +1,7 @@
 // JavaScript for localstorage.html
 // Start main jQuery logic after document ready
 
-if(!localStorage.length) {
+if(window.localStorage && !localStorage.length) {
   // Load the big image. This is about 1.6 Meg. Even when this is cached it still is a big load!
   // So this first time we load the full 1.6 Meg but on subsequent loads the base64 URI is much
   // smaller. The product of the width and height is about 8 Meg.
@@ -38,7 +38,6 @@ if(!localStorage.length) {
     ctx.drawImage(this, 0, 0, this.width, this.height);
 
     // Some ancient browsers (like IE) have a small limit to the URI size.
-
     
     try {
       var dataUri = canvas.toDataURL();
@@ -65,6 +64,11 @@ if(!localStorage.length) {
 }
 
 jQuery(document).ready(function($) {
+  if(!window.localStorage) {
+    $("body").html("<h1>NO LOCAL STORAGE<h1>");
+    return;
+  }
+  
   var img, msg, xhr;
 
   //alert("ready");
@@ -102,6 +106,9 @@ jQuery(document).ready(function($) {
       
       $("<pre class='brush: xml'></pre>").appendTo("#showsource").text(localStorage.page);
       $("<pre class='brush: js'></pre>").appendTo("#showjs").text(localStorage.js);
+
+      // Load the script after we have added the pre
+      $.getScript('https://bartonphillips.net/js/syntaxhighlighter.js');
 
       // Check for warnings
 
@@ -143,9 +150,7 @@ jQuery(document).ready(function($) {
       // Now get the HTML source code of this page
 
       $.ajax({
-        url: "localstorage.html",
-        cache: false,
-        dataType: 'text', // if not text the script will be executed.
+        url: "localstorage.php?page=source", //"localstorage.html",
         success: function(data) {
                localStorage.page = data;
                $("<pre class='brush: xml'></pre>").appendTo("#showsource").text(localStorage.page);
@@ -179,28 +184,37 @@ jQuery(document).ready(function($) {
   
     // window.location = "view-source:" + window.location.href;
 
-    $("#source").toggle(function() {
-      $(this).text("Hide HTML Source");
-      $("#showsource").show();
-    }, function() {
-      $(this).text("Show HTML Source");
-      $("#showsource").hide();
+    $("#source").on("click", function() {
+      if(!this.flag) {
+        $(this).text("Hide HTML Source");
+        $("#showsource").show();
+      } else {
+        $(this).text("Show HTML Source");
+        $("#showsource").hide();
+      }
+      this.flag = !this.flag;
     });
 
-    $("#jssource").toggle(function() {
-      $(this).text("Hide JS Source");
-      $("#showjs").show();
-    }, function() {
-      $(this).text("Show JS Source");
-      $("#showjs").hide();
+    $("#jssource").on("click",function() {
+      if(!this.flag) {
+        $(this).text("Hide JS Source");
+        $("#showjs").show();
+      } else {
+        $(this).text("Show JS Source");
+        $("#showjs").hide();
+      }
+      this.flag = !this.flag;
     });
   
-    $("#reload").click(function() {
+    $("#reload").on("click", function() {
       localStorage.clear();
       location.reload(); // = "localstorage.html";
     });
 
     $("body > pre").addClass("brush: js");
+
+    // Load the script after we have added the pre
+    $.getScript('https://bartonphillips.net/js/syntaxhighlighter.js');
   }
   // ********************************************
 });
@@ -208,7 +222,7 @@ jQuery(document).ready(function($) {
 // Display the size of the image at various stages
 // Everything needs to be loaded before we can display this.
 
-$(window).load(function() {
+$(window).on("load", function() {
   $("#size").html("original image width*height size: " +
                   localStorage.orgsize +
                   "<br>filesize: " +

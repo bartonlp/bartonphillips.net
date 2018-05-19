@@ -157,6 +157,7 @@ jQuery(document).ready(function($) {
       type: 'post',
       success: function(data) {
         console.log(data);
+        $("#TrackerCount").html("Tracker every " + time/1000 + " sec.<br>");
         setTimeout(runtimer, time)
       },
       error: function(err) {

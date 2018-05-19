@@ -8,8 +8,8 @@
 */
 @font-face {
   font-family: liberation;
-  src: url(https://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.woff),
-    url(https://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.ttf);
+  src: url("https://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.woff"),
+    url("https://bartonphillips.net/fonts/allnatural/truetype/liberation/LiberationSans-Regular.ttf");
   font-weight: normal;
   font-style: normal;
 }
@@ -18,11 +18,11 @@
 
 @font-face {
   font-family: 'icomoon';
-  src: url(https://bartonphillips.net/fonts/icomoon.eot);
-  src: url(https://bartonphillips.net/fonts/icomoon.woff) format('woff'),
-    url(https://bartonphillips.net/fonts/icomoon.eot) format('embedded-opentype'),
-    url(https://bartonphillips.net/fonts/icomoon.ttf) format('truetype'),
-    url(https://bartonphillips.net/fonts/icomoon.svg) format('svg');
+  src: url("https://bartonphillips.net/fonts/icomoon.eot");
+  src: url("https://bartonphillips.net/fonts/icomoon.woff") format('woff'),
+    url("https://bartonphillips.net/fonts/icomoon.eot") format('embedded-opentype'),
+    url("https://bartonphillips.net/fonts/icomoon.ttf") format('truetype'),
+    url("https://bartonphillips.net/fonts/icomoon.svg") format('svg');
   font-weight: normal;
   font-style: normal;
 }

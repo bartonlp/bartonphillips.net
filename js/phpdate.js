@@ -83,8 +83,8 @@ function phpdate( format, dt, options ) {
 }
 
 // BLP 2018-03-15 -- make 'date' an alias for 'phpdate'
-
-const date = phpdate;
+// Old version of IE do not understand 'const' so use ver.
+var date = phpdate;
 
 // run the actual phpdate function, bypass options and cache
 var _compiledFormats = {};
