@@ -8,15 +8,15 @@ if(window.localStorage && !localStorage.length) {
 
   var image = new Image;
   var d = new Date(); 
-  image.src = "https://bartonphillips.net/images/CIMG0020.JPG?_="+d.getTime(); // do not cache
   // This is NEEDED to be able to do a toDataUrl() on an image that is
   // not on our site!
   image.crossOrigin = "Anonymous";
+  image.src = "https://bartonphillips.net/images/CIMG0020.JPG?_="+d.getTime(); // do not cache
   
   // Wait till the image is fully loaded which may be after READY
   // above.
 
-  $(image).load(function() {
+  $(image).on('load', function() {
     localStorage.orgsize = this.width * this.height;
 
     var ratio = 500 / this.width;
