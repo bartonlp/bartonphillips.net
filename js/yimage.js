@@ -47,7 +47,7 @@ function bannershow() {
   }
     
   var image = new Image;
-  image.src = bannerImages[binx++];
+  image.src = "https://www.bartonlp.com/" +bannerImages[binx++];
   $(image).load(function() {
     console.log(image.src);
     $("#show img").attr('src', image.src);
