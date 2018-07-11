@@ -6,7 +6,7 @@
     "className": "SiteClass",
     "copyright": "Barton L. Phillips",
     "author": "Barton L. Phillips, mailto:bartonphillips@gmail.com",
-    "address": "Williamson, North Carolina",
+    "address": "Goldsboro, North Carolina",
     "headFile": "/var/www/bartonlp/includes/head.i.php",
     "footerFile": "/var/www/bartonlp/includes/footer.i.php",
     "noTrack": true,
