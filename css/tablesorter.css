@@ -3,7 +3,7 @@
   has way too much other stuff.
   I updated tablesort from 'github.com/christianbach/tablesorter' today.
   But the 'themes' directory css does not work well with my stuff.
-  Table sorter. This works with the jQuery tablesorter plug in in 'https://bartonphillips.net/js'.
+  Table sorter. This works with the jQuery tablesorter plugin in 'https://bartonphillips.net/js'.
   I also have the up/down images in 'https://bartonphillips.net/images'.
 */
 table.tablesorter thead tr .header {

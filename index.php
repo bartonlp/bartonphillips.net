@@ -4,7 +4,9 @@ ErrorClass::setNoEmailErrs(true);
 ErrorClass::setDevelopment(true);
 $S = new $_site->className($_site);
 
-$h->title = "bartonphillips.net";
+$ip = $_SERVER['REMOTE_ADDR'];
+
+$h->title = "bartonphillips.net: $ip";
 $h->banner = "<h1>This Server is Only for Serving Content to My Sites<br>Please Go Away</h1>";
 $h->css =<<<EOF
   <style>

@@ -9,5 +9,7 @@ mysqldump --user=root --no-data --password=bartonl411 barton 2>/dev/null > $dir/
 mysqldump --user=root --add-drop-table --password=bartonl411 barton 2>/dev/null >$dir/$filename
 gzip $dir/$filename
 
-echo "bkupdb.sh for bartonphillipsnet Done"
+find $dir -atime +28 -type f -exec rm '{}' \;
+
+#echo "bkupdb.sh for bartonphillipsnet Done"
 

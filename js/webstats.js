@@ -1,11 +1,10 @@
-/* webstats.js for http://www.bartonphillips.com/webstats.php */
+/* webstats.js for http://www.bartonphillips.com/webstats.php et all*/
 
 jQuery(document).ready(function($) {
   var path = document.location.pathname;
   var directory = path.substring(path.indexOf('/'), path.lastIndexOf('/'));
-
-  //var directory = "https://www.bartonphillips.com";
-
+  //console.log("directory: " + directory);
+  
   function getcountry() {
     var ip = $("#tracker tr td:first-child");
     var ar = new Array;
@@ -23,7 +22,6 @@ jQuery(document).ready(function($) {
       data: {list: ar},
       success: function(co) {
         var com = JSON.parse(co);
-
         ip.each(function(i) {
           ip = $(this).text();
           co = com[ip];
@@ -195,7 +193,7 @@ jQuery(document).ready(function($) {
     // "123.123.123.123,12.3.4.4" or just a single entry. This is
     // because $S->myUrl can now be an array and therefore $S->myIp can
     // be either a string or an array. The Javascript variable myIp is
-    // made from $S->myIp which is an array by doing $myIp = implode(',',
+    // made from $S->myIp, which is an array, by doing $myIp = implode(',',
     // $S->myIP) and then in webstats.php adding it as a Javascript
     // varible.
     
@@ -372,15 +370,8 @@ jQuery(document).ready(function($) {
 //  var site = "ALL";
   
   var selectIt = "Get site: <select name='site'>"+
-                 "<option>Applitec</option>"+
                  "<option>Bartonlp</option>"+
                  "<option>Bartonphillips</option>"+
-                 "<option>Conejoskiclub</option>"+
-                 "<option>Endpolio</option>"+
-                 "<option>GranbyRotary</option>"+
-                 "<option>Messiah</option>"+
-                 "<option>Puppiesnmore</option>"+
-                 "<option>Weewx</option>"+
                  "<option>ALL</option>"+
                  "</select>&nbsp;&nbsp;"+
                  "<button id='mysite' type='submit'>Submit</button>";
@@ -445,7 +436,7 @@ jQuery(document).ready(function($) {
         data: {page: 'curl', ip: ip},
         type: "POST",
         success: function(data) {
-          //console.log(data);
+          console.log(data);
           // For mobile devices there is NO ctrKey! so we don't
           // need to worry about position fixed not working!
 

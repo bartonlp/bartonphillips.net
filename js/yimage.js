@@ -1,6 +1,8 @@
-/* For the image slideshow at the top of index.php
- *  This uses glob.proxy.php on www.bartonphillips.dyndns.org that is
- *  rpi
+// BLP 2021-03-10 -- As far as I can tell this is no longer used.
+/* For the image slideshow at the top of index.php and altoroute.php
+ * homepage, index and root. It gets the images from
+ * ../bartonlp/Pictures which has only a few of the photoes that
+ * are on my Rpi.
  *  glob.proxy.php returns a list of files in the 'path' of dobanner()
  *  The bannershow() function uses the 'bannerImages' array created by
  *  dobanner().
@@ -23,7 +25,7 @@ function dobanner(path, obj) {
   let mode = obj.mode;
   
   $.ajax({
-    url: 'https://www.bartonlp.com/proxy-glob.php',
+    url: '../bartonlp/proxy-glob.php',
     type: 'get',
     data: {path: path, recursive: recursive, size: size, mode: mode},
     success: function(data) {
@@ -47,7 +49,7 @@ function bannershow() {
   }
     
   var image = new Image;
-  image.src = "https://www.bartonlp.com/" +bannerImages[binx++];
+  image.src = "../bartonlp/" +bannerImages[binx++];
   $(image).load(function() {
     console.log(image.src);
     $("#show img").attr('src', image.src);

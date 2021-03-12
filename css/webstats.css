@@ -126,8 +126,12 @@ div {
   color: pink;
 }
 /* 4=lasttime */
-#logagent td:nth-child(4) {
-  width: 10rem;
+#logagent td:nth-of-type(4) {
+        width: 8rem;
+}
+#logagent td:nth-of-type(2) {
+        width: 50rem;
+        overflow-wrap: anywhere;
 }
 /* make all tablesorterr icoms bigger */
 table .header {
@@ -143,4 +147,11 @@ table .header {
 }
 .red { color: red; }
         
-        
+@media (max-width: 500px) {
+        #logagent th:nth-of-type(3) {
+                overflow-wrap: anywhere;
+        }
+        #logagent td:nth-of-type(3) {
+                width: 2%;
+        }
+}
