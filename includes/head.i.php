@@ -12,12 +12,9 @@ return <<<EOF
   <meta name="keywords"
     content="cookieless domain"/>
   <meta name=viewport content="width=device-width, initial-scale=1">
-  <link rel="canonical" href="http://www.bartonphillips.com">
+  <link rel="canonical" href="https://www.bartonphillips.com">
   <!-- CSS -->
   <link rel="stylesheet" href="https://bartonphillips.net/css/blp.css">
-  <!-- css is not css but a link to tracker via .htaccess RewriteRule. -->
-  <link rel="stylesheet" href="/csstest.css?id=$this->LAST_ID" title="blp test">
-
   {$arg['link']}
   <!-- Custom Scripts -->
 {$arg['extra']}

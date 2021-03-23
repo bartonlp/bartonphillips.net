@@ -11,24 +11,29 @@ jQuery(document).ready(function($) {
 
     ip.each(function() {
       var ipval = $(this).text();
+      // remove dups. If ipval is not in the ar array add it once.
       if(!ar[ipval]) {
         ar[ipval] = 1;
       }
     });
-    ar = JSON.stringify(Object.keys(ar));
+
+    // we have made ipval true so we do not have duplicate
+    
+    ar = JSON.stringify(Object.keys(ar)); // get the key which is ipval and make a string like '["123.123.123.123", "..."', ...]'
 
     $.ajax(directory+'/webstats-ajax.php', {
       type: 'post',
       data: {list: ar},
       success: function(co) {
-        var com = JSON.parse(co);
-        ip.each(function(i) {
+        var com = JSON.parse(co); // com is an array of countries by ip.
+        ip.each(function(i) { // ip is the first td. We look at each td.
           ip = $(this).text();
           co = com[ip];
           //console.log(co);
 
-          $(this).html("<span class='co-ip'>"+ip+"</span><br><div class='country'>"+co+
-                       "</div>");
+          // We make co-ip for the ip and country for co.
+          
+          $(this).html("<span class='co-ip'>"+ip+"</span><br><div class='country'>"+co+"</div>");
         });
       },
       error: function(err) {
@@ -36,6 +41,7 @@ jQuery(document).ready(function($) {
       }
     });
   }
+  
   // For 'tracker'
   
   function hideIt(f) {
@@ -128,13 +134,19 @@ jQuery(document).ready(function($) {
     return s;
   }
 
-  var flags = {all: false, webmaster: false, bots: false};
+  var flags = {all: false, webmaster: false, bots: false, ip6: true};
 
   // Set up tablesorter
-  
-  $("#logip, #logagent, #counter, #counter2, #robots2").tablesorter()
-      .addClass('tablesorter'); // attach class tablesorter to all except our counter
+  /*
+  $("#logip, #logagent, #counter, #counter2, #robots, #robots2").tablesorter()
+    .addClass('tablesorter'); // attach class tablesorter to all except our counter
+  */
 
+  $("#logip, #logagent, #counter, #counter2, #robots, #robots2").tablesorter({
+    theme: 'blue',
+    sortList: [[0][1]]
+  }); //.addClass('tablesorter');
+  
   // Add two special tablesorter functions: hex and strnum
   
   $.tablesorter.addParser({
@@ -163,18 +175,18 @@ jQuery(document).ready(function($) {
   // Set up analysis tables for tablesorter
   
   $("#os1, #os2, #browser1, #browser2")
-      .tablesorter({ headers: { 1: {sorter: 'strnum'}, 2: {sorter: false}, 3: {sorter: false}}, sortList: [[1,1]]})
-      .addClass('tablesorter');
+      .tablesorter({ headers: { 1: {sorter: 'strnum'}, 2: {sorter: false}, 3: {sorter: false}}, sortList: [[1,1]]});
+  //.addClass('tablesorter');
 
   // Set up tracker for tablesorter
   
-  $("#tracker").tablesorter({headers: {6: {sorter: 'hex'}}});
+  $("#tracker").tablesorter({theme: 'blue', headers: {6: {sorter: 'hex'}}});
 
   // Set up robots for tablesorter
   
   $("#robots").tablesorter({headers: {3: {sorter: 'hex'}}});
  
-  $("#tracker, #robots").addClass('tablesorter');
+  //$("#tracker, #robots").addClass('tablesorter');
 
   // Function to do all the stuff for tracker when it is Ajaxed in
   
@@ -216,15 +228,16 @@ jQuery(document).ready(function($) {
 
   // Put a couple of buttons before the tracker table
 
-  $("#tracker").before("<p>Ctrl Click on IP to <span id='ip'>Show Only ip</span>.<br>"+
-                       "Alt Click on IP to <span class='red'>Show http://ipinfo.io info</span><br>"+
-                       "Double Click on Page to <span id='page'>Show Only page</span>.<br>"+
+  $("#tracker").parent().before("<p class='desktop'>Ctrl Click on the 'ip' items to <span id='ip'>Show Only ip</span>.<br>"+
+                       "Alt Click on the 'ip' items to <span class='red'>Show http://ipinfo.io info</span><br>"+
+                       "Double Click on the 'page' items to <span id='page'>Show Only page</span>.<br>"+
+                       "Click on the 'js' items to see human readable info.<br>"+
                        "Average stay time: <span id='average'></span> (times over two hours are discarded.)</p>"+
                        "<button id='webmaster'>Show webmaster</button>"+
                        "<button id='bots'>Show bots</button>"+
                        "<button id='all'>Show All</button><br>"+
                        "<button id='update'>Update Fields</button>"+
-                       "<button id='ip6only'>Show only IPV6</button>"                       
+                       "<button id='ip6only'>Hide IPV6</button>"                       
                       );
 
   // Do this after the 'average' id is set.
@@ -259,12 +272,21 @@ jQuery(document).ready(function($) {
   // Ip6only
   
   $("#ip6only").on("click", function(e) {
-    $("#tracker tbody tr").hide();
     $("#tracker tbody tr td:nth-child(1)").each(function(i, v) {
       if($(this).text().match(/:/) != null ) {
-        $(this).parent().show();
+        if(flags.ip6 === true) {
+          $(this).parent().show();
+        } else {
+          $(this).parent().hide();
+        }
       }
     });
+    if(flags.ip6 === false) {
+      $("#ip6only").text("Hide IPV6");
+    } else {
+      $("#ip6only").text("Show IPV6")
+    }
+    flags.ip6 = !flags.ip6;
   });
   
   // ShowHideBots clicked
@@ -309,58 +331,62 @@ jQuery(document).ready(function($) {
                }
              }
            },
-          error: function(err) {
-             console.log(err);
-           }
+      error: function(err) {
+        console.log(err);
+      }
     });
   });
 
-  // Second field (url) dbl clicked
+  // Second field 'page' dbl clicked
 
-  var flag1;
+  $("body").on('dblclick', '#tracker td:nth-child(2)', function() { // This is 'page'
+    if(flags.page) { // if true
+      flags.page = false;
 
-  $("body").on('dblclick', '#tracker tbody td:nth-child(2)', function() {
-    if(flag1) {
-      flags.ip = false;
-      $(".ip").removeClass("ip").hide();
+      $("#tracker tr").removeClass('page');
+
       for(var f in flags) {
         if(flags[f] == true) {
           $("."+f).show();
         }
       }
       $(".normal").show();
-      msg = "Show Only ip";
+      msg = "Show Only Page";
     } else {
-      var ip = $(this).text();
-      $("#tracker tbody tr td:nth-child(2)").each(function(i, v) {
-        if($(v).text() == ip) {
-          $(v).parent().addClass('ip');
+      flags.page = true;
+      let page = $(this).text();
+      $("#tracker td:nth-child(2)").each(function(i, v) {
+        if($(v).text() == page) {
+          $(v).parent().addClass('page');
         }
       });
-      flags.ip = true;
-      $("#tracker tbody tr").not(".ip").hide();
-      msg = "Show All ip";
+      $("#tracker tr").not(".page").hide();
+      msg = "Show All Page";
     }
-    $("#ip").text(msg);
-    flag1 = !flag1;
+    $("#page").text(msg);
   });
 
   // The robots tables doesn't need to be deligated.
   
-  $("#robots").before("<p>Double Click the Agents row to <span id='showhide'>Show Only</span> Agent</p>");
+  $("#robots").parent().before("<p class='desktop'>Double Click the 'agent' items to <span class='botsshowhide'>Show Only</span> Agent<br>" +
+                      "Click the 'bots' items for human readable info.</p>");
+  $("#robots2").parent().before("<p class='desktop'>Double Click the 'agent' items to <span class='botsshowhide'>Show Only</span> Agent</p>");
+  
+  $("#robots td:nth-child(2), #robots2 td:nth-child(2)").on("dblclick", function() {
+    let tr = $(this).closest('table').find('tr');
+    let showhide = $(this).closest('table').prev().find('.botsshowhide');
 
-  $("#robots td:nth-child(2)").on("dblclick", function() {
     if(!this.flag) {
-      var agent = $(this).text();
-      $("#robots td:nth-child(2)").each(function(i, v) {
-        if($(v).text() != agent) {
-          $(this).parent().hide();
+      let agent = $(this).text();
+      tr.each(function(i, v) {
+        if($("td:nth-of-type(2)", v).text() != agent) {
+          $(v).hide();
         }
       });
-      $('#showhide').text("Show All");
+      showhide.text("Show All");
     } else {
-      $("#robots tr").show();
-      $('#showhide').text("Show Only");
+      tr.show();
+      showhide.text("Show Only");
     }
     this.flag = !this.flag;
   });
@@ -380,9 +406,9 @@ jQuery(document).ready(function($) {
     $("#siteanalysis").html("<p>Showing "+site+"</p>"+selectIt);
   }
 
-  // A click anywhere will remove #FindBot which is used for the bots
-  // info and for the isJavaScript 'human' info and ipinfo.io. There can only be one
-  // of these Id's at a time.
+  // A click anywhere will remove #FindBot which is used for the bots,
+  // for the isJavaScript 'human' and ipinfo.io.
+  // There can only be one of these Id's at a time.
   
   $("body").on("click", function(e) {
     $("#FindBot").remove();
@@ -393,44 +419,42 @@ jQuery(document).ready(function($) {
   // Looks for altKey and does http://ipinfo.io via curl to get info on
   // ip.
 
-  var flag0;
-
   $("#logagent, #tracker, #robots, #robots2").on("click", "td:first-child", function(e) {
     if(e.ctrlKey) {
+      console.log("delegateTarget.id: " + e.delegateTarget.id);
+      
       if(e.delegateTarget.id == 'tracker') {
-        if(flag0) {
+        if(flags.ip) {
           flags.ip = false;
-          $(".page").removeClass("page").hide();
+          $(".ip").removeClass("ip").hide();
           for(var f in flags) {
             if(flags[f] == true) {
               $("."+f).show();
             }
           }
           $(".normal").show();
-          msg = "Show Only page";
+          msg = "Show Only ID";
         } else {
-          var page = $(this).text();
-          $("#tracker tbody tr td:first-child").each(function(i, v) {
-            if($(v).text() == page) {
-              $(v).parent().addClass('page');
+          flags.ip = true;
+          let ip = $(this).text();
+          $("#tracker td:first-child").each(function(i, v) {
+            if($(v).text() == ip) {
+              $(v).parent().addClass('ip');
             }
           });
-          flags.ip = true;
-          $("#tracker tbody tr").not(".page").hide();
-          msg = "Show All page";
+          $("#tracker tbody tr").not(".ip").hide();
+          msg = "Show All ID";
         }
-        $("#page").text(msg);
+        $("#ip").text(msg);
         flag0 = !flag0;
         return;
       }
     }
-        
+
+    let ip = $(".co-ip", this).text();
+    let ypos = e.pageY;
+    
     if(e.altKey) { // Alt key?
-      var ip = $(this).html();
-      ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
-
-      var ypos = e.pageY;
-
       $.ajax({
         url: directory+"/webstats-ajax.php",
         data: {page: 'curl', ip: ip},
@@ -450,21 +474,13 @@ jQuery(document).ready(function($) {
         }
       });
     } else { // No alt.
-      var ip = $(this).html();
-      ip = ip.match(/^<span class=.*?>(.*?)<\/span>/)[1];
-      var bottom = $(this).offset()['top'] + $(this).height();
-      var ypos = e.pageY;
+      let bottom = $(this).offset()['top'] + $(this).height();
 
       $.ajax({
         url: directory+"/webstats-ajax.php",
         data: {page: 'findbot', ip: ip},
         type: "POST",
         success: function(data) {
-          //console.log(data);
-
-          // For mobile devices there is NO ctrKey! so we don't
-          // need to worry about position fixed not working!
-
           $("#FindBot").remove();
           $("<div id='FindBot' style='position: fixed;top: 10px; "+
               "background-color: white; border: 5px solid black;padding: 10px'>"+
@@ -488,7 +504,7 @@ jQuery(document).ready(function($) {
   // Popup a human version of 'isJavaScript'
 
   $("body").on("click", "#tracker td:nth-child(7), #robots td:nth-child(4)", function(e) {
-    var js = parseInt($(this).text(), 16),
+    let js = parseInt($(this).text(), 16),
     human, h = '', ypos, xpos;
 
     // The td is in a tr which in in a tbody, so table is three
@@ -512,7 +528,7 @@ jQuery(document).ready(function($) {
     if(js == 0) {
       h = 'curl';
     } else {
-      for(var [k, v] of Object.entries(human)) {
+      for(let [k, v] of Object.entries(human)) {
         h += (js & k) ? v + "<br>" : '';
       }
     }

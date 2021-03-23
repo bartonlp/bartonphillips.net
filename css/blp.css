@@ -82,8 +82,8 @@ ul {
   color: var(--blpHitcntrColor);
 }
 /* for BIG screens */
-@media (min-width: 1800px) {
+@media (min-width: 1600px) {
   html {
-    font-size: calc(24px + .4vw);
+    font-size: calc(22px + .4vw);
   }
 }

@@ -10,9 +10,9 @@
     "nodb": true,
     "noTrack": true,
     "myUri": "https://bartonphillips.net/myUri.json",
-    "headFile": "/var/www/bartonphillipsnet/includes/head.i.php",
-    "bannerFile": "/var/www/bartonphillipsnet/includes/banner.i.php",
-    "footerFile": "/var/www/bartonphillipsnet/includes/footer.i.php",
+    "headFile": "includes/head.i.php",
+    "bannerFile": "includes/banner.i.php",
+    "footerFile": "includes/footer.i.php",
     "EMAILADDRESS": "bartonphillips@gmail.com",
     "EMAILRETURN": "bartonphillips@gmail.com",
     "EMAILFROM": "webmaster@bartonlp.com"

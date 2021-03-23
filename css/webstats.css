@@ -1,129 +1,141 @@
-/* for webstats-new.php */
+/*
+  For webstats.php. It lives in tysonweb and is sym linked to others
+  BLP 2021-03-22 -- added @media for hover and pointer to figure out what is a smartphone
+  Also moved stuff from the analysis.php to here.
+  BLP 2021-03-15 -- remove relative from mail.
+*/
 
 main {
-  width: 100%;
-  position: relative;
+        width: 100%;
 }
 button {
-  -webkit-border-radius: .5rem;
-  -moz-border-radius: .5rem;
-  border-radius: .5rem;
-  font-size: 1.2em;
-  margin-bottom: .5rem;
+        border-radius: .5rem;
+        font-size: 1.2em;
+        margin-bottom: .5rem;
 }
 /* The country of the ip */
 .country {
-  border: 1px solid black;
-  padding: .3rem;
-  background-color: #8dbdd8;
+        border: 1px solid black;
+        padding: .3rem;
+        background-color: #8dbdd8;
 }
 /* The value in table 1 */
 .blpip {
-  color: red;
+        color: red;
 }
 /* No New Data found in table */
 .noNewData {
-  color: red;
+        color: red;
 }
 /* Hourly update messages */
 .h-update {
-  color: pink;
+        color: pink;
 }
 /* The rows with my ip address */
 .blp-row {
-  color: red;
+        color: red;
+}
+/* container for logagent, tracker, bots, bots2 */
+.scrolling {
+        height: 800px;
+        border: 1px solid black;
+        overflow: auto;
 }
 th, td {
-  padding: .5rem;
+        padding: .5rem;
 }
 /* page */
 #counter td:first-child {
-  word-break: break-all;
-  width: 40rem;
+        word-break: break-all;
+        width: 40rem;
 }
 /* page */
 #counter2 td:first-child {
-  word-break: break-all;
-  width: 40rem;
+        word-break: break-all;
+        width: 40rem;
 }
 /* all to left */
 #daycount * {
-  text-align: right;
+        text-align: right;
+        font-size: .9rem;
 }
 #tracker {
-  width: 100%;
+        width: 100%;
 }
 /* first-child=ip */
 #tracker td:first-child:hover {
-  cursor: pointer;
+        cursor: pointer;
 }
 /* 1=ip */
 #tracker td:first-child {
-  width: 10rem;
+        width: 10rem;
 }
 /* 2=page */
 #tracker td:nth-child(2):hover {
-  cursor: pointer;
+        cursor: pointer;
 }
 /* 2=page */
 #tracker td:nth-child(2) {
-  width: 25rem;
-  word-break: break-all;
+        width: 25rem;
+        word-break: break-all;
 }
 /* 3=agent */
 #tracker td:nth-child(3) {
-  width: 40rem;
-  word-break: break-all;
+        width: 40rem;
+        word-break: break-all;
 }
 /* 4=starttime, 5=endtime */
 #tracker td:nth-child(4), #tracker td:nth-child(5) {
-  width: 10rem;
+        width: 10rem;
 }
 /* 6=difftime */
 #tracker td:nth-child(6) {
-  width: 5rem;
+        width: 5rem;
 }
 /* last=js */
 #tracker td:nth-child(7) {
-  width: 1rem;
+        width: 1rem;
 }
 #tracker td:nth-child(8) {
         width: 10rem;
         word-break: break-all;
 }
 div {
-  padding: .5rem 0;
+        padding: .5rem 0;
 }
 #robots {
-  width: 100%;
+        width: 100%;
 }
 #robots td {
-  width: 5rem;
+        width: 5rem;
 }
 /* 2=agent */
 #robots td:nth-child(2) {
-  font-size: .7em;
-  width: 20rem;
-  word-break: break-all;
+        font-size: .7em;
+        width: 20rem;
+        word-break: break-all;
 }
 /* 3=bots */
 #robots td:nth-child(3) {
-  width: 1rem;
+        width: 1rem;
 }
 #robots2 {
-  width: 100%;
+        width: 100%;
 }
 #robots2 td:first-child {
-  word-break: break-all;
-  width: 10rem;
+        word-break: break-all;
+        width: 10rem;
 }
 #robots2 td:nth-child(2) {
-  font-size: .7em;
-  word-break: break-all;
-  width: 40rem;
+        font-size: .7em;
+        word-break: break-all;
+        width: 40rem;
 }
 #showhide {
-  color: pink;
+        color: pink;
+}
+.botsshowhide {
+        color: pink;
 }
 /* 4=lasttime */
 #logagent td:nth-of-type(4) {
@@ -135,23 +147,70 @@ div {
 }
 /* make all tablesorterr icoms bigger */
 table .header {
-  background-size: 1.2rem;
+        background-size: 1.2rem;
 }
 #ip, #page {
-  color: red;
+        color: red;
+}
+.red { color: red; }
+
+/* For Analysis */
+.pure-table-striped tr:nth-child(2n-1) td {
+        background-color: inherit;
+}
+.pure-table-striped tbody {
+        background-color: #e0e0e0;
+}
+.pure-table-striped tbody tr:nth-child(2n+2) td {
+        background-color: pink;
+}
+.pure-table thead {
+        background-color: yellow;
+}
+#os1, #os2, #browser1, #browser2 {
+        font-size: 1rem;
 }
 /* make the tablesorter icons bigger */
 #os1 thead th:first-child, #os2 thead th:first-child,
 #browser1 thead th:first-child, #browser2 thead th:first-child {
-  padding: .5rem 2rem .5rem 2rem;
+        padding: .5rem 2rem .5rem 2rem;
 }
-.red { color: red; }
-        
-@media (max-width: 500px) {
+#os1 td:nth-child(2), #browser1 td:nth-child(2),
+#os2 td:nth-child(2), #browser2 td:nth-child(2),
+#os1 td:nth-child(3), #browser1 td:nth-child(3),
+#os2 td:nth-child(3), #browser2 td:nth-child(3),
+#os1 td:nth-child(4), #browser1 td:nth-child(4),
+#os2 td:nth-child(4), #browser2 td:nth-child(4) {
+        text-align: right;
+}
+.AlignTop {
+        vertical-align: top;
+}
+.pure-table thead {
+        vertical-align: middle;
+}
+.HeaderRow th {
+        padding: 20px 10px;
+}
+/* End Analysis */
+
+@media (max-height: 800px) {
+        .scrolling {
+                height: 450px;
+        }
+}
+@media (max-width: 600px) {
         #logagent th:nth-of-type(3) {
                 overflow-wrap: anywhere;
         }
         #logagent td:nth-of-type(3) {
                 width: 2%;
+        }
+}
+/* BLP 2021-03-22 -- */
+/* try hover and pointer. Seems to work on an iPhone with Chrome and Safari */
+@media (hover: none) and (pointer: coarse) {
+        .desktop {
+                display: none;
         }
 }
