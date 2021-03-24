@@ -1,4 +1,6 @@
 /* webstats.js for http://www.bartonphillips.com/webstats.php et all*/
+// BLP 2021-03-24 -- see comments this date.
+// BLP 2016-11-27 -- see comments this date.
 
 jQuery(document).ready(function($) {
   var path = document.location.pathname;
@@ -302,6 +304,8 @@ jQuery(document).ready(function($) {
   });
 
   // Update the tracker info.
+  // BLP 2021-03-24 -- thesite and myIp are set in a script in
+  // webstats.php
   
   $("#update").on("click", function() {
     $.ajax({
@@ -392,19 +396,7 @@ jQuery(document).ready(function($) {
   });
 
   // For analysis. Replace the <form ..> stuff with this.
-  
-//  var site = "ALL";
-  
-  var selectIt = "Get site: <select name='site'>"+
-                 "<option>Bartonlp</option>"+
-                 "<option>Bartonphillips</option>"+
-                 "<option>ALL</option>"+
-                 "</select>&nbsp;&nbsp;"+
-                 "<button id='mysite' type='submit'>Submit</button>";
-
-  if(typeof site != 'undefined') {
-    $("#siteanalysis").html("<p>Showing "+site+"</p>"+selectIt);
-  }
+  // BLP 2021-03-24 -- removed form replacement stuff
 
   // A click anywhere will remove #FindBot which is used for the bots,
   // for the isJavaScript 'human' and ipinfo.io.
