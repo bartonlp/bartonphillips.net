@@ -4,4 +4,4 @@ modules/
 Archive/
 server/
 tablesorter-master/
-
+*.asv#

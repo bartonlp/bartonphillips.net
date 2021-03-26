@@ -1,14 +1,10 @@
-// BLP 2014-03-06 -- track user activity
+// Track user activity
+// Goes hand in hand with tracker.php
+// BLP 2021-03-26 -- get lastId from the <head> section
 
 'use strict';
 
-// Kluge! For weewx only. LocalPath is defined in the head.i.php file
-// as '/weewx'. Otherwise LocalPath is always 'undefined' and we set
-// it to ''.
-
-if(typeof LocalPath == 'undefined') {
-  var LocalPath = '';
-}
+var lastId;
 
 // Post a AjaxMsg. Local function
 
@@ -27,27 +23,18 @@ function postAjaxMsg(msg) {
   });             
 }
 
-// Some of the bartonlp.com banner.i.php files have not been modified
-// to use 'logo' and still use 'blpimg' and have the head.i.php still
-// setting 'blpimg' in a script. BUT that should be OK as if there is
-// NO 'logo' nothing happens. I should probably fix this at some point.
-// BLP 2016-11-27 -- I think this is pretty much fixed at this point.
-
 jQuery(document).ready(function($) {
-  console.log("LocalPath: " +LocalPath);
-
-  // Now if LocalPath is null we get 'tracker.php...' without a leading
-  // '/'
-  $("#logo").attr('src', LocalPath +"tracker.php?page=script&id="+lastId);
+  $("#logo").attr('src', "tracker.php?page=script&id="+lastId);
 });
 
 // The rest of this is for everybody!
 
 (function($) {
-  console.log("lastId: " + lastId);
-  
-  var trackerUrl = LocalPath + "tracker.php";
-  var beaconUrl = LocalPath + "beacon.php";
+  lastId = $("script[data-lastid]").attr("data-lastid");
+  $("script[data-lastid]").before('<link rel="stylesheet" href="/csstest-' + lastId + '.css" title-"blp test">');
+
+  var trackerUrl = "tracker.php";
+  var beaconUrl =  "beacon.php";
   
   // 'start' is done weather or not 'load' happens.
 
