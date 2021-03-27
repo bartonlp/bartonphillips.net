@@ -210,6 +210,17 @@ jQuery(document).ready(function($) {
     // made from $S->myIp, which is an array, by doing $myIp = implode(',',
     // $S->myIP) and then in webstats.php adding it as a Javascript
     // varible.
+
+    $("#logagent tbody td:nth-child(1)").each(function(i, v) {
+      if(myIp.indexOf($(v).text()) !== -1) {
+        $(v).css("color", "red");
+      }
+    });
+
+    $("#logagent tbody td:nth-child(2)").each(function(i, v) {
+      v = $(v);
+      v.html((v.html().replaceAll(/</g, "&lt;")).replaceAll(/>/g, "&gt;"));
+    });
     
     $("#tracker tbody td:nth-child(1) span.co-ip").each(function(i, v) {
       if(myIp.indexOf($(v).text()) !== -1) {
