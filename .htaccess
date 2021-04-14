@@ -3,8 +3,8 @@ Options -Indexes
 Header set Access-Control-Allow-Origin "*"
 Header set Access-Control-Expose-Headers: Content-Length
 
-order allow,deny
-allow from all
+Order Allow,Deny
+Allow from All
 
 SetEnv SITELOAD /var/www/vendor/bartonlp/site-class/includes
 SetEnv SITELOADNAME /var/www/vendor/bartonlp/site-class/includes/siteload.php
@@ -14,21 +14,17 @@ FileETag None
 Header unset ETag
 
 # BEGIN EXPIRES
-<IfModule mod_expires.c>
-  ExpiresActive On
-<Files *.php>
-  ExpiresByType text/html A0
-</Files>
-  ExpiresDefault "access plus 10 days"
-  ExpiresByType text/css A0
-  ExpiresByType text/plain A0
-  ExpiresByType image/gif "access plus 1 month"
-  ExpiresByType image/png "access plus 1 month"
-  ExpiresByType image/jpeg "access plus 1 month"
-  ExpiresByType application/x-javascript A0
-  ExpiresByType application/javascript A0 
-  ExpiresByType application/x-icon "access plus 1 year"
-</IfModule>
+ExpiresActive On
+ExpiresDefault "access plus 10 days"
+ExpiresByType text/html A0
+ExpiresByType text/plain A0
+ExpiresByType application/x-javascript A0
+ExpiresByType application/javascript A0 
+ExpiresByType text/css "access plus 1 month"
+ExpiresByType image/gif "access plus 1 month"
+ExpiresByType image/png "access plus 1 month"
+ExpiresByType image/jpeg "access plus 1 month"
+ExpiresByType application/x-icon "access plus 1 year"
 # END EXPIRES
 
 # BEGIN NO Cookies for static items
