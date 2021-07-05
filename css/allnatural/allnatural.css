@@ -197,7 +197,7 @@ header .phone {
   color: red;
   margin-left: 5px; /*1rem;*/
 }
-header ul:first-of-type {
+#bignavbar ul {
   display: inline-flex;
   justify-content: space-between;
   list-style-type: none;
@@ -206,17 +206,14 @@ header ul:first-of-type {
   margin-left: 5px; /*1rem;*/
   font-size: .8rem;
 }
-header ul:first-of-type >li {
+#bignavbar ul >li {
   background: url('https://bartonphillips.net/images/header-bg.png') right top no-repeat;
   background-size: 3px; /*.1rem;*/
 }
-header ul:first-of-type >li:last-of-type {
+#bignavbar ul >li:last-of-type {
   background-image: none;
 }
-/*header a {
-  text-decoration: none;
-}*/
-header ul:first-of-type li a, .dropbtn {
+#bignavbar ul li a, .dropbtn {
   display: block;
   z-index: 100;
   color: black;
@@ -228,7 +225,7 @@ header ul:first-of-type li a, .dropbtn {
 Home | Services | Info | Contact
 I want Home and Contact to turn red when hovered over but not Services and Info
 */
-header ul:first-of-type >li:hover >a:hover {
+#bignavbar ul >li:hover >a:hover {
   color: red;
 }
 /* Here I want the sub menues of Services and Info to turn red when they are hovered over */
@@ -342,23 +339,32 @@ textarea {
   font-size: 1rem;
   padding: 0 .1rem;
 }
+.center { text-align: center; }
+
 /* Media queries */
-@media (max-width: 1275px) {
-  html {
-    font-size: 20px;
-  }
-}
-@media (max-width: 1050px) {
+/* hover and pointer seem to work on most browsers */
+@media (hover: none) and (pointer: coarse) {
   #header ul:first-of-type {
     display: none;
   }
   #smallnavbar {
     display: inline-block;
   }
-  #header ul:first-of-type >li {
-    background-image: none;
+}
+/* Even if we can hover and the pointer is fine we still need to use the smallnavbar under 800px */
+@media (hover: hover) and (pointer: fine) and (max-width: 1050px) {
+  #bignavbar {
+        display: none;
   }
-}        
+  #smallnavbar {
+    display: inline-block;
+  }
+}
+@media (max-width: 1275px) {
+  html {
+    font-size: 20px;
+  }
+}
 @media (max-width: 760px) {
   html {
     font-size: 16px;

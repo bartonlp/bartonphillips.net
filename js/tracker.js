@@ -1,5 +1,6 @@
 // Track user activity
 // Goes hand in hand with tracker.php
+// BLP 2021-06-05 -- new logic
 // BLP 2021-03-26 -- get lastId from the <head> section
 
 'use strict';
@@ -23,20 +24,36 @@ function postAjaxMsg(msg) {
   });             
 }
 
+// BLP 2021-06-05 -- get the image from image logo's data-image
+// attribute. Then set the src attribute to the 'lastId' and the
+// 'image' from logo.
+
 jQuery(document).ready(function($) {
-  $("#logo").attr('src', "tracker.php?page=script&id="+lastId);
+  // logo is in banner.i.php and it is now fully instantiated. We got
+  // lastId from below via the script's data-lastid attribute.
+  
+  let image = $("#logo").attr("data-image");
+  $("#logo").attr('src', "https://bartonphillips.net/tracker.php?page=script&id="+lastId+"&image="+image);
 });
 
 // The rest of this is for everybody!
 
 (function($) {
-  lastId = $("script[data-lastid]").attr("data-lastid");
-  $("script[data-lastid]").before('<link rel="stylesheet" href="/csstest-' + lastId + '.css" title-"blp test">');
-
-  var trackerUrl = "tracker.php";
-  var beaconUrl =  "beacon.php";
+  // BLP 2021-06-05 -- We get the lastId from the script's data-lastid attribute.
+  // Then we add the css link just before the script.
   
-  // 'start' is done weather or not 'load' happens.
+  lastId = $("script[data-lastid]").attr("data-lastid");
+  $("script[data-lastid]").before('<link rel="stylesheet" href="csstest-' + lastId + '.css" title-"blp test">');
+
+  // BLP 2021-06-05 -- 
+  // Now tracker.php and beacon.php are at bartonphillips.net
+  
+  var trackerUrl = "https://bartonphillips.net/tracker.php";
+  var beaconUrl =  "https://bartonphillips.net/beacon.php";
+
+  // 'start' is done weather or not 'load' happens. As long as
+  // javascript works. Otherwise we should get information from the
+  // image in the noscript section of banner.i.php
 
   $.ajax({
     url: trackerUrl,
@@ -49,57 +66,13 @@ jQuery(document).ready(function($) {
       console.log(err);
     }
   });
-  
-  $(window).on("load", function(e) {
-    $.ajax({
-      url: trackerUrl,
-      data: {page: 'load', 'id': lastId},
-      type: 'post',
-      success: function(data) {
-        console.log(data);
-      },
-      error: function(err) {
-        console.log(err);
-      }
-    });
-  });
 
-  $(window).on('beforeunload ',function() {
+  $(window).on("load beforeunload unload pagehide", function(e) {
+    var type = e.type;
     $.ajax({
       url: trackerUrl,
-      data: {page: 'beforeunload', id: lastId },
+      data: {page: type, 'id': lastId},
       type: 'post',
-      async: false,
-      success: function(data) {
-        console.log(data);
-      },
-      error: function(err) {
-        console.log(err);
-      }
-    });
-  });
-  
-  $(window).on("unload", function(e) {
-    $.ajax({
-      url: trackerUrl,
-      data: {page: 'unload', id: lastId },
-      type: 'post',
-      async: false,
-      success: function(data) {
-        console.log(data);
-      },
-      error: function(err) {
-        console.log(err);
-      }
-    });
-  });
-
-  $(window).on("pagehide", function(e) {
-    $.ajax({
-      url: trackerUrl,
-      data: {page: 'pagehide', id: lastId },
-      type: 'post',
-      async: false,
       success: function(data) {
         console.log(data);
       },
@@ -112,16 +85,23 @@ jQuery(document).ready(function($) {
   // We will use beacon also
 
   if(navigator.sendBeacon) {
-    $(window).on("pagehide", function() {
-      navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'which': 1}));
-    });
-
-    $(window).on("unload", function() {
-      navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'which': 2}));
-    });
-
-    $(window).on('beforeunload ',function() {
-      navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'which': 4}));    
+    $(window).on("pagehide unload beforeunload", function(e) {
+      let which;
+      
+      switch(e.type) {
+        case 'pagehide':
+          which = 1;
+          break;
+        case 'unload':
+          which = 2;
+          break;
+        case 'beforeunload':
+          which = 4;
+          break;
+      }
+      console.log("Which: " + which + ", type: " + e.type);
+      
+      navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'type': e.type, 'which': which}));
     });
   } else {
     var msg = "NEW: Beacon NOT SUPPORTED";

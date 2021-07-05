@@ -7,7 +7,16 @@
     "copyright": "Barton L. Phillips",
     "author": "Barton L. Phillips, mailto:bartonphillips@gmail.com",
     "address": "New Bern, North Carolina",
-    "nodb": true,
+//    "nodb": true,
+    "masterdb": "barton",
+    "dbinfo": {
+      "host": "localhost",
+      "user": "barton",
+      "password": "7098653",
+      "database": "barton",
+      "engine": "mysqli"
+    },
+    "trackerImg1": "/images/blp-image.png", // /image/.. will get the image from bartonphillips.net.
     "myUri": "https://bartonphillips.net/myUri.json",
     "headFile": "includes/head.i.php",
     "bannerFile": "includes/banner.i.php",

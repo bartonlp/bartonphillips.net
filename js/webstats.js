@@ -23,7 +23,7 @@ jQuery(document).ready(function($) {
     
     ar = JSON.stringify(Object.keys(ar)); // get the key which is ipval and make a string like '["123.123.123.123", "..."', ...]'
 
-    $.ajax(directory+'/webstats-ajax.php', {
+    $.ajax('https://bartonphillips.net/webstats-ajax.php', {
       type: 'post',
       data: {list: ar},
       success: function(co) {

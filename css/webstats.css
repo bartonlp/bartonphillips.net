@@ -27,10 +27,6 @@ button {
 .noNewData {
         color: red;
 }
-/* Hourly update messages */
-.h-update {
-        color: pink;
-}
 /* The rows with my ip address */
 .blp-row {
         color: red;
@@ -44,12 +40,10 @@ button {
 th, td {
         padding: .5rem;
 }
-/* page */
 #counter td:first-child {
         word-break: break-all;
         width: 40rem;
 }
-/* page */
 #counter2 td:first-child {
         word-break: break-all;
         width: 40rem;
@@ -205,12 +199,5 @@ table .header {
         }
         #logagent td:nth-of-type(3) {
                 width: 2%;
-        }
-}
-/* BLP 2021-03-22 -- */
-/* try hover and pointer. Seems to work on an iPhone with Chrome and Safari */
-@media (hover: none) and (pointer: coarse) {
-        .desktop {
-                display: none;
         }
 }

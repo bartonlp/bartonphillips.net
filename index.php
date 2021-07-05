@@ -29,7 +29,7 @@ list($top, $footer) = $S->getPageTopBottom($h);
 echo <<<EOF
 $top
 <div id="form">
-<form action="https://www.bartonlp.org/bartonlp/showmarkdown.php" method="post">
+<form action="https://www.bartonphillips.com/showmarkdown.php" method="post">
 <input type='hidden' name='filename' value="https://bartonphillips.net/README.md">
 <input type='hidden' name='type' value="GitHub">
 <input type='submit' value="View the README.md file">
