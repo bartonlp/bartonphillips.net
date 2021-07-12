@@ -43,7 +43,7 @@ jQuery(document).ready(function($) {
   // Then we add the css link just before the script.
   
   lastId = $("script[data-lastid]").attr("data-lastid");
-  $("script[data-lastid]").before('<link rel="stylesheet" href="csstest-' + lastId + '.css" title-"blp test">');
+  $("script[data-lastid]").before('<link rel="stylesheet" href="/csstest-' + lastId + '.css" title-"blp test">');
 
   // BLP 2021-06-05 -- 
   // Now tracker.php and beacon.php are at bartonphillips.net

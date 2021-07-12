@@ -186,6 +186,7 @@ EOF;
   "where site='$S->siteName' order by lasttime desc";
 
   $tbl = <<<EOF
+<div class="scrolling">
 <table id="counter" border="1">
 <thead>
 <tr><th>Page</th><th>Real</th><th>Bots</th><th>Lasttime</th></tr>
@@ -214,6 +215,7 @@ EOF;
     $tbl .= <<<EOF
 <tbody>
 </table>
+</div>
 EOF;
   } else {
     list($tbl) = $T->maketable($sql, array('attr'=>array('border'=>'1', 'id'=>'counter')));
@@ -232,7 +234,9 @@ EOF;
 <a href="#table5">Next</a>
 <h4>Showing $S->siteName grand TOTAL hits since last reset $reset for pages viewed today</h4>
 <p>'real' is the number of non-bots and 'bots' is the number of robots.</p>
+<div class="scrolling">
 $tbl
+</div>
 EOF;
 
   $today = date("Y-m-d");
