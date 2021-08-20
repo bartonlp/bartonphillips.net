@@ -10,15 +10,6 @@ $_site = require_once(getenv("SITELOADNAME"));
 ErrorClass::setDevelopment(true);
 $S = new $_site->className($_site);
 
-if($S->siteName == "Tysonweb") {
-  // Add a link to a private password protected location
-  $tyson = <<<EOF
-<p>
-  <a href = "admin/webst.php">Web Statistics For The Tyson Group</a>
-</p>
-EOF;
-}
-
 // check for subdomain. This doesn't need to be rigorous as we will Never have a multiple
 // subdomain like en.test.domain.com. At most we might have www. or mpc.
 
@@ -40,7 +31,7 @@ $copyright = isset($S->copyright) ? $S->copyright : (isset($S->siteName) ? date(
              date("Y") . " " . get_class($S));
 
 $h->title = "About This Web Site and Server";
-$h->banner = "<h2>About This Web Site and Server</h2>";
+$h->banner = "<h2 class='center'>About This Web Site and Server</h2>";
 $h->css = <<<EOF
   <style>
 img { border: 0; }
@@ -108,7 +99,7 @@ $top
   
 	<p>This site is hosted at
     <a href="https://www.digitalocean.com">
-		  <img	src="https://bartonphillips.net/images/aboutsite/digitalocean.jpg"
+		  <img src="https://bartonphillips.net/images/aboutsite/digitalocean.jpg"
 		    alt="DigitalOcean">
 		</a>
   </p>
@@ -151,7 +142,7 @@ $top
     </a>
 	</p>
 </div>
-$tyson
+<p><a href="webstats.php?blp=8653">Web Statistics for $S->siteName</a></p>
 </div>
 $footer
 EOF;

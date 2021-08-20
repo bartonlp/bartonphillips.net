@@ -1,5 +1,5 @@
 <?php
-// All sites do a Symlink to tysonweb/ for webstats.php. The symlink is needed because we need to
+// All sites do a Symlink to ../bartonphillipsnet for webstats.php. The symlink is needed because we need to
 // get the mysitemap.json for the specific website.
 // The css is at https://bartonphillips.net/css/webstats.css
 // BLP 2021-06-08 -- Moved webstats.ajax.php to bartonphillipsnet/
@@ -18,16 +18,19 @@ if(isset($_POST['submit'])) {
 
   switch($siteName) {
     case 'Allnatural': 
-      header("Location: https://www.allnaturalcleaningcompany.com/webstats.php");
+      header("Location: https://www.allnaturalcleaningcompany.com/webstats.php?blp=8653");
       break;
     case 'BartonlpOrg':
-      header("Location: https://www.bartonlp.org/webstats.php");
+      header("Location: https://www.bartonlp.org/webstats.php?blp=8653");
       break;
     case 'Bartonphillips':
-      header("Location: https://www.bartonphillips.com/webstats.php");
+      header("Location: https://www.bartonphillips.com/webstats.php?blp=8653");
       break;
     case 'Tysonweb':
-      header("Location: https://www.newbern-nc.info/webstats.php");
+      header("Location: https://www.newbern-nc.info/webstats.php?blp=8653");
+      break;
+    case 'Newbernzig':
+      header("Location: http://www.newbernzig.com/webstats.php?blp=8653");
       break;
     default:
       echo "OPS something went wrong: siteName: $siteName";
@@ -103,9 +106,7 @@ EOF;
 
 $h->title = "Web Statistics";
 
-$h->banner = "";
-$S->mainTitle = "";
-$S->maintitle = "<h1 id='maintitle' class='center'>Web Stats For <b>$S->siteName</b></h1>";
+$h->banner = "<h1 id='maintitle' class='center'>Web Stats For <b>$S->siteName</b></h1>";
 
 list($S->top, $S->footer) = $S->getPageTopBottom($h);
 
@@ -466,6 +467,7 @@ EOF;
     <option>BartonlpOrg</option>
     <option>Bartonphillips</option>
     <option>Tysonweb</option>
+    <option>Newbernzig</option>
   </select>
 
   <button type="submit" name='submit'>Submit</button>
@@ -497,7 +499,7 @@ EOF;
   
   $ret = <<<EOF
 $S->top
-$S->maintitle
+<div id="content">
 $errMsg
 $form
 <main>
@@ -558,6 +560,7 @@ $analysis
 </div>
 <hr>
 </main>
+</div>
 $S->footer
 EOF;
 

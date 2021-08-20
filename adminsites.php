@@ -7,8 +7,7 @@ return <<<EOF
 <section id='adminstuff'>
 <h2>Admin</h2>
 <ul>
-<li><a target="_blank" href="https://www.bartonphillips.com/webstats.php?blp=$blp">General Webstats</a></li>
-<li><a target="_blank" href="https://www.newbern-nc.info/webstats.php">Tysonweb Webstats</a></li>
+<li><a target="_blank" href="https://www.bartonphillips.com/webstats.php?blp=8653">Webstats</a></li>
 <li><a target="_blank" href="https://www.bartonphillips.com/gitstatus.php">GitStatus$GIT[0]$GIT[1]</a></li>
 <li><a target="_blank" href="http://www.bartonphillips.dyndns.org:8080">Rpi</a></li>
 <li><a target="_blank" href="https://www.bartonphillips.org">Bartonphillips.org</a></li>

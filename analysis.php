@@ -79,6 +79,8 @@ button {
   </style>
 EOF;
 
+  $h->banner = "<h1 id='analysis-info'>Analysis Information$for</h1>";
+
   list($top, $footer) = $S->getPageTopBottom($h);
 
   $site = empty($_POST['site']) ? 'ALL' : $_POST['site'];
@@ -87,8 +89,9 @@ EOF;
 
   echo <<<EOF
 $top
+<div id="content">
 $analysis
-<hr>
+</div>
 $footer
 EOF;
   exit();
@@ -311,6 +314,7 @@ EOF;
       <option>Bartonphillips</option>
       <option>BartonOrg</option>
       <option>Tysonweb</option>
+      <option>Newbernzig</option>
       <option>ALL</option>
     </select>
 
@@ -328,7 +332,6 @@ EOF;
   // BLP 2021-03-24 -- removed extranious divs where pure stuff was.
   
   $analysis = <<<EOF
-<h2 id="analysis-info">Analysis Information$for</h2>
 <p class="h-update">Last updated $creationDate.</p>
 $form
 <p>These tables show the number and percentage of Operating Systems and Browsers.<br>

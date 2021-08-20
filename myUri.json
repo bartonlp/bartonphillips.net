@@ -1,6 +1,7 @@
+// This is a special json file because we allow comments. See SiteClass.
 {
   "myUri": [
-            "72.47.162.110",
+            "bartonphillips.dyndns.org", // HOME
             "bartonlp.org"
   ]
 }
