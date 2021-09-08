@@ -1,4 +1,6 @@
 <?php
+// BLP 2021-08-22 -- Changed the name of the file to goto.php to try to reduce the number of
+// instances of proxy being used to goto porn sites.
 // BLP 2021-03-10 -- Proxy by passes all of the tracker.php and tracker.js logic. It writes a
 // special string into the 'site' fields ($S->siteName . "Proxy") to identify this behavior.
 // This is a proxy for the gitHub and others. It takes the query string and logs both counter2 and
@@ -17,10 +19,10 @@ function checkUser($S) {
   if(!$c) {
     echo "<h1>Go to our <a href='https://www.bartonphillips.com'>Home Page</a> or just Go Way.</h1>";
     $ref = ($_SERVER['HTTP_REFERER'] ?? "NO REFERED");
-    error_log("PROXY-GO_AWAY: $ref, siteName: $S->siteName" . ", query: $query, agent: $S->agent, ip: $S->ip");
+    error_log("GOTO-GO_AWAY: $ref, siteName: $S->siteName" . ", query: $query, agent: $S->agent, ip: $S->ip");
     exit();
   } else {
-    error_log("PROXY-OK_$S->ip - query: $query, agent: $S->agent, ip: $S->ip");
+    error_log("GOTO-OK_$S->ip - query: $query, agent: $S->agent, ip: $S->ip");
   }
   return $query;
 };

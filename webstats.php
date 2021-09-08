@@ -180,7 +180,13 @@ EOF;
 $tbl
 EOF;
 
-  // Here 'count' is total number of hits so count-realcnt is the number of Bots.
+  // BLP 2021-08-20 -- 
+  // Here 'count' is total number of hits (bots and real) so count-realcnt is the number of Bots.
+  // 'realcnt' is used in $this->hitCount which is the hit counter at the bottom of some pages.
+  // We do not count BOTS in the hitCount.
+  // Also we do NOT count me! If isMe() is true we do not count. See myUri.json and mysitemap.json.
+  // In myUri.json "/ HOME" is bartonphillips.dyndns.org. I have added the DynDns updater to my
+  // home computer's systemd so the IP address should always be the current IP at DynDns.
   
   $sql = "select filename as Page, realcnt as 'Real', (count-realcnt) as 'Bots', lasttime as LastTime ".
   "from $S->masterdb.counter ".
