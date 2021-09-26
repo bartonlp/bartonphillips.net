@@ -35,12 +35,12 @@ function Dot2LongIP($IPaddr) {
   }
 }
 
-// via file_get_contents('webstats.php?list=<iplist>
+// Ajax via list='json string of ips', like ["123.123.123.123", "..."', ...].
 // Given a list of ip addresses get a list of countries as $ar[$ip] = $name of country.
 
 if($list = $_POST['list']) {
   $S = new Database($_site);
-  $list = json_decode($list);
+  $list = json_decode($list); // turn json string backinto an array.
 
   $ar = array();
 
@@ -68,7 +68,7 @@ if($list = $_POST['list']) {
   exit();
 }
 
-// via ajax proxy for curl http://ipinfo.io/<ip>
+// Ajax via page=curl, proxy for curl http://ipinfo.io/<ip>
 
 if($_POST['page'] == 'curl') {
   $ip = $_POST['ip'];
@@ -83,7 +83,7 @@ if($_POST['page'] == 'curl') {
   exit();
 }
 
-// via ajax findbot. Search the bots table looking for all the records with ip
+// Ajax via page=findbot. Search the bots table looking for all the records with ip
 
 if($_POST['page'] == 'findbot') {
   $S = new Database($_site);
@@ -145,14 +145,14 @@ EOF;
   exit();
 }
 
-// AJAX from webstats.js
+// AJAX via page=gettrackedr. site=thesite ($S->siteName)
 // Get the info form the tracker table again.
-// NOTE this is called from /var/www/bartonphillipsnet/js/webstats.js which always uses this file
-// for its AJAX calls!! 
 
 if($_POST['page'] == 'gettracker') {
   $S = new Database($_site);
-  
+  $T = new dbTables($S);
+  $site = $_POST['site'];
+
   // Callback function for maketable()
 
   function callback1(&$row, &$desc) {
@@ -177,12 +177,6 @@ if($_POST['page'] == 'gettracker') {
     $row['difftime'] = sprintf("%u:%02u:%02u", $hr, $min, $sec);
   } // End callback
 
-  $site = $_POST['site'];
-  
-  //$ipcountry = json_decode($_POST['ipcountry'], true);
-
-  $T = new dbTables($S);
-
   $sql = "select ip, page, agent, starttime, endtime, difftime, isJavaScript as js, refid ".
          "from $S->masterdb.tracker " .
          "where site='$site' and starttime >= current_date() - interval 24 hour ". 
@@ -194,4 +188,3 @@ if($_POST['page'] == 'gettracker') {
   echo $tracker;
   exit();
 }
-

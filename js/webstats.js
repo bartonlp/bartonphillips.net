@@ -1,11 +1,17 @@
-/* webstats.js for http://www.bartonphillips.com/webstats.php et all*/
+/*
+ * webstats.js for http://www.bartonphillips.net/webstats.php.
+ * webstats.php is symlinked in each of my domains. This lets me use
+ * the mysitemap.json to configure webstats.
+*/
 // BLP 2021-03-24 -- see comments this date.
 // BLP 2016-11-27 -- see comments this date.
 
 jQuery(document).ready(function($) {
   var path = document.location.pathname;
-  var directory = path.substring(path.indexOf('/'), path.lastIndexOf('/'));
+  //var directory = path.substring(path.indexOf('/'), path.lastIndexOf('/'));
   //console.log("directory: " + directory);
+
+  var ajaxurl = 'https://bartonphillips.net/webstats-ajax.php'; // URL for all ajax calls.
   
   function getcountry() {
     var ip = $("#tracker tr td:first-child");
@@ -23,7 +29,7 @@ jQuery(document).ready(function($) {
     
     ar = JSON.stringify(Object.keys(ar)); // get the key which is ipval and make a string like '["123.123.123.123", "..."', ...]'
 
-    $.ajax('https://bartonphillips.net/webstats-ajax.php', {
+    $.ajax(ajaxurl, {
       type: 'post',
       data: {list: ar},
       success: function(co) {
@@ -203,6 +209,7 @@ jQuery(document).ready(function($) {
     });
 
     // To start Webmaster is hidden
+    // BLP 2021-09-26 -- myIp also has all of the myip table.
     // BLP 2016-11-27 -- myIp is now a string. It could be
     // "123.123.123.123,12.3.4.4" or just a single entry. This is
     // because $S->myUrl can now be an array and therefore $S->myIp can
@@ -315,12 +322,11 @@ jQuery(document).ready(function($) {
   });
 
   // Update the tracker info.
-  // BLP 2021-03-24 -- thesite and myIp are set in a script in
-  // webstats.php
+  // BLP 2021-03-24 -- thesite ($S->siteName) and myIp are set in a script in webstats.php
   
   $("#update").on("click", function() {
-    $.ajax({
-      url: directory+'/webstats-ajax.php',
+    $.ajax(ajaxurl, {
+      //url: directory+'/webstats-ajax.php',
       data: {page: 'gettracker', site: thesite},
       type: 'post',
       success: function(data) {
@@ -458,10 +464,10 @@ jQuery(document).ready(function($) {
     let ypos = e.pageY;
     
     if(e.altKey) { // Alt key?
-      $.ajax({
-        url: directory+"/webstats-ajax.php",
+      $.ajax(ajaxurl, {
+        //url: directory+"/webstats-ajax.php",
         data: {page: 'curl', ip: ip},
-        type: "POST",
+        type: "post",
         success: function(data) {
           console.log(data);
           // For mobile devices there is NO ctrKey! so we don't
@@ -479,10 +485,10 @@ jQuery(document).ready(function($) {
     } else { // No alt.
       let bottom = $(this).offset()['top'] + $(this).height();
 
-      $.ajax({
-        url: directory+"/webstats-ajax.php",
+      $.ajax(ajaxurl, {
+        //url: directory+"/webstats-ajax.php",
         data: {page: 'findbot', ip: ip},
-        type: "POST",
+        type: "post",
         success: function(data) {
           $("#FindBot").remove();
           $("<div id='FindBot' style='position: fixed;top: 10px; "+
