@@ -17,7 +17,7 @@
       "engine": "mysqli"
     },
     "trackerImg1": "/images/blp-image.png", // /image/.. will get the image from bartonphillips.net.
-    "myUri": "https://bartonphillips.net/myUri.json",
+    //"myUri": "https://bartonphillips.net/myUri.json",
     "headFile": "includes/head.i.php",
     "bannerFile": "includes/banner.i.php",
     "footerFile": "includes/footer.i.php",

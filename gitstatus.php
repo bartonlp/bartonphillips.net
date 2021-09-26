@@ -7,7 +7,7 @@ $sites = ['/vendor/bartonlp/site-class', 'allnaturalcleaningcompany', '/applitec
 
 if($site = $_POST['readme']) {
   error_log("readme: $site");
-  $ret = file_get_contents("https://bartonlp.org/bartonlp/showmarkdown.php?filename=../$site/README.md");
+  $ret = file_get_contents("https://bartonphillips.com/showmarkdown.php?filename=../$site/README.md");
 
   $ret = "data:text/html;base64," . base64_encode($ret);
   echo $ret;

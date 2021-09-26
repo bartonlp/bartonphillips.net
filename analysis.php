@@ -79,11 +79,11 @@ button {
   </style>
 EOF;
 
-  $h->banner = "<h1 id='analysis-info'>Analysis Information$for</h1>";
+$site = $_POST['site'] ?? 'ALL';
+  
+  $h->banner = "<h1 id='analysis-info'>Analysis Information for $site</h1>";
 
   list($top, $footer) = $S->getPageTopBottom($h);
-
-  $site = empty($_POST['site']) ? 'ALL' : $_POST['site'];
 
   $analysis = file_get_contents("https://bartonphillips.net/analysis/$site-analysis.i.txt");
 
@@ -204,24 +204,19 @@ function maketable($sql, $S) {
 // Main function to get analysis
 
 function getAnalysis($S, $site='ALL') {
-  $rows = [];
-  $cnt = 0;
-  $cnt2 = 0;
-
   $S->query("select myip from $S->masterdb.myip");
 
   $ips = '';
   
-  while(list($myip) = $S->fetchrow('num')) {
-    $ips .= "'$myip',"; // the ips must be surrounded by '..'
+  while([$myip] = $S->fetchrow('num')) {
+    $ips .= "'$myip',"; // the ips must be surrounded by single quotes (')
   }
   $ips = rtrim($ips, ',');
 
-  $where1 = $for = '';
+  $where1 = '';
 
   if($site && $site != 'ALL') {
     $where1 = " and site='$site'";
-    $for = " for $site";
   }
 
   // get startDate. Limit 1 will get the OLDEST date
@@ -307,12 +302,11 @@ EOF;
 <!-- If not Tysonweb give the options to view different sites -->
 <div id="siteanalysis">
   <form method="post" action="analysis.php">
-    <p>Showing $site</p>
     Get Site: 
     <select name='site'>
       <option>Allnatural</option>
       <option>Bartonphillips</option>
-      <option>BartonOrg</option>
+      <option>BartonlpOrg</option>
       <option>Tysonweb</option>
       <option>Newbernzig</option>
       <option>ALL</option>

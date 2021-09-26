@@ -1,4 +1,7 @@
-// This is a special json file because we allow comments. See SiteClass.
+// This is a special json file because we allow comments. See
+// SiteClass.
+// BLP 2021-09-21 -- We currently do not use this in any of the
+// mysitemap.json files so it is NOT USED.
 {
   "myUri": [
             "bartonphillips.dyndns.org", // HOME
