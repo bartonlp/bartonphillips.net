@@ -83,7 +83,7 @@ $h->css = <<<EOF
   box-sizing: border-box !important;
 }
 .home {
-  color: while;
+  color: white;
   background: green;
   padding: 0 5px;
 }
@@ -103,12 +103,15 @@ if(is_array($S->myIp)) {
   $myIp = $S->myIp;
 }
 
+$homeIp = gethostbyname("bartonphillips.dyndns.org");
+
 // Set up the javascript variables it needs from PHP
 
 $h->script = <<<EOF
 <script>
   var thesite = "$S->siteName";
   var myIp = "$myIp"; // $myIp has all of the data from the myip table and myUri
+  var homeIp = "$homeIp"; // my home ip
 </script>
 <!-- BLP 2021-03-24 -- this is the latest version of tablesorter -->
 <script src="https://bartonphillips.net/tablesorter-master/dist/js/jquery.tablesorter.min.js"></script>
@@ -150,9 +153,9 @@ $page = <<<EOF
 </script>
 
 <h2>From table <i>myip</i></h2>
-<p>These are the IP Addresses used by the Webmaster. When these addresses appear in the other tables they are in
-<span style="color: red">RED</span>.</p>
-<p>My home ip is in <span style="color: white; background: green; padding: 0 5px;">GREEN</span></p>
+<p>These are the IP Addresses used by the Webmaster.<br>
+When these addresses appear in the other tables they are in
+<span style="color: red">RED</span> or <span style="color: white; background: green; padding: 0 5px;">GREEN</span> if my home IP.</p>
 $tbl
 EOF;
 

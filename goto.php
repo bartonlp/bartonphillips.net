@@ -19,10 +19,10 @@ function checkUser($S) {
   if(!$c) {
     echo "<h1>Go to our <a href='https://www.bartonphillips.com'>Home Page</a> or just Go Way.</h1>";
     $ref = ($_SERVER['HTTP_REFERER'] ?? "NO REFERED");
-    error_log("GOTO-GO_AWAY: $ref, siteName: $S->siteName" . ", query: $query, agent: $S->agent, ip: $S->ip");
+    error_log("GOTO-Go-Away_$S->ip: $ref, siteName: $S->siteName" . ", query: $query, agent: $S->agent");
     exit();
   } else {
-    error_log("GOTO-OK_$S->ip - query: $query, agent: $S->agent, ip: $S->ip");
+    error_log("GOTO-OK_$S->ip - query: $query, agent: $S->agent");
   }
   return $query;
 };

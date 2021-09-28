@@ -3,6 +3,7 @@
  * webstats.php is symlinked in each of my domains. This lets me use
  * the mysitemap.json to configure webstats.
 */
+// BLP 2021-09-27 -- comment out pink ips
 // BLP 2021-03-24 -- see comments this date.
 // BLP 2016-11-27 -- see comments this date.
 
@@ -200,14 +201,15 @@ jQuery(document).ready(function($) {
   
   function dotracker() {
     // To start js = 0 is hidden
-
+/* BLP 2021-09-27 -- remove as once country is added it gets removed
+ * anyway.
     $("#tracker tbody td:nth-child(7)").each(function(i, v) {
       if($(v).text() == '0') {
         $(v).parent().addClass("all").hide();
         $(v).parent().find("span.co-ip").css("color", "pink");
       }
     });
-
+*/
     // To start Webmaster is hidden
     // BLP 2021-09-26 -- myIp also has all of the myip table.
     // BLP 2016-11-27 -- myIp is now a string. It could be
@@ -220,7 +222,11 @@ jQuery(document).ready(function($) {
 
     $("#logagent tbody td:nth-child(1)").each(function(i, v) {
       if(myIp.indexOf($(v).text()) !== -1) {
-        $(v).css("color", "red");
+        if(homeIp === ($(v).text())) {
+          $(v).css({"color": "white", "background": "green"});
+        } else {
+          $(v).css("color", "red");
+        }
       }
     });
 
@@ -231,7 +237,11 @@ jQuery(document).ready(function($) {
     
     $("#tracker tbody td:nth-child(1) span.co-ip").each(function(i, v) {
       if(myIp.indexOf($(v).text()) !== -1) {
-        $(v).parent().css("color", "red").parent().addClass("webmaster").hide();
+        if(homeIp === ($(v).text())) {
+          $(v).parent().css({ "color":"white", "background":"green"}).parent().addClass("webmaster").hide();
+        } else {
+          $(v).parent().css("color", "red").parent().addClass("webmaster").hide();
+        }
       }
     });
 
