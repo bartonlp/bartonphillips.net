@@ -196,7 +196,6 @@ $sql = "select filename as Page, realcnt as 'Real', (count-realcnt) as 'Bots', l
 "where site='$S->siteName' order by lasttime desc";
 
 $tbl = <<<EOF
-<div class="scrolling">
 <table id="counter" border="1">
 <thead>
 <tr><th>Page</th><th>Real</th><th>Bots</th><th>Lasttime</th></tr>
@@ -207,7 +206,7 @@ EOF;
 if($S->siteName == 'Tysonweb') {
   $g = glob("*.php");
 
-  $del = ['analysis.php', 'phpinfo.php']; 
+  $del = ['analysis.php', 'phpinfo.php', 'robots.php', 'sitemap.php']; 
   $S->query($sql);
 
   while([$filename, $count, $bots, $lasttime] = $S->fetchrow('num')) {
@@ -225,7 +224,6 @@ if($S->siteName == 'Tysonweb') {
   $tbl .= <<<EOF
 <tbody>
 </table>
-</div>
 EOF;
 } else {
   list($tbl) = $T->maketable($sql, array('attr'=>array('border'=>'1', 'id'=>'counter')));

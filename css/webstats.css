@@ -188,7 +188,7 @@ table .header {
 }
 /* End Analysis */
 
-@media (max-height: 800px) {
+@media (max-width: 800px) {
         .scrolling {
                 height: 450px;
         }
