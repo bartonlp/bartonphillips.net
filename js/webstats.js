@@ -3,17 +3,17 @@
  * webstats.php is symlinked in each of my domains. This lets me use
  * the mysitemap.json to configure webstats.
 */
-// BLP 2021-09-27 -- comment out pink ips
+// BLP 2021-10-25 -- Maps and geo logic moved to geo.js
 // BLP 2021-03-24 -- see comments this date.
 // BLP 2016-11-27 -- see comments this date.
 
 jQuery(document).ready(function($) {
-  var path = document.location.pathname;
-  //var directory = path.substring(path.indexOf('/'), path.lastIndexOf('/'));
-  //console.log("directory: " + directory);
+  // BLP 2021-10-24 -- Geo and maps logic
+  // Is this a mobile device?
 
+  var path = document.location.pathname;
   var ajaxurl = 'https://bartonphillips.net/webstats-ajax.php'; // URL for all ajax calls.
-  
+    
   function getcountry() {
     var ip = $("#tracker tr td:first-child");
     var ar = new Array;
@@ -200,16 +200,6 @@ jQuery(document).ready(function($) {
   // Function to do all the stuff for tracker when it is Ajaxed in
   
   function dotracker() {
-    // To start js = 0 is hidden
-/* BLP 2021-09-27 -- remove as once country is added it gets removed
- * anyway.
-    $("#tracker tbody td:nth-child(7)").each(function(i, v) {
-      if($(v).text() == '0') {
-        $(v).parent().addClass("all").hide();
-        $(v).parent().find("span.co-ip").css("color", "pink");
-      }
-    });
-*/
     // To start Webmaster is hidden
     // BLP 2021-09-26 -- myIp also has all of the myip table.
     // BLP 2016-11-27 -- myIp is now a string. It could be
@@ -421,9 +411,6 @@ jQuery(document).ready(function($) {
     }
     this.flag = !this.flag;
   });
-
-  // For analysis. Replace the <form ..> stuff with this.
-  // BLP 2021-03-24 -- removed form replacement stuff
 
   // A click anywhere will remove #FindBot which is used for the bots,
   // for the isJavaScript 'human' and ipinfo.io.

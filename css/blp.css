@@ -3,7 +3,7 @@
 
 /* This is a 'Reset' css */
 
-@import 'normalize.css';
+/* @import 'normalize.css'; */
 
 /*
 :root
@@ -87,3 +87,10 @@ ul {
     font-size: calc(22px + .4vw);
   }
 }
+
+/* BLP 2021-10-13 -- Need to add this at some point
+@media (hover: none) and (pointer: coarse) {
+}
+@media (hover: hover) and (pointer: fine) and (max-width: 1000px) {
+}
+*/

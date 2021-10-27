@@ -10,10 +10,10 @@ $S = new Database($_site);
 
 $DEBUG = false; // BLP 2021-06-30 -- added for debugging
 
-// Database (above) does not set $ip or $agent!
+// BLP 2021-10-25 -- I have fixed Database to now have ip and agent.
 
-$ip = $_SERVER['REMOTE_ADDR'];
-$agent = $_SERVER['HTTP_USER_AGENT'];
+$ip = $S->ip;
+$agent = $S->agent;
 
 // Post an ajax error message
 
@@ -251,7 +251,7 @@ if($_GET['page'] == 'script') {
 }
 
 // We put an image in the banner.i.php that looks like:
-// <img src="tracker.php?page=normal&id=$this->LAST_ID"> or something like that.
+// <img src="tracker.php?page=normal&id=$this->LAST_ID&image=$this->trackerImg2"> or something like that.
 // This is $image2 from above.
 // If this is not there this will never happen!
 

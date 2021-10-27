@@ -2,6 +2,10 @@
 // All sites do a Symlink to ../bartonphillipsnet for webstats.php. The symlink is needed because we need to
 // get the mysitemap.json for the specific website.
 // The css is at https://bartonphillips.net/css/webstats.css
+// BLP 2021-10-24 -- add Maps and geo logic like in getcookie.php
+// BLP 2021-10-22 -- See getcookie.php for info on debugging.
+// BLP 2021-10-12 -- Add geo logic
+// BLP 2021-10-10 -- bots2 don't get site.
 // BLP 2021-09-26 -- Simplify this whole thing. Remove getwebstats() and renderpage(). Now I have only one Render with an echo.
 // BLP 2021-09-20 -- get the $ip array from the myip table. Don't use $S->myUrl.
 // BLP 2021-06-08 -- Moved webstats.ajax.php to bartonphillipsnet/
@@ -47,6 +51,7 @@ if(isset($_POST['submit'])) {
 $_site = require_once(getenv("SITELOADNAME"));
 ErrorClass::setDevelopment(true);  
 $S = new $_site->className($_site);
+//vardump("S", $S);
 
 // Check for magic 'blp'. If not found check if one of my recent ips. If not justs 'Go Away'
 
@@ -79,23 +84,72 @@ EOF;
 
 $h->css = <<<EOF
 <style>
-* {
+/** {
   box-sizing: border-box !important;
-}
+}*/
 .home {
   color: white;
   background: green;
   padding: 0 5px;
 }
 body { margin: 10px; }
+#mygeo td {
+  padding: 10px;
+  cursor: pointer;
+}
+
+#geocontainer {
+  width: 500px;
+  height: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 5px solid black;
+  z-index: 20;
+}
+#showMe, #showAll {
+  border-radius: 5px;
+  color: white;
+  background: green;
+  padding: 2px;
+}
+#removemsg {
+  display: none;
+  color: white;
+  background: red;
+  border-radius: 5px;
+  padding: 2px;
+}
+#outer {
+  display: none;
+  position:
+  absolute;
+  z-index: 20;
+  padding-bottom: 30px;
+}
+@media (max-width: 850px) {
+  html { font-size: 10px; }
+  #geocontainer {
+    width: 360px;
+    height: 360px;
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  html { font-size: 10px; }
+  #resetmsg { padding-inline-start: 5px; }
+  #members td { width: 50px; };  
+  /* mygeo is the table */
+  #mygeo td {
+    padding: 2px 2px 2px 5px;
+    width: 50px;
+  }
+  /* geo is the div for the image */
+  #geocontainer {
+    width: 360px;
+    height: 360px;
+  }
+}
 </style>
 EOF;
-
-// BLP 2021-03-22 special case for Tysonweb
-
-if($S->siteName == 'Tysonweb') {
-  $h->css .= "\n<style>#robots2 td:nth-of-type(3), #robots2 th:nth-of-type(3) { display: none; }</style>";
-}
 
 if(is_array($S->myIp)) {
   $myIp = implode(",", $S->myIp);
@@ -118,11 +172,19 @@ $h->script = <<<EOF
 <script src="https://bartonphillips.net/js/webstats.js"></script>
 EOF;
 
+// BLP 2021-10-12 -- add geo logic and Maps
+if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig'])[0]) {
+  $b->script = <<<EOF
+<script src="https://bartonphillips.net/js/maps.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsfESZ7BBan6SX2qeCg3xDfzZbQLERo0U&callback=initMap&v=weekly" async></script>
+EOF;
+}
+
 $h->title = "Web Statistics";
 
 $h->banner = "<h1 id='maintitle' class='center'>Web Stats For <b>$S->siteName</b></h1>";
 
-[$top, $footer] = $S->getPageTopBottom($h);
+[$top, $footer] = $S->getPageTopBottom($h, $b);
 
 $homeip = gethostbyname("bartonphillips.dyndns.org"); // My home ip. Updated via ddclient.
  
@@ -440,8 +502,10 @@ function bots2Callback(&$row, &$desc) {
 
   $row['ip'] = "<span class='bots2-ip'>$ip</span><br>";
 }
-  
-$sql = "select ip, agent, site, which, count from $S->masterdb.bots2 ".
+
+// BLP 2021-10-10 -- remove site from select for everyone
+
+$sql = "select ip, agent, which, count from $S->masterdb.bots2 ".
 "where site='$S->siteName' and date >= current_date() - interval 24 hour order by lasttime desc";
 
 list($bots2) = $T->maketable($sql, array('callback'=>'bots2Callback',
@@ -455,10 +519,9 @@ EOF;
   
 $date = date("Y-m-d H:i:s T");
 
-// BLP 2021-03-22 special case for Tysonweb
+// BLP 2021-10-10 -- Display even for Tysonweb
 
-if($S->siteName != "Tysonweb") {
-  $form = <<<EOF
+$form = <<<EOF
 <form action="webstats.php" method="post">
   Select Site:
   <select name='site'>
@@ -472,6 +535,59 @@ if($S->siteName != "Tysonweb") {
   <button type="submit" name='submit'>Submit</button>
 </form>
 EOF;
+
+// BLP 2021-10-08 -- add geo
+
+$today = date("Y-m-d");
+
+function mygeofixup(&$row, &$rowdesc) {
+  global $today;
+
+  $me = [
+         'hFBzuVRDeIWdbhXmhZv7' => "HP",
+         'e30hJHxUeaToTAB6g4Zv' => "TAB",
+         'agvmgLtbOej09pGw27ZF' => "LAP",
+         'Z1Kx9vql4QxiMB9brOd2' => "i12",
+        ];
+  
+  foreach($me as $key=>$val) {
+    if($row['finger'] == $key) {
+      $row['finger'] .= "<span class='ME' style='color: red'> : $val</span>";
+    }
+  }
+
+  // BLP 2021-10-24 --
+  
+  if(strpos($row['lasttime'], $today) === false) {
+    $row['lasttime'] = "<span class='OLD'>{$row['lasttime']}</span>";
+  }
+
+  return false;
+}
+
+if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig'])[0] !== null) {
+  $sql = "select lat, lon, finger, created, lasttime from geo order by lasttime desc";
+  [$tbl] = $T->maketable($sql, ['callback'=>'mygeofixup', 'attr'=>['id'=>'mygeo', 'border'=>'1']]);
+
+  // BLP 2021-10-12 -- add geo logic
+  $geotbl = <<<EOF
+<h2 id="table11">From table <i>geo</i></h2>
+<a href="#analysis-info">Next</a>
+<div id="geotable">
+<div id="outer">
+<div id="geocontainer"></div>
+<button id="removemsg">Click to remove map image</button>
+</div>
+<p>Click on table row to view map.<br>
+<button id="showMe">Show Me</button>&nbsp;<button id="showAll">Show All</button>
+</p>
+$tbl
+</div>
+EOF;
+  
+  $geoTable = "<li><a href='#table11'>Goto Table: geo</a></li>";
+} else {
+  $botsnext = "<a href='#analysis-info'>Next</a>";
 }
 
 // BLP 2021-06-23 -- Only bartonphillips.com has a members table.
@@ -480,18 +596,24 @@ if($S->memberTable) {
   $sql = "select name, email, ip, agent, created, lasttime from $S->memberTable";
 
   list($tbl) = $T->maketable($sql, array('attr'=>array('id'=>'members', 'border'=>'1')));
-    
+
+  if($geotbl) {
+    $mTable = "<li><a href='#table10'>Goto Table: $S->memberTable</a></li>";
+    $botsnext = "<a href='#table10'>Next</a>";
+    $togeo = "<a href='#table11'>Next</a>";
+  } else {
+    $togeo = "<a href='#analysis-info'>Next</a>";
+  }
+  
   $mtbl = <<<EOF
 <h2 id="table10">From table <i>$S->memberTable</i></h2>
-<a href="#analysis-info">Next</a>
+$togeo
 <div id="memberstable">
 $tbl
 </div>
 EOF;
-$mTable = "<li><a href='#table10'>Goto Table: $S->memberTable</a></li>";
-$botsnext = "<a href='#table10'>Next</a>";
 } else {
-  $bptsnext = "<a href='#analysis-info'>Next</a>";
+  $botsnext = $geotbl ? "<a href='#table11'>Next</a>" : "<a href='#analysis-info'>Next</a>";
 }
 
 // Render page
@@ -512,6 +634,7 @@ $form
    <li><a href="#table8">Goto Table: bots</a></li>
    <li><a href="#table9">Goto Table: bots2</a></li>
 $mTable
+$geoTable
    <li><a href="#analysis-info">Goto Analysis Info</a></li>
 </ul>
 
@@ -554,7 +677,8 @@ $botsnext
 The 'count' field is the number of hits today.</p>
 $bots2
 $mtbl
-<div id="analysis">
+$geotbl
+<div id="analysis-info">
 <hr>
 <h2>Analusis Information for $S->siteName</h2>
 $analysis
@@ -562,7 +686,5 @@ $analysis
 <hr>
 </main>
 </div>
-footer
+$footer
 EOF;
-
-
