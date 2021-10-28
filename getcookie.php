@@ -3,9 +3,6 @@
 // This file needs to be symlinked into the local directories.
 // BLP 2021-10-26 -- add 'form' and POST logic.
 // BLP 2021-10-22 -- Added Google maps:
-// Google Maps Client ID: 349339793020-495f4uhbrml5uiit6mh9ht1po1blqcqd.apps.googleusercontent.com
-// Gooble Cloud Secret: GtxZCgh5S2XUaazrQxN962aT
-// Google Maps token key: AIzaSyAsfESZ7BBan6SX2qeCg3xDfzZbQLERo0U
 // To Remotely debug from my Tablet:
 // In the desktop browser: chrome://inspect/#devices
 // Plug the tablet into the USB port. You should see "Chrome" and each of the domains that are open on the tablet.
@@ -154,9 +151,14 @@ EOF;
 
 // This goes after footer
 
+// Get the google maps api key form a secure location. google-maps-key has Deny All
+$APIKEY = require_once("/var/www/bartonphillipsnet/google-maps-key/maps-apikey");
+
 $b->script = <<<EOF
 <script src="https://bartonphillips.net/js/maps.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsfESZ7BBan6SX2qeCg3xDfzZbQLERo0U&callback=initMap&v=weekly" async></script>
+<script
+ src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async>
+</script>
 EOF;
 
 [$top, $footer] = $S->getPageTopBottom($h, $b);

@@ -1,7 +1,8 @@
 // This is only used by getcookie.php and webstats.php
 // We do this at the bottom of the page:
+// $APIKEY = require_once("/var/www/bartonphillipsnet/google-maps-key/maps-apikey");
 // <script src="https://bartonphillips.net/js/maps.js"></script>
-// <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsfESZ7BBan6SX2qeCg3xDfzZbQLERo0U&callback=initMap&v=weekly" async></script>
+// <script src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async></script>
 
 'use strict';
 
@@ -118,4 +119,3 @@ $("#showAll").on("click", function() {
     this.showall = false;
   }
 });
-

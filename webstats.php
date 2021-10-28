@@ -174,9 +174,11 @@ EOF;
 
 // BLP 2021-10-12 -- add geo logic and Maps
 if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig'])[0]) {
+  // BLP 2021-10-27 -- Get the key from a secure location that does not have Internet access.
+  $APIKEY = require_once("/var/www/bartonphillipsnet/google-maps-key/maps-apikey");
   $b->script = <<<EOF
 <script src="https://bartonphillips.net/js/maps.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsfESZ7BBan6SX2qeCg3xDfzZbQLERo0U&callback=initMap&v=weekly" async></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async></script>
 EOF;
 }
 

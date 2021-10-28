@@ -5,3 +5,5 @@ Archive/
 server/
 tablesorter-master/
 *.asv#
+google-maps-key/
+.cache_ggshield
