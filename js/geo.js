@@ -44,7 +44,7 @@ const fpPromise = new Promise((resolve, reject) => {
   //               + '@fingerprintjs/fingerprintjs@3/dist/fp.min.js';
   document.head.appendChild(script)
 })
-.then(() => FingerprintJS.load({ token: 'QpC5rn4jiJmnt8zAxFWo'})); //, endpoint: 'https://fp.bartonphillips.com'}));
+.then(() => FingerprintJS.load({ token: FINGER_TOKEN})); //, endpoint: 'https://fp.bartonphillips.com'}));
 
 // Get the visitor identifier (fingerprint) when you need it.
 

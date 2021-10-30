@@ -152,7 +152,7 @@ EOF;
 // This goes after footer
 
 // Get the google maps api key form a secure location. google-maps-key has Deny All
-$APIKEY = require_once("/var/www/bartonphillipsnet/google-maps-key/maps-apikey");
+$APIKEY = require_once("/var/www/bartonphillipsnet/PASSWORDS/maps-apikey");
 
 $b->script = <<<EOF
 <script src="https://bartonphillips.net/js/maps.js"></script>

@@ -1,3 +1,4 @@
+// BLP 2021-10-29 -- No longer use password see note below
 {
     "siteDomain": "bartonphillips.net",
     "siteName": "Bartonphillipsnet",
@@ -7,17 +8,20 @@
     "copyright": "Barton L. Phillips",
     "author": "Barton L. Phillips, mailto:bartonphillips@gmail.com",
     "address": "New Bern, North Carolina",
-//    "nodb": true,
+    // "nodb": true,
     "masterdb": "barton",
     "dbinfo": {
       "host": "localhost",
       "user": "barton",
-      "password": "7098653",
+      /* "password": "7098653", // get database password from
+       * /var/www/bartonphillipsnet/PASSWORDS/database-password
+       * This is a secure location not visible to the internet and not
+       * saved to github.com
+       */
       "database": "barton",
       "engine": "mysqli"
     },
     "trackerImg1": "/images/blp-image.png", // /image/.. will get the image from bartonphillips.net.
-    //"myUri": "https://bartonphillips.net/myUri.json",
     "headFile": "includes/head.i.php",
     "bannerFile": "includes/banner.i.php",
     "footerFile": "includes/footer.i.php",
