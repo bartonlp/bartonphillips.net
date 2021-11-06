@@ -6,7 +6,6 @@ Header set Access-Control-Expose-Headers: Content-Length
 Order Allow,Deny
 Allow from All
 
-SetEnv SITELOAD /var/www/vendor/bartonlp/site-class/includes
 SetEnv SITELOADNAME /var/www/vendor/bartonlp/site-class/includes/siteload.php
 
 Header unset Pragma

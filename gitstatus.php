@@ -3,7 +3,7 @@
 $_site = require_once(getenv("SITELOADNAME"));
 ErrorClass::setDevelopment(true);  
 
-$sites = ['/vendor/bartonlp/site-class', 'allnaturalcleaningcompany', '/applitec', '/bartonlp', '/bartonphillips.com', '/bartonphillipsnet', '/newbernzig.com', '/tysonweb'];
+$sites = ['/vendor/bartonlp/site-class', 'allnaturalcleaningcompany', '/bartonlp', '/bartonphillips.com', '/bartonphillipsnet', '/newbernzig.com', '/tysonweb'];
 
 if($site = $_POST['readme']) {
   error_log("readme: $site");

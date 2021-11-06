@@ -2,6 +2,7 @@ analysis/
 other/
 modules/
 Archive/
+*/Archive/
 server/
 tablesorter-master/
 *.asv#
