@@ -150,8 +150,12 @@ $h->css =<<<EOF
 EOF;
 
 // This goes after footer
+// Get the google maps api key form a secure location.
+// BLP 2021-11-06 -- This key is further restricted to my domains only. See
+// https://console.cloud.google.com/google/maps-apis/overview?project=barton-1324
+// Therefore even though this file is on GitHub and the key is being leaked to the public it can
+// only be used from one of my domains!
 
-// Get the google maps api key form a secure location. google-maps-key has Deny All
 $APIKEY = require_once("/var/www/bartonphillipsnet/PASSWORDS/maps-apikey");
 
 $b->script = <<<EOF

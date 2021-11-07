@@ -1,11 +1,5 @@
-analysis/
-other/
-modules/
 Archive/
-*/Archive/
-server/
-tablesorter-master/
+analysis/
 *.asv#
-google-maps-key/
 .cache_ggshield
 PASSWORDS/

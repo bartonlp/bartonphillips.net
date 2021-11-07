@@ -1,8 +1,13 @@
+// Javascript for google maps API
+// BLP 2021-11-06 -- 
 // This is only used by getcookie.php and webstats.php
-// We do this at the bottom of the page:
+// We do this at the bottom of the above two pages:
 // $APIKEY = require_once("/var/www/bartonphillipsnet/google-maps-key/maps-apikey");
 // <script src="https://bartonphillips.net/js/maps.js"></script>
 // <script src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async></script>
+// NOTE the $APIKEY can still be seen using DevTools so we have further
+// restricted the key to our web domains. See
+// https://console.cloud.google.com/google/maps-apis/overview?project=barton-1324.
 
 'use strict';
 

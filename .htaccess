@@ -3,8 +3,7 @@ Options -Indexes
 Header set Access-Control-Allow-Origin "*"
 Header set Access-Control-Expose-Headers: Content-Length
 
-Order Allow,Deny
-Allow from All
+Require all granted
 
 SetEnv SITELOADNAME /var/www/vendor/bartonlp/site-class/includes/siteload.php
 
