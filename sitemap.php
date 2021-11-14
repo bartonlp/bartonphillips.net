@@ -39,6 +39,8 @@ list($ok) = $S->fetchrow('num');
       
 if($ok == 1) {
   try {
+    // BLP 2021-11-12 -- count is a counter and robots is set to 16 initially and updated or 32.
+    
     $S->query("insert into $S->masterdb.bots (ip, agent, count, robots, site, creation_time, lasttime) ".
                "values('$ip', '$agent', 1, 16, '$S->siteName', now(), now())");
   }  catch(Exception $e) {
@@ -51,7 +53,9 @@ if($ok == 1) {
       if(strpos($who, $S->siteName) === false) {
         $who .= ", $S->siteName";
       }
-      $S->query("update $S->masterdb.bots set robots=robots | 32, site='$who', count=count+1, lasttime=now() where ip='$ip'");
+      // BLP 2021-11-12 -- On update or in 32.
+      
+      $S->query("update $S->masterdb.bots set robots=robots|32, count=count+1, site='$who', lasttime=now() where ip='$ip'");
     } else {
       error_log("sitemap: ".print_r($e, true));
     }
@@ -66,6 +70,8 @@ $S->query("select count(*) from information_schema.tables ".
 list($ok) = $S->fetchrow('num');
       
 if($ok == 1) {
+  // BLP 2021-11-12 -- sitemap.php is 4
+  
   $S->query("insert into $S->masterdb.bots2 (ip, agent, date, site, which, count, lasttime) ".
              "values('$ip', '$agent', current_date(), '$S->siteName', 4, 1, now()) ".
              "on duplicate key update count=count+1, lasttime=now()");

@@ -1,9 +1,7 @@
-// BLP 2021-03-10 -- As far as I can tell this is no longer used.
-/* For the image slideshow at the top of index.php and altoroute.php
- * homepage, index and root. It gets the images from
- * ../bartonlp/Pictures which has only a few of the photoes that
- * are on my Rpi.
- *  glob.proxy.php returns a list of files in the 'path' of dobanner()
+// BLP 2021-11-11 -- 
+/* For the image slideshow in bartonlp.org
+ * It gets the images from a symlink at /var/www/html/Pictures which has only a few
+ * of the photoes that are on my Rpi.
  *  The bannershow() function uses the 'bannerImages' array created by
  *  dobanner().
  *  'bannershow() displayes the images in "#show"
@@ -25,7 +23,7 @@ function dobanner(path, obj) {
   let mode = obj.mode;
   
   $.ajax({
-    url: '../bartonlp/proxy-glob.php',
+    url: 'index.php',
     type: 'get',
     data: {path: path, recursive: recursive, size: size, mode: mode},
     success: function(data) {
@@ -49,7 +47,7 @@ function bannershow() {
   }
     
   var image = new Image;
-  image.src = "../bartonlp/" +bannerImages[binx++];
+  image.src = bannerImages[binx++];
   $(image).load(function() {
     console.log(image.src);
     $("#show img").attr('src', image.src);

@@ -2,6 +2,7 @@
 // All sites do a Symlink to ../bartonphillipsnet for webstats.php. The symlink is needed because we need to
 // get the mysitemap.json for the specific website.
 // The css is at https://bartonphillips.net/css/webstats.css
+// BLP 2021-11-11 -- Get me from myfingerpriints.php
 // BLP 2021-10-24 -- add Maps and geo logic like in getcookie.php
 // BLP 2021-10-22 -- See getcookie.php for info on debugging.
 // BLP 2021-10-12 -- Add geo logic
@@ -367,15 +368,15 @@ foreach($tmp as $d=>$v) {
 // Only show items that are not me.
 
 foreach($S->myIp as $v) {
-  $me .= "'" . gethostbyname($v) . "',";
+  $meIp .= "'" . gethostbyname($v) . "',";
 }
-$me = rtrim($me, ",");
+$meIp = rtrim($meIp, ",");
 
 // This screens me out.
   
 $sql = "select count(*), date(starttime) from $S->masterdb.tracker ".
 "where date(starttime)>=current_date() - interval 6 day and site='$S->siteName' and ".
-"isJavaScript & ~(0x201c) and not (isJavaScript & 0x2000) and ip not in($me) ".
+"isJavaScript & ~(0x201c) and not (isJavaScript & 0x2000) and ip not in($meIp) ".
 "group by date(starttime) order by date(starttime)";
   
 $S->query($sql);
@@ -541,17 +542,12 @@ EOF;
 // BLP 2021-10-08 -- add geo
 
 $today = date("Y-m-d");
+// BLP 2021-11-11 -- Get me
+$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
 
 function mygeofixup(&$row, &$rowdesc) {
-  global $today;
+  global $today, $me;
 
-  $me = [
-         'hFBzuVRDeIWdbhXmhZv7' => "HP",
-         'e30hJHxUeaToTAB6g4Zv' => "TAB",
-         'agvmgLtbOej09pGw27ZF' => "LAP",
-         'Z1Kx9vql4QxiMB9brOd2' => "i12",
-        ];
-  
   foreach($me as $key=>$val) {
     if($row['finger'] == $key) {
       $row['finger'] .= "<span class='ME' style='color: red'> : $val</span>";
@@ -647,17 +643,20 @@ $page
 <h2 id="table7">From table <i>tracker</i> for last 24 hours</h2>
 <a href="#table8">Next</a>
 <h4>Only Showing $S->siteName</h4>
-<p>'js' is hex. 1, 2, 32(x20), 64(x40), 128(x80), 256(x100), 512(x200) and 4096(x1000) are done by 'webstats.js'.<br>
-4, 8 and 16(x10) via an &lt;img&gt; tag in the header<br>
-16384 (x4000) var an attempt to read 'csstest.css' from the 'head.i.php' file.<br>
-1=start, 2=load, 4=script, 8=normal, 16(x10)=noscript,<br>
-32(x20)=beacon/pagehide, 64(x40)=beacon/unload, 128(x80)=beacon/beforeunload,<br>
-256(x100)=tracker/beforeunload, 512(x200)=tracker/unload, 1024(x400)=tracker/pagehide,<br>
-4096(x1000)=tracker/timer: hits once every 5 seconds via ajax.</br>
-8192(x2000)=SiteClass (PHP) determined this is a robot via analysis of the 'user agent' or scan of 'bots'.<br>
-16384(x4000)=tracker/csstest<br>
-The 'starttime' is done by SiteClass (PHP) when the file is loaded.<br>
-Rows with 'js' zero (0) are <b>curl</b> or something like <b>curl</b> (wget, lynx, etc) and are probaly really <b>ROBOTS</b>.</p>
+<div>'js' is hex.
+<ul style="margin: 0">
+<li>1, 2, 32(x20), 64(x40), 128(x80), 256(x100), 512(x200) and 4096(x1000) are done by 'webstats.js'.
+<li>4, 8 and 16(x10) via an &lt;img&gt; tag in the header
+<li>16384 (x4000) var an attempt to read 'csstest.css' from the 'head.i.php' file.
+<li>1=start, 2=load, 4=script, 8=normal, 16(x10)=noscript,
+<li>32(x20)=beacon/pagehide, 64(x40)=beacon/unload, 128(x80)=beacon/beforeunload,
+<li>256(x100)=tracker/beforeunload, 512(x200)=tracker/unload, 1024(x400)=tracker/pagehide,
+<li>4096(x1000)=tracker/timer: hits once every 5 seconds via ajax.
+<li>8192(x2000)=SiteClass (PHP) determined this is a robot via analysis of the 'user agent' or scan of 'bots'.
+<li>16384(x4000)=tracker/csstest
+</ul>
+The 'starttime' is done by SiteClass (PHP) when the file is loaded.
+Rows with 'js' zero (0) are <b>curl</b> or something like <b>curl</b> (wget, lynx, etc) and are probaly really <b>ROBOTS</b>.</div>
 
 $tracker
 <h2 id="table8">From table <i>bots</i> for Today</h2>
@@ -669,20 +668,26 @@ From 'rotots.txt': Initial Insert=1, Update= OR 2.<br>
 From 'SiteClass' scan: Initial Insert=4, Update= OR 8.<br>
 From 'Sitemap.xml': Initial Insert=16(x10), Update= OR 32(x20).<br>
 From 'tracker' cron: Inital Insert=64(x40), Update= OR 128(x80).<br>
-From CRON indicates a Zero in the 'tracker' table: 258(x100).<br>
+From CRON indicates a Zero (curl type) in the 'tracker' table: 258(x100).<br>
 So if you have a 1 you can't have a 2 and visa versa.</p>
 $bots
 <h2 id="table9">From table <i>bots2</i> for Today</h2>
 $botsnext
 <h4>Showing ALL <i>bots2</i> for today</h4>
-<p>'which' is 0 for zero in tracker, 1 for 'robots.txt', 2 for 'SiteClass', 4 for 'Sitemap.xml'.<br>
-The 'count' field is the number of hits today.</p>
+<div>The 'which' filed    
+<ul style="margin: 0">
+<li>2 for 'robots.txt'
+<li>4 for 'Sitemap.xml'
+<li>8 for 'SiteClass'
+<li>16 for tracker value 0 (curl type).
+</ul>
+The 'count' field is the number of hits today.</div>
 $bots2
 $mtbl
 $geotbl
 <div id="analysis-info">
 <hr>
-<h2>Analusis Information for $S->siteName</h2>
+<h2>Analysis Information for $S->siteName</h2>
 $analysis
 </div>
 <hr>

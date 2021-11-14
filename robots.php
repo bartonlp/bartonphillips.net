@@ -1,4 +1,7 @@
 <?php
+// BLP 2021-11-12 -- bots2 which is an ored value and robots.php is 2. Also bots is 1 onece and or
+// 2 on update.
+// value.
 // BLP 2014-09-14 -- The .htaccess file has: ReWriteRule ^robots.txt$ robots.php [L,NC]
 // This file reads the rotbots.txt file and outputs it and then gets the user agent string and
 // saves it in the bots table.
@@ -50,7 +53,7 @@ if($ok == 1) {
       if(strpos($who, $S->siteName) === false) {
         $who .= ", $S->siteName";
       }
-      $S->query("update $S->masterdb.bots set robots=robots | 2, site='$who', count=count+1, lasttime=now() ".
+      $S->query("update $S->masterdb.bots set robots=robots|2, count=count +1, site='$who', lasttime=now() ".
                  "where ip='$ip'");
     } else {
       error_log("robots: ".print_r($e, true));
@@ -66,8 +69,10 @@ $S->query("select count(*) from information_schema.tables ".
 list($ok) = $S->fetchrow('num');
 
 if($ok) {
+  // BLP 2021-11-12 -- 2 is for seen by robots.php.
+  
   $S->query("insert into $S->masterdb.bots2 (ip, agent, date, site, which, count, lasttime) ".
-             "values('$ip', '$agent', current_date(), '$S->siteName', 1, 1, now()) ".
+             "values('$ip', '$agent', current_date(), '$S->siteName', 2, 1, now()) ".
              "on duplicate key update count=count+1, lasttime=now()");
 } else {
   error_log("robots: $S->siteName bots2 does not exist in $S->masterdb database");

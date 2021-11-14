@@ -53,8 +53,8 @@ RewriteRule ^Sitemap\.xml$ sitemap.php [L,NC]
 # rewrite the address of csstest.css to tracker.php?csstest
 RewriteRule ^csstest-(.*)\.css$ tracker.php?$1&csstest [L,QSA]
 
-RewriteRule ^(\.git|other|script)/.*$ - [F,L]
-RewriteRule ^(\.gitignore|mysitemap\.json|myUrl\.json)$  - [F,L]
+RewriteRule ^(\.git|other)/.*$ - [F,L]
+RewriteRule ^(\.gitignore|mysitemap\.json)$  - [F,L]
 
 # Do compression of the followin types
 
@@ -86,4 +86,3 @@ AddOutputFilterByType DEFLATE \
   "text/vtt" \
   "text/x-component" \
   "text/xml"
- 

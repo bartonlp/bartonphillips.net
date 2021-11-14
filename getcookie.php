@@ -1,6 +1,7 @@
 <?php
 // Reset Cookie. Show the member, myip and geo tables. Show a map of geo lat/long.
 // This file needs to be symlinked into the local directories.
+// BLP 2021-11-11 -- Get me from myfingerpriints.php
 // BLP 2021-10-26 -- add 'form' and POST logic.
 // BLP 2021-10-22 -- Added Google maps:
 // To Remotely debug from my Tablet:
@@ -194,16 +195,11 @@ function myipfixup(&$row, &$rowdesc) {
 [$myip] = $T->maketable($sql, array('callback'=>'myipfixup','attr'=>array('border'=>'1', 'id'=>'myip')));
 
 $today = date("Y-m-d");
+// BLP 2021-11-11 -- Get me from myfingerpriints.php
+$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
 
 function mygeofixup(&$row, &$rowdesc) {
-  global $today;
-  
-  $me = [
-         'hFBzuVRDeIWdbhXmhZv7' => "HP",
-         'e30hJHxUeaToTAB6g4Zv' => "TAB",
-         'agvmgLtbOej09pGw27ZF' => "LAP",
-         'Z1Kx9vql4QxiMB9brOd2' => "i12",
-        ];
+  global $today, $me;
   
   foreach($me as $key=>$val) {
     if($row['finger'] == $key) {

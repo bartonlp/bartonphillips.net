@@ -16,10 +16,11 @@ var bannerImages = new Array, binx = 0;
 
 function dobanner(path, obj) {
   // obj has three members: size, recursive, mode.
-  
+
   let recursive = obj.recursive;
   let size = obj.size;
   let mode = obj.mode;
+  //console.log("obj: " +obj+", recursive: "+recursive);
 
   $.ajax({
     // Note this must be http NOT https
