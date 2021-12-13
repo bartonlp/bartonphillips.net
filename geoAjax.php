@@ -50,7 +50,7 @@ if($_POST['page'] == 'geo') {
   
   //error_log("From geoAjax: $lat, $lon, $visitor");
 
-  $sql = "select lat, lon, finger from geo where finger = '$visitor'";
+  $sql = "select lat, lon from $S->masterdb.geo where site = '$S->siteName' and finger = '$visitor'";
   $S->query($sql);
 
   // If lat and lon is the same as what we just found update
@@ -58,7 +58,7 @@ if($_POST['page'] == 'geo') {
   while([$slat, $slon] = $S->fetchrow('num')) {
     if($slat === $lat && $slon === $lon) {
       //error_log("lat and lon for $visitor exists so update lasttime");
-      $sql = "update geo set lasttime=now() where lat=$slat and lon=$slon and finger='$visitor'";
+      $sql = "update $S->masterdb.geo set lasttime=now() where lat=$slat and lon=$slon and site = '$S->siteName' and finger='$visitor'";
       $S->query($sql);
       echo "Update";
       exit();
@@ -69,7 +69,7 @@ if($_POST['page'] == 'geo') {
   
   // This is either a new visitor or the lat and lon are not the same as before. Insert.
   
-  $sql = "insert into geo (lat, lon, finger, created, lasttime) values('$lat', '$lon', '$visitor', now(), now())";
+  $sql = "insert into $S->masterdb.geo (lat, lon, finger, site, created, lasttime) values('$lat', '$lon', '$visitor', '$S->siteName', now(), now())";
   $S->query($sql);
 
   echo "Insert";

@@ -13,7 +13,7 @@
     "dbinfo": {
       "host": "localhost",
       "user": "barton",
-      /* "password": "7098653", // get database password from
+      /* Get database password from
        * /var/www/bartonphillipsnet/PASSWORDS/database-password
        * This is a secure location not visible to the internet and not
        * saved to github.com

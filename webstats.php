@@ -88,6 +88,7 @@ $h->css = <<<EOF
 /** {
   box-sizing: border-box !important;
 }*/
+tables ul { margin-top: 0; }  
 .home {
   color: white;
   background: green;
@@ -114,7 +115,6 @@ body { margin: 10px; }
   padding: 2px;
 }
 #removemsg {
-  display: none;
   color: white;
   background: red;
   border-radius: 5px;
@@ -163,6 +163,12 @@ $homeIp = gethostbyname("bartonphillips.dyndns.org");
 // Set up the javascript variables it needs from PHP
 
 $h->script = <<<EOF
+<!-- mobile for taphold -->
+<script src="https://bartonphillips.net/js/jquery.mobile.custom.js"></script>
+<!-- UI for drag and drop and touch-punch for mobile drag -->
+<script src="https://bartonphillips.net/js/jquery-ui-1.13.0.custom/jquery-ui.js"></script>
+<script src="https://bartonphillips.net/js/jquery-ui-1.13.0.custom/jquery.ui.touch-punch.js"></script>
+<link rel="stylesheet" href="https://bartonphillips.net/js/jquery-ui-1.13.0.custom/jquery-ui.css">
 <script>
   var thesite = "$S->siteName";
   var myIp = "$myIp"; // $myIp has all of the data from the myip table and myUri
@@ -215,8 +221,6 @@ $creationDate = date("Y-m-d H:i:s T");
 
 $page = <<<EOF
 <hr/>
-</script>
-
 <h2>From table <i>myip</i></h2>
 <p>These are the IP Addresses used by the Webmaster.<br>
 When these addresses appear in the other tables they are in
@@ -333,7 +337,7 @@ $page .= <<<EOF
 $tbl
 EOF;
 
-// Get the footer line
+// Get the footer line for daycounts
   
 $sql = "select sum(`real`+bots) as Count, sum(`real`) as 'Real', sum(bots) as 'Bots', ".
 "sum(visits) as Visits " .
@@ -345,10 +349,16 @@ list($Count, $Real, $Bots, $Visits) = $S->fetchrow('num');
 
 // Use 'tracker' to get the number of Visitors ie unique ip accesses.
 // BLP 2018-01-07 -- changed order by from starttime to lasttime.
-  
+// BLP 2021-11-22 -- Only show items that are not me.
+
+foreach($S->myIp as $v) {
+  $meIp .= "'" . gethostbyname($v) . "',";
+}
+$meIp = rtrim($meIp, ",");
+
 $S->query("select ip, date(lasttime) ".
 "from $S->masterdb.tracker where lasttime>=current_date() - interval 6 day ".
-"and site='$S->siteName' order by date(lasttime)");
+"and site='$S->siteName' and ip not in($meIp) order by date(lasttime)");
 
 $Visitors = 0;
 
@@ -365,14 +375,9 @@ foreach($tmp as $d=>$v) {
   $Visitors += $n;
 }
   
-// Only show items that are not me.
-
-foreach($S->myIp as $v) {
-  $meIp .= "'" . gethostbyname($v) . "',";
-}
-$meIp = rtrim($meIp, ",");
-
 // This screens me out.
+// Looking for isJavaScript that does not have these bits set (0x201c) and is not a robot.
+// Those bits are bots, script, normal and noscript.
   
 $sql = "select count(*), date(starttime) from $S->masterdb.tracker ".
 "where date(starttime)>=current_date() - interval 6 day and site='$S->siteName' and ".
@@ -391,12 +396,14 @@ while(list($cnt, $date) = $S->fetchrow('num')) {
 $ftr = "<tr><th>Totals</th><th>$Visitors</th><th>$Count</th><th>$Real</th>".
 "<th>$jsenabled</th><th>$Bots</th><th>$Visits</th></tr>";
 
-// Get the table lines
+// Get the table lines (daycounts does not count ME!)
   
-$sql = "select date as Date, 'visitors' as Visitors, `real`+bots as Count, `real` as 'Real', 'AJAX', ".
+$sql = "select date as Date, 'Visitors', `real`+bots as Count, `real` as 'Real', 'AJAX', ".
 "bots as 'Bots', visits as Visits ".
 "from $S->masterdb.daycounts where site='$S->siteName' and ".
 "lasttime >= current_date() - interval 6 day order by lasttime desc";
+
+// callback for maketable
 
 function visit(&$row, &$rowdesc) { // callback from maketable()
   global $visitors, $jsEnabled;
@@ -418,13 +425,16 @@ $page .= <<<EOF
 <a href="#table7">Next</a>
 
 <h4>Showing $S->siteName for seven days</h4>
-<p>'Visitors' is the number of distinct IP addresses (via 'tracker' table).<br>
-'Count' is the sum of 'Real' and 'Bots', the total number of HITS.<br>
-'Real' is the number of non-robots.<br>
-'AJAX' is the number of non-robots with AJAX functioning (via 'tracker' table) that are NOT Webmaster.<br>
-'Bots' is the number of robots.<br>
-'Visits' are hits outside of a 10 minutes interval.<br>
-So if you come to the site from two different IP addresses you would be two 'Visitors'.<br>
+<ul>
+<li>'Visitors' is the number of distinct IP addresses (via 'tracker' table).
+<li>'Count' is the sum of 'Real' and 'Bots', the total number of HITS.
+<li>'Real' is the number of non-robots.
+<li>'AJAX' is the number of non-robots with AJAX functioning (via 'tracker' table) that are NOT Webmaster.
+<li>'Bots' is the number of robots.
+<li>'Visits' are hits outside of a 10 minutes interval.
+</ul>
+
+<p>So if you come to the site from two different IP addresses you would be two 'Visitors'.<br>
 If you hit our site 10 times the sum of 'Real' and 'Bots' would be 10.<br>
 If you hit our site 5 time within 10 minutes you will have only one 'Visits'.<br>
 If you hit our site again after 10 minutes you would have two 'Visits'.</p>
@@ -542,29 +552,29 @@ EOF;
 // BLP 2021-10-08 -- add geo
 
 $today = date("Y-m-d");
-// BLP 2021-11-11 -- Get me
+
+// BLP 2021-11-11 -- Get me from myfingerpriints.php
 $me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
 
 function mygeofixup(&$row, &$rowdesc) {
   global $today, $me;
-
+  
   foreach($me as $key=>$val) {
     if($row['finger'] == $key) {
       $row['finger'] .= "<span class='ME' style='color: red'> : $val</span>";
     }
   }
-
-  // BLP 2021-10-24 --
   
   if(strpos($row['lasttime'], $today) === false) {
     $row['lasttime'] = "<span class='OLD'>{$row['lasttime']}</span>";
+  } else {
+    $row['lasttime'] = "<span class='TODAY'>{$row['lasttime']}</span>";
   }
-
   return false;
 }
 
 if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig'])[0] !== null) {
-  $sql = "select lat, lon, finger, created, lasttime from geo order by lasttime desc";
+  $sql = "select lat, lon, finger, created, lasttime from $S->masterdb.geo where site = '$S->siteName' order by lasttime desc";
   [$tbl] = $T->maketable($sql, ['callback'=>'mygeofixup', 'attr'=>['id'=>'mygeo', 'border'=>'1']]);
 
   // BLP 2021-10-12 -- add geo logic
@@ -576,9 +586,7 @@ if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig'])
 <div id="geocontainer"></div>
 <button id="removemsg">Click to remove map image</button>
 </div>
-<p>Click on table row to view map.<br>
-<button id="showMe">Show Me</button>&nbsp;<button id="showAll">Show All</button>
-</p>
+<p id="geomsg"></p>
 $tbl
 </div>
 EOF;
@@ -635,16 +643,13 @@ $mTable
 $geoTable
    <li><a href="#analysis-info">Goto Analysis Info</a></li>
 </ul>
-
-<div id="hourly-update">
+<tables>
 $page
-</div>
-
 <h2 id="table7">From table <i>tracker</i> for last 24 hours</h2>
 <a href="#table8">Next</a>
 <h4>Only Showing $S->siteName</h4>
 <div>'js' is hex.
-<ul style="margin: 0">
+<ul>
 <li>1, 2, 32(x20), 64(x40), 128(x80), 256(x100), 512(x200) and 4096(x1000) are done by 'webstats.js'.
 <li>4, 8 and 16(x10) via an &lt;img&gt; tag in the header
 <li>16384 (x4000) var an attempt to read 'csstest.css' from the 'head.i.php' file.
@@ -662,20 +667,22 @@ $tracker
 <h2 id="table8">From table <i>bots</i> for Today</h2>
 <a href="#table9">Next</a>
 <h4>Showing ALL <i>bots</i> for today</h4>
-<p>The 'bots' field is hex.<br>
-The 'count' field is the total count since 'created'.<br>
-From 'rotots.txt': Initial Insert=1, Update= OR 2.<br>
-From 'SiteClass' scan: Initial Insert=4, Update= OR 8.<br>
-From 'Sitemap.xml': Initial Insert=16(x10), Update= OR 32(x20).<br>
-From 'tracker' cron: Inital Insert=64(x40), Update= OR 128(x80).<br>
-From CRON indicates a Zero (curl type) in the 'tracker' table: 258(x100).<br>
-So if you have a 1 you can't have a 2 and visa versa.</p>
+<div>The 'bots' field is hex.
+<ul>
+<li>The 'count' field is the total count since 'created'.
+<li>From 'rotots.txt': Initial Insert=1, Update= OR 2.
+<li>From 'SiteClass' scan: Initial Insert=4, Update= OR 8.
+<li>From 'Sitemap.xml': Initial Insert=16(x10), Update= OR 32(x20).
+<li>From 'tracker' cron: Inital Insert=64(x40), Update= OR 128(x80).
+<li>From CRON indicates a Zero (curl type) in the 'tracker' table: 258(x100).
+<li>So if you have a 1 you can't have a 2 and visa versa.
+</ul>
 $bots
 <h2 id="table9">From table <i>bots2</i> for Today</h2>
 $botsnext
 <h4>Showing ALL <i>bots2</i> for today</h4>
 <div>The 'which' filed    
-<ul style="margin: 0">
+<ul>
 <li>2 for 'robots.txt'
 <li>4 for 'Sitemap.xml'
 <li>8 for 'SiteClass'
@@ -685,6 +692,7 @@ The 'count' field is the number of hits today.</div>
 $bots2
 $mtbl
 $geotbl
+</tables>
 <div id="analysis-info">
 <hr>
 <h2>Analysis Information for $S->siteName</h2>

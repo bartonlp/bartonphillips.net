@@ -13,6 +13,7 @@
 
 var map, marker;
 var geoAjax = "/geoAjax.php";
+var uiheight, uiwidth, uitop, uileft, resized = false;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById("geocontainer"));
@@ -25,16 +26,11 @@ function isMobile() {
   return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 }
 
-function initMap() {
-  map = new google.maps.Map(document.getElementById("geocontainer"));
-  marker = new google.maps.Marker();
+// If we have done initMap then we should check to see if this is a
+// mobile device.
 
-  // If we have done initMap then we should check to see if this is a
-  // mobile device.
-
-  if(isMobile()) {
-    $("meta[name*='viewport']").attr({"content":"width=device-width initial-scale=.7"});
-  }
+if(isMobile()) {
+  $("meta[name*='viewport']").attr({"content":"width=device-width initial-scale=.7"});
 }
 
 // Only getcookie uses reset
@@ -59,7 +55,20 @@ $(".reset").on("click", function() {
   });
 });
 
-// both webstats and getcookie use the following
+// Both webstats and getcookie use the following
+// Add the geomsg.
+
+$("#geomsg").html("Click on table row to view map.<br>" +
+                  "Ctrl-Click (or long press) on the 'finger' to see only those fingers.<br>" +
+                  "Ctrl-Click (or long press) again to show only today.<br>" +
+                  "<button id='showMe'>Show Me</button>&nbsp;<button id='showAll'>Show All except Me</button>");
+
+// Hide OLD and ME rows
+
+$(".OLD").closest("tr").hide(); // Hide OLD and
+$(".ME").closest("tr").hide(); // Hide me at start. Show only TODAY
+
+// If the row is clicked show the map
 
 $("#mygeo tbody tr").on("click", function(e) {
   let lat = parseFloat($("td:first-of-type", this).text());
@@ -79,48 +88,152 @@ $("#mygeo tbody tr").on("click", function(e) {
 
   $(this).closest("tr").css({"background-color": "green", color: "white"});
 
-  let h = $(this).offset().top + $(this).height() + 10;
-  //console.log("height: " + $(this).height() + " top: " + $(this).offset().top + " total: " + h);
+  let t = $(this).offset().top + $(this).height() + 10;
 
-  let l = isMobile() ? "25%" : "50%";
+  let h, w, l;
   
-  $("#outer").css({top: h, left: l}).show();
+  if(resized) {
+    h = uiheight;
+    w = uiwidth;
+    t = uitop;
+    l = uileft;
+  } else {
+    if(isMobile()) {
+      h = "360px";
+      w = "360px";
+      l= "25%";
+    } else {
+      h = "500px";
+      w = "500px";
+      l = "50%";
+    }
+  }
+  $("#outer").css({top: t, left: l, width: w, height: h}).show();
+});
 
-  $("#removemsg").show();
+function drag(ui) {
+  uitop = ui.position.top;
+  uileft = ui.position.left;
+  resized = true;
+}
+
+function rsize(ui) {
+  uiheight = ui.size.height;
+  uiwidth = ui.size.width;
+  uitop = ui.position.top;
+  uileft = ui.position.left;
+  resized = true;
+}
+
+$("#outer").on("resize", function(e, ui) {
+  rsize(ui);
+});
+
+$("#outer").on("drag", function(e, ui) {
+  drag(ui);
+});
+
+// Two helper functions
+
+// Make the container for geo dragagle and resizable.
+
+$("#outer").draggable();
+$("#outer").resizable();
+
+// Display finger toggle
+
+function finger(self) {
+  let finger = $(self).text();
+  $("#mygeo tbody tr").each(function() {
+    let other = $("td:nth-of-type(3)", this).text();
+    if(other != finger) {
+      $(this).hide();
+    } else {
+      $(this).show();
+    }
+  });
+  $("#outer").hide();
+};
+
+// Show only today
+
+function showtoday() {
+  $("#mygeo tbody tr").hide();
+  $(".TODAY").closest("tr").show();
+  $(".ME").closest("tr").hide();
+  let showme = $("#showMe");
+  showme[0].showme = false;
+  showme.html("Show Me");
+  let showall = $("#showAll");
+  showall[0].showall = false;
+  showall.html("Show All except Me");
+  $("#outer").hide(); // remove map
+}
+
+// End of helper functions
+
+let flag, flagShowMe, flagShowAll; // flags. To start they are undefined (false).
+
+// taphold for phones
+
+$("#mygeo tbody td:nth-of-type(3)").on("taphold", function(e) {
+  if(!flag) {
+    finger(this);
+  } else {
+    showtoday();
+  }
   e.stopPropagation();
-  return false;
+  flag = !flag;
+});
+
+// Ctrl click for desktops
+
+$("#mygeo tbody td:nth-of-type(3)").on("click", function(e) {
+  if(e.ctrlKey) {
+    if(!(flag)) {
+      finger(this);
+    } else {
+      showtoday(); // show only today. Show Me and Show All.
+    }
+    e.stopPropagation();
+    flag = !flag;
+  } else {
+    $(this).parent().trigger("click");
+  }
 });
 
 $("#removemsg").on("click", function() {
   $("#outer").hide();
-  $(this).hide();
 });
 
-$(".OLD").closest("tr").hide();
-$(".ME").closest("tr").hide(); // Hide me to start
-
 $("#showMe").on("click", function() {
-  if(!this.showit) {
+  if(!flagShowMe) {
     $(".ME").closest("tr").show();
     $("#showMe").html("Hide Me");
-    this.showit = true;
   } else {
     $(".ME").closest("tr").hide();
     $("#showMe").html("Show Me");
-    this.showit = false;
   }
+  flagShowMe = !flagShowMe;
+  $("#outer").hide();
 });
 
 $("#showAll").on("click", function() {
-  if(!this.showall) {
+  if(!flagShowAll) {
+    $(".TODAY").closest("tr").show();
     $(".OLD").closest("tr").show();
     $(".ME").closest("tr").hide();
+    flagShowMe = false;
+    $("#showMe").html("Show Me");
     $("#showAll").html("Show Today");
-    //$("#showMe").trigger("click");
-    this.showall = true;
   } else {
+    $(".TODAY").closest("tr").show();
+    $(".ME").closest("tr").hide();
     $(".OLD").closest("tr").hide();
-    $("#showAll").html("Show All");
-    this.showall = false;
+    flagShowMe = false;
+    $("#showMe").html("Show Me");
+    $("#showAll").html("Show All except Me");
   }
+  flagShowAll = !flagShowAll;
+  $("#outer").hide();
 });

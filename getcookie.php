@@ -26,6 +26,7 @@ if(isset($_POST['submit'])) {
   $siteName = $_POST['site'];
 
   // use header() to go to the loocation.
+  // This is so we use the mysitemap.json from the corresponding domain.
   
   switch($siteName) {
     case 'Bartonphillips':
@@ -39,6 +40,7 @@ if(isset($_POST['submit'])) {
       break;
     default:
       echo "OPS something went wrong: siteName: $siteName";
+      error_log("getcookie.php: Something went wrong: siteName: $siteName");
   }
   exit();
 } 
@@ -96,12 +98,12 @@ $h->css =<<<EOF
 }
 /* geo is the div for the google maps image */
 #geocontainer {
-  width: 500px;
-  height: 500px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  height: 99%;
+/*  margin-left: auto;
+  margin-right: auto; */
   border: 5px solid black;
-  z-index: 20;
+  z-index: 100;
 }
 #contain {
   grid-area: main;
@@ -113,24 +115,23 @@ $h->css =<<<EOF
   padding: 2px;
 }
 #removemsg {
-  display: none;
   color: white;
   background: red;
   border-radius: 5px;
-  padding: 2px;
+  padding: 4px;
+  margin: 2px 0 2px 2px;
+  z-index: 100;
 }
 #outer {
   display: none;
   position: absolute;
-  z-index: 20;
+  background: white;
+  z-index: 99;
   padding-bottom: 30px;
+  border: 5px solid red;
 }
 @media (max-width: 850px) {
   html { font-size: 10px; }
-  #geocontainer {
-    width: 360px;
-    height: 360px;
-  }
 }
 @media (hover: none) and (pointer: coarse) {
   html { font-size: 10px; }
@@ -140,11 +141,6 @@ $h->css =<<<EOF
   #mygeo td {
     padding: 2px 2px 2px 5px;
     width: 50px;
-  }
-  /* geo is the div for the image */
-  #geocontainer {
-    width: 360px;
-    height: 360px;
   }
 }
 </style>
@@ -160,6 +156,12 @@ EOF;
 $APIKEY = require_once("/var/www/bartonphillipsnet/PASSWORDS/maps-apikey");
 
 $b->script = <<<EOF
+<!-- mobile for taphold -->
+<script src="https://bartonphillips.net/js/jquery.mobile.custom.js"></script>
+<!-- UI for drag and drop and touch-punch for mobile drag -->
+<script src="https://bartonphillips.net/js/jquery-ui-1.13.0.custom/jquery-ui.js"></script>
+<script src="https://bartonphillips.net/js/jquery-ui-1.13.0.custom/jquery.ui.touch-punch.js"></script>
+<link rel="stylesheet" href="https://bartonphillips.net/js/jquery-ui-1.13.0.custom/jquery-ui.css">
 <script src="https://bartonphillips.net/js/maps.js"></script>
 <script
  src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async>
@@ -195,6 +197,7 @@ function myipfixup(&$row, &$rowdesc) {
 [$myip] = $T->maketable($sql, array('callback'=>'myipfixup','attr'=>array('border'=>'1', 'id'=>'myip')));
 
 $today = date("Y-m-d");
+
 // BLP 2021-11-11 -- Get me from myfingerpriints.php
 $me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
 
@@ -209,11 +212,15 @@ function mygeofixup(&$row, &$rowdesc) {
   
   if(strpos($row['lasttime'], $today) === false) {
     $row['lasttime'] = "<span class='OLD'>{$row['lasttime']}</span>";
+  } else {
+    $row['lasttime'] = "<span class='TODAY'>{$row['lasttime']}</span>";
   }
   return false;
 }
 
-$sql = "select lat, lon, finger, created, lasttime from geo order by lasttime desc";
+// So it depends on the mysitemap.json which one we are using.
+
+$sql = "select lat, lon, finger, created, lasttime from $S->masterdb.geo where site='$S->siteName' order by lasttime desc";
 [$mygeo] = $T->maketable($sql, array('callback'=>'mygeofixup', 'attr'=>array('border'=>'1', 'id'=>'mygeo')));
 
 // Get the SiteId cookie
@@ -236,9 +243,7 @@ $myip
 <div id="geocontainer"></div>
 <button id="removemsg">Click to remove map image</button>
 </div>
-<p>Click on table row to view map.<br>
-<button id="showMe">Show Me</button>&nbsp;<button id="showAll">Show All</button>
-</p>
+<p id="geomsg"></p>
 $mygeo
 EOF;
 
@@ -264,6 +269,9 @@ if(!isMe($S) && $cookieEmail !== "bartonphillips@gmail.com" && !$DEBUG) {
   $all = '';
   
   foreach($cookies as $key=>$cookie) {
+    if($key == "mytime") {
+      $cookie = date("Y-m-d H:i:s", $cookie);
+    }
     $all .= "<li><button class='reset'>Reset: <span>$key</span></button>$cookie</li>";
   }
   

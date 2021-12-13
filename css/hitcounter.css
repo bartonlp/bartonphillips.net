@@ -1,0 +1,36 @@
+/*
+  This is @import from other css modules.
+  The #hitCounter... are for the SiteClass::getCounterWigget() which can be at the bottom of the page.
+  #F5DEB3==rgb(245,222,179) is 'wheat' for the background
+  rgb(123, 16, 66) is a burgundy for the number
+*/
+
+:root {
+  --blpHitcntrBgColor: #F5DEB3;
+  --blpHitcntrBorder: 8px ridge yellow;
+  --blpHitcntrColor: rgb(123, 16, 66);
+}
+#hitCounter {
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  text-align: center;
+}
+#hitCountertbl {
+  font-size: 1em;
+  width: 0;
+  border: var(--blpHitcntrBorder); /*8px ridge yellow;*/
+  margin-left: auto;
+  margin-right: auto;
+  background-color: var(--blpHitcntrBgColor);
+}
+#hitCountertr {
+  width: 0;
+  border: var(--blpHitcntrBorder);
+  margin-left: auto;
+  margin-right: auto;
+  background-color: var(--blpHitcntrBgColor) 
+}
+#hitCounterth {
+  color: var(--blpHitcntrColor);
+}

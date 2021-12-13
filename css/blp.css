@@ -4,6 +4,7 @@
 /* This is a 'Reset' css */
 
 /* @import 'normalize.css'; */
+@import 'hitcounter.css';
 
 /*
 :root
@@ -17,11 +18,9 @@ If you have another css file with the same var but different values that will ta
   --blpHitcntrColor: rgb(123, 16, 66);
   --blpFontSize: calc(16px + .3vw);
 }
-
 @font-face {
   font-family: 'FontFace';
   src: url(../fonts/ibm-plex-otf/IBMPlexSans-Regular.otf);
-  /*url(https://bartonphillips.net/fonts/ibm-plex-otf/IBMPlexSans-Regular.otf);*/
 }
 * {
   box-sizing: border-box;
@@ -51,35 +50,6 @@ footer {
 }
 ul {
   line-height: 150%;
-}
-/*
-  The #hitCounter... are for the SiteClass::getCounterWigget() which can be at the bottom of the page.
-  #F5DEB3==rgb(245,222,179) is 'wheat' for the background
-  rgb(123, 16, 66) is a burgundy for the number
-*/  
-#hitCounter {
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
-  text-align: center;
-}
-#hitCountertbl {
-  font-size: 1em;
-  width: 0;
-  border: var(--blpHitcntrBorder); /*8px ridge yellow;*/
-  margin-left: auto;
-  margin-right: auto;
-  background-color: var(--blpHitcntrBgColor);
-}
-#hitCountertr {
-  width: 0;
-  border: var(--blpHitcntrBorder);
-  margin-left: auto;
-  margin-right: auto;
-  background-color: var(--blpHitcntrBgColor) 
-}
-#hitCounterth {
-  color: var(--blpHitcntrColor);
 }
 /* for BIG screens */
 @media (min-width: 1600px) {

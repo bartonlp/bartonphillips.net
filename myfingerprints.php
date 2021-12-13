@@ -8,6 +8,7 @@ return [
         'agvmgLtbOej09pGw27ZF' => "LAP",
         'Z1Kx9vql4QxiMB9brOd2' => "i12",
         'm2cNTf0BaASn5Z2rLrGa' => "Jana",
-        'kSQmLodejUtIv65Ff7BF' => "SAM",
+        'kSQmLodejUtIv65Ff7BF' => "SAMj320",
         'aZxrc212BRsQLrMgyMZF' => "HPFox",
+        'FPc5lLUsrf46OK6mkste' => "SAMa10e",
        ];
