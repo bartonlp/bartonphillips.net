@@ -73,24 +73,29 @@ th, td {
         width: 25rem;
         word-break: break-all;
 }
-/* 3=agent */
+/* 3=finger */
 #tracker td:nth-child(3) {
+  width: 10rem;
+}
+/* 4=agent */
+#tracker td:nth-child(4) {
         width: 40rem;
         word-break: break-all;
 }
-/* 4=starttime, 5=endtime */
-#tracker td:nth-child(4), #tracker td:nth-child(5) {
+/* 5=starttime, 6=endtime */
+#tracker td:nth-child(5), #tracker td:nth-child(6) {
         width: 10rem;
 }
-/* 6=difftime */
-#tracker td:nth-child(6) {
+/* 7=difftime */
+#tracker td:nth-child(7) {
         width: 5rem;
 }
-/* last=js */
-#tracker td:nth-child(7) {
+/* 8=js */
+#tracker td:nth-child(8) {
         width: 1rem;
 }
-#tracker td:nth-child(8) {
+/* 9=refid */
+#tracker td:nth-child(9) {
         width: 10rem;
         word-break: break-all;
 }
