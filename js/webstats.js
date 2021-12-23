@@ -7,144 +7,140 @@
 // BLP 2021-03-24 -- see comments this date.
 // BLP 2016-11-27 -- see comments this date.
 
-jQuery(document).ready(function($) {
-  // BLP 2021-10-24 -- Geo and maps logic
-  // Is this a mobile device?
+var flags = {all: false, webmaster: false, bots: false, ip6: true};
+var path = document.location.pathname;
+var ajaxurl = 'https://bartonphillips.net/webstats-ajax.php'; // URL for all ajax calls.
 
-  var path = document.location.pathname;
-  var ajaxurl = 'https://bartonphillips.net/webstats-ajax.php'; // URL for all ajax calls.
-    
-  function getcountry() {
-    var ip = $("#tracker tr td:first-child");
-    var ar = new Array;
+// For 'tracker'
 
-    ip.each(function() {
-      var ipval = $(this).text();
-      // remove dups. If ipval is not in the ar array add it once.
-      if(!ar[ipval]) {
-        ar[ipval] = 1;
-      }
-    });
-
-    // we have made ipval true so we do not have duplicate
-    
-    ar = JSON.stringify(Object.keys(ar)); // get the key which is ipval and make a string like '["123.123.123.123", "..."', ...]'
-
-    $.ajax(ajaxurl, {
-      type: 'post',
-      data: {list: ar},
-      success: function(co) {
-        var com = JSON.parse(co); // com is an array of countries by ip.
-        ip.each(function(i) { // ip is the first td. We look at each td.
-          ip = $(this).text();
-          co = com[ip];
-          //console.log(co);
-
-          // We make co-ip for the ip and country for co.
-          
-          $(this).html("<span class='co-ip'>"+ip+"</span><br><div class='country'>"+co+"</div>");
-        });
-      },
-      error: function(err) {
-        console.log("ERROR:", err);
-      }
-    });
+function hideIt(f) {
+  switch(f) {
+    case 'all':
+      $(".all, .webmaster, .bots").hide();
+      $(".normal").show();
+      $("#webmaster").text("Show webmaster");
+      $("#bots").text("Show bots");
+      break;
+    case 'webmaster': // default is don't show
+      $(".webmaster").hide();
+      break;
+    case 'bots': // true means we are showing robots
+      $('.bots').hide();
+      break;
   }
-  
-  // For 'tracker'
-  
-  function hideIt(f) {
-    switch(f) {
-      case 'all':
-        $(".all, .webmaster, .bots").hide();
-        $(".normal").show();
-        $("#webmaster").text("Show webmaster");
-        $("#bots").text("Show bots");
-        break;
-      case 'webmaster': // default is don't show
-        $(".webmaster").hide();
-        break;
-      case 'bots': // true means we are showing robots
-        $('.bots').hide();
-        break;
-    }
-    flags[f] = false;
-    var msg = "Show ";
-    $("#"+ f).text(msg + f);
-    calcAv();
-    return;
-  }   
+  flags[f] = false;
+  var msg = "Show ";
+  $("#"+ f).text(msg + f);
+  calcAv();
+  return;
+}   
 
-  function showIt(f) {
-    switch(f) {
-      case 'all':
+function showIt(f) {
+  switch(f) {
+    case 'all':
         // bots and all can be together
-        $(".all").show();
-        $(".bots").hide();
-        break;
-      case 'webmaster':
-        $(".webmaster").show();
-        break;
-      case 'bots':
-        $(".bots").show();
-        break;
-    }
-    flags[f] = true;
-    var msg = "Hide ";
-    $("#"+ f).text(msg + f);
-    calcAv();
-    return;
+      $(".all").show();
+      $(".bots").hide();
+      break;
+    case 'webmaster':
+      $(".webmaster").show();
+      break;
+    case 'bots':
+      $(".bots").show();
+      break;
   }
+  flags[f] = true;
+  var msg = "Hide ";
+  $("#"+ f).text(msg + f);
+  calcAv();
+  return;
+}
 
-  function calcAv() {
+function calcAv() {
     // Calculate the average time spend using the NOT hidden elements
-    var av = 0, cnt = 0;
+  var av = 0, cnt = 0;
 
-    $("#tracker tbody :not(:hidden) td:nth-child(6)").each(function(i, v) {
-      var t = $(this).text();
-      if(t == '' || t == 0 || (typeof t == 'undefined')) {
+  $("#tracker tbody :not(:hidden) td:nth-child(7)").each(function(i, v) {
+    var t = $(this).text();
+    if(t == '' || t == 0 || (typeof t == 'undefined')) {
         //console.log("t:", t);
-        return true; // Continue, don't count blank
-      }
-      
-      //console.log("t", t);
-      
-      var ar = t.match(/^(\d+):(\d{2}):(\d{2})$/);
-      //console.log("ar: " + ar + "t:", t);
-      t = parseInt(ar[1], 10) * 3600 + parseInt(ar[2],10) * 60 + parseInt(ar[3],10);
-      
-      if(t > 7200) {
-        //console.log("Don't count: " + t);
-        return true; // Continue if over two hours 
-      }
-      av += t;
-      ++cnt;      
-    });
-
-    if(av) {
-      av = av/cnt; // Average
+      return true; // Continue, don't count blank
     }
-    var hours = Math.floor(av / (3600)); 
 
-    var divisor_for_minutes = av % (3600);
-    var minutes = Math.floor(divisor_for_minutes / 60);
+      //console.log("t", t);
 
-    var divisor_for_seconds = divisor_for_minutes % 60;
-    var seconds = Math.ceil(divisor_for_seconds);
+    var ar = t.match(/^(\d+):(\d{2}):(\d{2})$/);
+      //console.log("ar: " + ar + "t:", t);
+    t = parseInt(ar[1], 10) * 3600 + parseInt(ar[2],10) * 60 + parseInt(ar[3],10);
 
-    var tm = hours.pad()+":"+minutes.pad()+":"+seconds.pad();
+    if(t > 7200) {
+        //console.log("Don't count: " + t);
+      return true; // Continue if over two hours 
+    }
+    av += t;
+    ++cnt;      
+  });
 
-    $("#average").html(tm);
+  if(av) {
+    av = av/cnt; // Average
   }
+  var hours = Math.floor(av / (3600)); 
 
-  Number.prototype.pad = function(size) {
-    var s = String(this);
-    while (s.length < (size || 2)) {s = "0" + s;}
-    return s;
-  }
+  var divisor_for_minutes = av % (3600);
+  var minutes = Math.floor(divisor_for_minutes / 60);
 
-  var flags = {all: false, webmaster: false, bots: false, ip6: true};
+  var divisor_for_seconds = divisor_for_minutes % 60;
+  var seconds = Math.ceil(divisor_for_seconds);
 
+  var tm = hours.pad()+":"+minutes.pad()+":"+seconds.pad();
+
+  $("#average").html(tm);
+}
+
+Number.prototype.pad = function(size) {
+  var s = String(this);
+  while (s.length < (size || 2)) {s = "0" + s;}
+  return s;
+}
+
+function getcountry() {
+  var ip = $("#tracker tr td:first-child");
+  var ar = new Array;
+
+  ip.each(function() {
+    var ipval = $(this).text();
+      // remove dups. If ipval is not in the ar array add it once.
+    if(!ar[ipval]) {
+      ar[ipval] = 1;
+    }
+  });
+
+  // we have made ipval true so we do not have duplicate
+
+  ar = JSON.stringify(Object.keys(ar)); // get the key which is ipval and make a string like '["123.123.123.123", "..."', ...]'
+
+  $.ajax(ajaxurl, {
+    type: 'post',
+    data: {list: ar},
+    success: function(co) {
+      var com = JSON.parse(co); // com is an array of countries by ip.
+            
+      ip.each(function(i) { // ip is the first td. We look at each td.
+        ip = $(this).text();
+        co = com[ip];
+        //console.log(co);
+        // We make co-ip for the ip and country for co.
+
+        $(this).html("<span class='co-ip'>"+ip+"</span><br><div class='country'>"+co+"</div>");
+      });
+    },
+    error: function(err) {
+      console.log("ERROR:", err);
+    }
+  });
+}
+
+jQuery(document).ready(function($) {
   // Set up tablesorter
   /*
   $("#logip, #logagent, #counter, #counter2, #robots, #robots2").tablesorter()
@@ -237,7 +233,7 @@ jQuery(document).ready(function($) {
 
     // To start bots are hidden
 
-    $(".bots td:nth-child(3)").css("color", "red").parent().hide();
+    $(".bots td:nth-child(4)").css("color", "red").parent().hide();
 
     // What ever is left is normal
 
@@ -249,16 +245,17 @@ jQuery(document).ready(function($) {
   // Put a couple of buttons before the tracker table
 
   $("#tracker").parent().before("<p class='desktop'>Ctrl Click on the 'ip' items to <span id='ip'>Show Only ip</span>.<br>"+
-                       "Alt Click on the 'ip' items to <span class='red'>Show http://ipinfo.io info</span><br>"+
-                       "Double Click on the 'page' items to <span id='page'>Show Only page</span>.<br>"+
-                       "Click on the 'js' items to see human readable info.<br>"+
-                       "Average stay time: <span id='average'></span> (times over two hours are discarded.)</p>"+
-                       "<button id='webmaster'>Show webmaster</button>"+
-                       "<button id='bots'>Show bots</button>"+
-                       "<button id='all'>Show All</button><br>"+
-                       "<button id='update'>Update Fields</button>"+
-                       "<button id='ip6only'>Hide IPV6</button>"                       
-                      );
+                                "Alt Click on the 'ip' items to <span class='red'>Show http://ipinfo.io info</span><br>"+
+                                "Double Click on the 'page' items to <span id='page'>Show Only page</span>.<br>"+
+                                "Ctrl Click on 'finger' to show only those items.<br>"+
+                                "Click on the 'js' items to see human readable info.<br>"+
+                                "Average stay time: <span id='average'></span> (times over two hours are discarded.)</p>"+
+                                "<button id='webmaster'>Show webmaster</button>"+
+                                "<button id='bots'>Show bots</button>"+
+                                "<button id='all'>Show All</button><br>"+
+                                "<button id='update'>Update Fields</button>"+
+                                "<button id='ip6only'>Hide IPV6</button>"                       
+                               );
 
   // Do this after the 'average' id is set.
 
@@ -336,7 +333,8 @@ jQuery(document).ready(function($) {
              getcountry();
              dotracker();
 
-             for(f in flags) {
+             for(
+                 f in flags) {
                if(flags[f]) { // if true
                  switch(f) {
                    case 'all':
@@ -366,7 +364,7 @@ jQuery(document).ready(function($) {
 
       $("#tracker tr").removeClass('page');
 
-      for(var f in flags) {
+      for(let f in flags) {
         if(flags[f] == true) {
           $("."+f).show();
         }
@@ -433,7 +431,7 @@ jQuery(document).ready(function($) {
         if(flags.ip) {
           flags.ip = false;
           $(".ip").removeClass("ip").hide();
-          for(var f in flags) {
+          for(let f in flags) {
             if(flags[f] == true) {
               $("."+f).show();
             }
@@ -457,9 +455,10 @@ jQuery(document).ready(function($) {
       }
     }
 
-    let ip = $(".co-ip", this).text();
+    let ip = $("span", this).text();
     let ypos = e.pageY;
-    
+    console.log("IP: "+ip);
+
     if(e.altKey) { // Alt key?
       $.ajax(ajaxurl, {
         //url: directory+"/webstats-ajax.php",
@@ -509,7 +508,7 @@ jQuery(document).ready(function($) {
 
   // Popup a human version of 'isJavaScript'
 
-  $("body").on("click", "#tracker td:nth-child(7), #robots td:nth-child(4)", function(e) {
+  $("body").on("click", "#tracker td:nth-child(8), #robots td:nth-child(4)", function(e) {
     let js = parseInt($(this).text(), 16),
     human, h = '', ypos, xpos;
 

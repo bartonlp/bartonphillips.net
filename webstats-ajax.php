@@ -52,7 +52,7 @@ if($list = $_POST['list']) {
       $table = "ipcountry6";
     }
     $sql = "select countryLONG from $S->masterdb.$table ".
-            "where '$iplong' between ipFROM and ipTO";
+           "where '$iplong' between ipFROM and ipTO";
 
     $S->query($sql);
     

@@ -2,6 +2,7 @@
 // All sites do a Symlink to ../bartonphillipsnet for webstats.php. The symlink is needed because we need to
 // get the mysitemap.json for the specific website.
 // The css is at https://bartonphillips.net/css/webstats.css
+// BLP 2021-12-20 -- trackerCallback, if $row['js'] == 0xffff don't do check for zero of 0x2000
 // BLP 2021-11-11 -- Get me from myfingerpriints.php
 // BLP 2021-10-24 -- add Maps and geo logic like in getcookie.php
 // BLP 2021-10-22 -- See getcookie.php for info on debugging.
@@ -39,7 +40,10 @@ if(isset($_POST['submit'])) {
       header("Location: https://www.newbern-nc.info/webstats.php?blp=8653");
       break;
     case 'Newbernzig':
-      header("Location: http://www.newbernzig.com/webstats.php?blp=8653");
+      header("Location: https://www.newbernzig.com/webstats.php?blp=8653");
+      break;
+    case 'bartonhome': 
+      header("Location: https://www.bartonphillips.org/webstats.php?blp=8653");
       break;
     default:
       echo "OPS something went wrong: siteName: $siteName";
@@ -57,21 +61,11 @@ $S = new $_site->className($_site);
 // Check for magic 'blp'. If not found check if one of my recent ips. If not justs 'Go Away'
 
 if(empty($_GET['blp']) || $_GET['blp'] != '8653') { // If blp is empty or set but not '8653' then check $S->myIp
-  // myIp can be an array made from the myUri from mysitemap.json
-  // it already has all of the data from the myip table along with anything from myUri.
+  // BLP 2021-12-20 -- $S->myIp is always an array from SiteClass.
   
-  if(is_array($S->myIp)) {
-    // Is one of the ips my ip?
-
-    if(!array_intersect([$S->ip], $S->myIp)) {
-      echo "<h1>Go Away</h1>";
-      exit();
-    }
-  } else {
-    if($S->ip != $S->myIp) {
-      echo "<h1>Go Away</h1>";
-      exit();
-    }
+  if(!array_intersect([$S->ip], $S->myIp)) {
+    echo "<h1>Go Away</h1>";
+    exit();
   }
 } 
 
@@ -85,9 +79,7 @@ EOF;
 
 $h->css = <<<EOF
 <style>
-/** {
-  box-sizing: border-box !important;
-}*/
+/* 'tables' is not a real HTML tag but css allows it. See <tables> in code */  
 tables ul { margin-top: 0; }  
 .home {
   color: white;
@@ -99,7 +91,6 @@ body { margin: 10px; }
   padding: 10px;
   cursor: pointer;
 }
-
 #geocontainer {
   width: 500px;
   height: 500px;
@@ -180,12 +171,10 @@ $h->script = <<<EOF
 EOF;
 
 // BLP 2021-10-12 -- add geo logic and Maps
-if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig'])[0]) {
-  // BLP 2021-10-27 -- Get the key from a secure location that does not have Internet access.
-  $APIKEY = require_once("/var/www/bartonphillipsnet/PASSWORDS/maps-apikey");
+if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig', 'Allnatural', 'bartonhome'])[0]) {
   $b->script = <<<EOF
 <script src="https://bartonphillips.net/js/maps.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA6GtUwyWp3wnFH1iNkvdO9EO6ClRr_pWo&callback=initMap&v=weekly" async></script>
 EOF;
 }
 
@@ -228,13 +217,19 @@ When these addresses appear in the other tables they are in
 $tbl
 EOF;
 
+function logagentCallback(&$row, &$desc) {
+  global $S;
+
+  $ip = $S->escape($row['IP']);
+
+  $row['IP'] = "<span>$ip</span>";
+}
+
 $sql = "select ip as IP, agent as Agent, count as Count, lasttime as LastTime " .
 "from $S->masterdb.logagent ".
 "where site='$S->siteName' and lasttime >= current_date() order by lasttime desc";
 
-// BLP 2021-03-27 -- removed callback to blpip along with all ref to blpips.
-  
-list($tbl) = $T->maketable($sql, array('attr'=>array('id'=>"logagent", 'border'=>"1")));
+list($tbl) = $T->maketable($sql, array('callback'=>'logagentCallback', 'attr'=>array('id'=>"logagent", 'border'=>"1")));
 if(!$tbl) {
   $tbl = "<h3 class='noNewData'>No New Data Today</h2>";
 } else {
@@ -446,21 +441,33 @@ if(!$analysis) $errMsg = "https://bartonphillips.net/analysis/$S->siteName-analy
 
 // Callback for tracker below
 
-function trackerCallback(&$row, &$desc) {
-  global $S;
+// BLP 2021-11-11 -- Get the list of know fingerprints
+// BLP 2021-12-18 -- php.ini has allow-url-include and allow-url-fopen set to 'On'
+$me = json_decode(file_get_contents("https://bartonphillips.net/myfingerprints.json"));
 
+function trackerCallback(&$row, &$desc) {
+  global $S, $me;
+
+  foreach($me as $key=>$val) {
+    if($row['finger'] == $key) {
+      $row['finger'] .= "<span class='ME' style='color: red'> : $val</span>";
+    }
+  }
+  
   $ip = $S->escape($row['ip']);
 
-  $row['ip'] = "<span class='co-ip'>$ip</span><br>";
+  $row['ip'] = "<span class='co-ip'>$ip</span>";
   $row['refid'] = preg_replace('/\?.*/', '', $row['refid']);
 
-  if(($row['js'] & 0x2000) === 0x2000) {
+  // BLP 2021-12-20 -- SiteClass makes isJavaScript == 0xffff if isMe() is true.
+  
+  if($row['js'] != 0xffff && ($row['js'] == 0 || (($row['js'] & 0x2000) === 0x2000))) {
     $desc = preg_replace("~<tr>~", "<tr class='bots'>", $desc);
   }
+
   $row['js'] = dechex($row['js']);
   $t = $row['difftime'];
   if(is_null($t)) {
-    //echo "$ip, t=$t<br>";
     return;
   }
     
@@ -473,7 +480,7 @@ function trackerCallback(&$row, &$desc) {
 
 // BLP 2018-01-07 -- changed from order by starttime to lasttime
   
-$sql = "select ip, page, agent, starttime, endtime, difftime, isJavaScript as js, refid ".
+$sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, refid ".
 "from $S->masterdb.tracker ".
 "where site='$S->siteName' and starttime >= current_date() - interval 24 hour ". 
 "order by lasttime desc";
@@ -492,7 +499,7 @@ function botsCallback(&$row, &$desc) {
 
   $ip = $S->escape($row['ip']);
 
-  $row['ip'] = "<span class='bots-ip'>$ip</span><br>";
+  $row['ip'] = "<span class='bots-ip'>$ip</span>";
 }
   
 $sql = "select ip, agent, count, hex(robots) as bots, site, creation_time as 'created', lasttime ".
@@ -513,7 +520,7 @@ function bots2Callback(&$row, &$desc) {
 
   $ip = $S->escape($row['ip']);
 
-  $row['ip'] = "<span class='bots2-ip'>$ip</span><br>";
+  $row['ip'] = "<span class='bots2-ip'>$ip</span>";
 }
 
 // BLP 2021-10-10 -- remove site from select for everyone
@@ -543,6 +550,7 @@ $form = <<<EOF
     <option>Bartonphillips</option>
     <option>Tysonweb</option>
     <option>Newbernzig</option>
+    <option>bartonhome</option>
   </select>
 
   <button type="submit" name='submit'>Submit</button>
@@ -552,9 +560,6 @@ EOF;
 // BLP 2021-10-08 -- add geo
 
 $today = date("Y-m-d");
-
-// BLP 2021-11-11 -- Get me from myfingerpriints.php
-$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
 
 function mygeofixup(&$row, &$rowdesc) {
   global $today, $me;
@@ -573,7 +578,7 @@ function mygeofixup(&$row, &$rowdesc) {
   return false;
 }
 
-if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig'])[0] !== null) {
+if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig', 'Allnatural', 'bartonhome'])[0] !== null) {
   $sql = "select lat, lon, finger, created, lasttime from $S->masterdb.geo where site = '$S->siteName' order by lasttime desc";
   [$tbl] = $T->maketable($sql, ['callback'=>'mygeofixup', 'attr'=>['id'=>'mygeo', 'border'=>'1']]);
 
@@ -660,8 +665,8 @@ $page
 <li>8192(x2000)=SiteClass (PHP) determined this is a robot via analysis of the 'user agent' or scan of 'bots'.
 <li>16384(x4000)=tracker/csstest
 </ul>
-The 'starttime' is done by SiteClass (PHP) when the file is loaded.
-Rows with 'js' zero (0) are <b>curl</b> or something like <b>curl</b> (wget, lynx, etc) and are probaly really <b>ROBOTS</b>.</div>
+The 'starttime' is done by SiteClass (PHP) when the file is loaded.<br>
+Rows with 'js' zero (0) are <b>curl</b> or something like <b>curl</b> (wget, lynx, etc) and counted as 'bots'</b>.</div>
 
 $tracker
 <h2 id="table8">From table <i>bots</i> for Today</h2>
@@ -673,7 +678,6 @@ $tracker
 <li>From 'rotots.txt': Initial Insert=1, Update= OR 2.
 <li>From 'SiteClass' scan: Initial Insert=4, Update= OR 8.
 <li>From 'Sitemap.xml': Initial Insert=16(x10), Update= OR 32(x20).
-<li>From 'tracker' cron: Inital Insert=64(x40), Update= OR 128(x80).
 <li>From CRON indicates a Zero (curl type) in the 'tracker' table: 258(x100).
 <li>So if you have a 1 you can't have a 2 and visa versa.
 </ul>
