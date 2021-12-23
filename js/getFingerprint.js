@@ -29,10 +29,13 @@ fpPromise
   console.log("visitor: " + visitorId);
   $.ajax({
     url: ajaxFile,
-    data: { page: 'finger', visitor: visitorId, file: file, path: path, agent: agent, err: err, ip: ip },
+    data: { page: 'finger', visitor: visitorId, file: file, path: path, agent: agent, err: err, ip: ip, ref: ref },
     type: 'post',
     success: function(data) {
       console.log("return: " + data);
+      setTimeout(function(){
+        window.location.href = 'easter-example.php';
+      }, 5000)
     },
     error: function(err) {
       console.log(err);

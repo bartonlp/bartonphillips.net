@@ -6,19 +6,21 @@
 
 'use strict';
 
-console.log("URL: " + window.location.host);
+console.log("URL: " + window.location.href);
 
-var geoAjax = "/geoAjax.php";
+const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo";
+var visitorId;
+const geoAjax = "/geoAjax.php"; 
 
-function getGeo(visitor) {
+function getGeo() {
   if('geolocation' in navigator) {
     navigator.geolocation.getCurrentPosition((position) => {
-      console.log("lat: " + position.coords.latitude + ", lon: " + position.coords.longitude);
+      console.log("lat: " + position.coords.latitude + ", lon: " + position.coords.longitude+ ", visitor: " + visitorId);
       $("#geo i").html(position.coords.latitude + ", " + position.coords.longitude);
 
       $.ajax({
         url: geoAjax, // This sets geo and Finger cookies and insert/update the geo table.
-        data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitor },
+        data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitorId },
         type: 'post',
         success: function(data) {
           console.log("return: " + data);
@@ -52,8 +54,23 @@ fpPromise
 .then(fp => fp.get())
 .then(result => {
   // This is the visitor identifier:
-  const visitorId = result.visitorId;
+  visitorId = result.visitorId;
   $("#finger i").html(visitorId);
   console.log("visitor: " + visitorId);
-  getGeo(visitorId);
+  $.ajax({
+    url: geoAjax, // This sets geo and Finger cookies and insert/update the geo table.
+    data: { page: 'finger', visitor: visitorId, id: lastId },
+    type: 'post',
+    success: function(data) {
+      console.log("return: " + data);
+      console.log(window.location.pathname);
+      const fname = window.location.pathname;
+      if(fname == '/' || fname == "/index.php") {
+        getGeo();
+      }
+    },
+    error: function(err) {
+      console.log(err);
+    }
+  });
 })

@@ -13,68 +13,73 @@ if(!file_exists($S->path . "/Sitemap.xml")) {
 $sitemap = file_get_contents($S->path."/Sitemap.xml");
 echo $sitemap;
 
-$ip = $_SERVER['REMOTE_ADDR'];
-if($S->myUri) {
-  if(is_array($S->myUri)) {
-    foreach($S->myUri as $v) {
-      if($ip == gethostbyname($v)) {
-        return;
-      }
-    }
-  } else {
-    if($ip == gethostbyname($S->myUri)) {
-      return;
+// Get info from myip
+
+$S->query("select count(*) from information_schema.tables ".
+          "where (table_schema = '$S->masterdb') and (table_name = 'myip')");
+
+$ok = $S->fetchrow('num')[0];
+      
+if($ok == 1) {
+  // Check to see if this ip is in the myip table.
+  
+  $ip = $_SERVER['REMOTE_ADDR'];
+
+  $sql = "select myip from $S->masterdb.myip";
+  $S->query($sql);
+  
+  while($myip = $S->fetchrow('num')[0]) {
+    if($ip == $myip) {
+      return; // Found me so return and don't put my info into the bots table
     }
   }
 }
 
-$agent = $S->escape($_SERVER['HTTP_USER_AGENT']);
-
-//error_log("sitemap: $S->siteName, $ip, $agent");
-
 $S->query("select count(*) from information_schema.tables ".
            "where (table_schema = '$S->masterdb') and (table_name = 'bots')");
 
-list($ok) = $S->fetchrow('num');
+$ok = $S->fetchrow('num')[0];
       
 if($ok == 1) {
+  $agent = $S->escape($_SERVER['HTTP_USER_AGENT']);
+
   try {
-    // BLP 2021-11-12 -- count is a counter and robots is set to 16 initially and updated or 32.
-    
+
     $S->query("insert into $S->masterdb.bots (ip, agent, count, robots, site, creation_time, lasttime) ".
-               "values('$ip', '$agent', 1, 16, '$S->siteName', now(), now())");
+               "values('$ip', '$agent', 1, 4, '$S->siteName', now(), now())");
   }  catch(Exception $e) {
     if($e->getCode() == 1062) { // duplicate key
       $S->query("select site from $S->masterdb.bots where ip='$ip'");
+
       list($who) = $S->fetchrow('num');
+
       if(!$who) {
         $who = $S->siteName;
       }
       if(strpos($who, $S->siteName) === false) {
         $who .= ", $S->siteName";
       }
-      // BLP 2021-11-12 -- On update or in 32.
-      
-      $S->query("update $S->masterdb.bots set robots=robots|32, count=count+1, site='$who', lasttime=now() where ip='$ip'");
+      $S->query("update $S->masterdb.bots set robots=robots|8, count=count+1, site='$who', lasttime=now() ".
+                 "where ip='$ip'");
     } else {
-      error_log("sitemap: ".print_r($e, true));
+      error_log("robots: ".print_r($e, true));
     }
   }
 } else {
-  error_log("sitemap: $S->siteName bots does not exist in $S->masterdb database");
+  error_log("robots: $S->siteName bots does not exist in $S->masterdb database");
 }
 
 $S->query("select count(*) from information_schema.tables ".
            "where (table_schema = '$S->masterdb') and (table_name = 'bots2')");
 
-list($ok) = $S->fetchrow('num');
-      
-if($ok == 1) {
-  // BLP 2021-11-12 -- sitemap.php is 4
+$ok = $S->fetchrow('num')[0];
+
+if($ok) {
+  // BLP 2021-11-12 -- 4 for sitemap
   
   $S->query("insert into $S->masterdb.bots2 (ip, agent, date, site, which, count, lasttime) ".
              "values('$ip', '$agent', current_date(), '$S->siteName', 4, 1, now()) ".
              "on duplicate key update count=count+1, lasttime=now()");
 } else {
-  error_log("sitemap: $S->siteName bots does not exist in $S->masterdb database");
+  error_log("robots: $S->siteName bots2 does not exist in $S->masterdb database");
 }

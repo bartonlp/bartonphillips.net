@@ -1,4 +1,5 @@
 <?php
+// BLP 2021-12-15 -- cosmetic changes to error_log messages etc.
 // BLP 2021-06-30 -- Added $DEBUG etc. No longer using symlinks. This lives at bartonphillips.net
 // BLP 2014-03-06 -- ajax for tracker.js
 // BLP 2016-12-29 -- NOTE: the $_site info is from a mysitemap.json that is where the tracker.php
@@ -22,7 +23,7 @@ if($_POST['page'] == 'ajaxmsg') {
   // NOTE: $_POST['ipagent'] is a string not a boolian! So === true does NOT work but == true
   // or == 'true' does work.
   $ipagent = ($_POST['ipagent'] == 'true') ? ": $ip, $agent" : '';
-  error_log("tracker: AJAXMSG, $S->siteName, '$msg'" . $ipagent);
+  error_log("tracker AJAXMSG: $S->siteName, '$msg'" . $ipagent);
   echo "AJAXMSG OK";
   exit();
 }
@@ -33,11 +34,11 @@ $S->query("select count(*) from information_schema.tables ".
 list($ok) = $S->fetchrow('num');
 
 if($ok != 1) {
-  error_log("No tracker in $S->masterdb");
+  error_log("tracker: No tracker in $S->masterdb");
   exit();
 }
 
-// start is an ajax call
+// start is an ajax call from tracker.js
 
 if($_POST['page'] == 'start') {
   $id = $_POST['id'];
@@ -66,7 +67,7 @@ if($_POST['page'] == 'load') {
     exit();
   }
 
-  if($DEBUG) error_log("tracker: load,    $S->siteName, $id, $ip, $agent");
+  if($DEBUG) error_log("tracker: load, $S->siteName, $id, $ip, $agent");
 
   $S->query("update $S->masterdb.tracker set isJavaScript=isJavaScript|2, lasttime=now() where id='$id'");
   echo "Load OK";
@@ -174,7 +175,36 @@ if($_POST['page'] == 'unload') {
 }
 // END OF EXIT FUNCTIONS
 
+// timer is an ajax call from tracker.js
+// TIMER. This runs while the page is up.
+
+if($_POST['page'] == 'timer') {  
+  $id = $_POST['id'];
+  $time = $_POST['time'] / 1000;
+  $filename = $_POST['filename'];
+  
+  if($DEBUG) error_log("tracker timer: $S->siteName, $filename, $ip, $time sec.");
+  
+  if(!$id) {
+    error_log("tracker: $S->siteName, $filename: TIMER NO ID, $ip, $agent");
+    exit();
+  }
+
+  try {
+    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|4096, endtime=now(), ".
+           "difftime=timestampdiff(second, starttime, now()), lasttime=now() where id=$id";
+    
+    $S->query($sql);
+  } catch(Exception $e) {
+    error_log(print_r($e, true));
+  }
+  echo "Timer OK";
+  exit();
+}
+
 // START OF IMAGE FUNCTIONS
+// NOTE: The image functions are GET calls from the original php file. These are not done by
+// tracker.js!
 
 // BLP 2021-06-30 -- Here is an example of the banner.i.php:
 // <header>
@@ -199,14 +229,14 @@ if($_GET['page'] == 'script') {
   $id = $_GET['id'];
   $image = $_GET['image'];
            
-  if($DEBUG) error_log("trackerImg1: $image");
+  if($DEBUG) error_log("tracker script: trackerImg1: $image");
   
   if(!$id || $id == 'undefined') {
-    error_log("tracker: $S->siteName: SCRIPT NO ID, $ip, $agent");
+    error_log("tracker script: NO ID, $ip, $agent");
     exit();
   }
 
-  if($DEBUG) error_log("tracker: script, $S->siteName, $id, $ip, $agent");
+  if($DEBUG) error_log("tracker script: $id, $ip, $agent");
 
   try {
     $sql = "select page, agent from $S->masterdb.tracker where id=$id";
@@ -241,7 +271,7 @@ if($_GET['page'] == 'script') {
   }
   // If no $image then use the default full url.
   
-  if($DEBUG) error_log("tracker script image: $img1");
+  if($DEBUG) error_log("tracker script: default-image: $img1");
   
   $imageType = preg_replace("~^.*\.(.*)$~", "$1", $img1); // greedy \. so we only see the LAST .
   $img = file_get_contents("$img1");
@@ -260,7 +290,7 @@ if($_GET['page'] == 'normal') {
   $image = $_GET['image'];
   
   if(!$id) {
-    error_log("tracker: $S->siteName: NORMAL NO ID, $ip, $agent");
+    error_log("tracker normal: NO ID, $ip, $agent");
     exit();
   }
 
@@ -310,11 +340,11 @@ if($_GET['page'] == 'noscript') {
   $id = $_GET['id'];
 
   if(!$id) {
-    error_log("tracker: $S->siteName: NOSCRIPT NO ID, $ip, $agent");
+    error_log("tracker noscript: NO ID, $ip, $agent");
     exit();
   }
 
-  if($DEBUG) error_log("tracker: noscript, $S->siteName, $id, $ip, $agent");
+  if($DEBUG) error_log("tracker noscript: $id, $ip, $agent");
 
   try {
     $sql = "select page, agent from $S->masterdb.tracker where id=$id";
@@ -344,23 +374,25 @@ if($_GET['page'] == 'noscript') {
 // END IMAGE FUNCTIONS
 
 // BLP 2021-06-30 -- CSS TEST
-// This tests if a css file was ever loaded. We look for 'csstest-(.*)\.css' in our .htaccess file.
+// Tests if a css file was ever loaded. We look for 'csstest-(.*)\.css' in our .htaccess file.
 // The (.*) is the 'LAST_ID'. tracker.js gets it from the 'script' with the attribute
 // 'data-lastid'. tracker.js does:
 // lastId = $("script[data-lastid]").attr("data-lastid");
 // $("script[data-lastid]").before('<link rel="stylesheet" href="csstest-' + lastId + '.css" title-"blp test">');
 // The RewriteRule in .htaccess redirects to 'https://bartonphillips.net/tracker.php?id=$1&csstest'
 // $1 is the LAST_ID which was appended to 'csstest-', that is the (.*).
+// NOTE: this is called from .htaccess not from tracker.js.
+// Also NOTE: $_GET['csstest'] is set even though no value is assigned to 'csstest'.
 
 if(isset($_GET['csstest'])) {
   $id = $_GET['id'];
 
   if(!$id) {
-    error_log("tracker: $S->siteName: CSSTEST NO ID, $ip, $agent");
+    error_log("tracker csstest: NO ID, $ip, $agent");
     exit();
   }
 
-  if($DEBUG) error_log("tracker: csstest, $S->siteName, $id, $ip, $agent");
+  if($DEBUG) error_log("tracker csstest: $id, $ip, $agent");
 
   // For csstest we will set bit 0x4000
   
@@ -389,33 +421,13 @@ if(isset($_GET['csstest'])) {
   exit();
 }
 
-// TIMER. This runs while the page is up.
-
-if($_POST['page'] == 'timer') {  
-  $id = $_POST['id'];
-  $time = $_POST['time'] / 1000;
-  $filename = $_POST['filename'];
-  
-  if($DEBUG) error_log("tracker timer: $S->siteName, $filename, $ip, $time sec.");
-  
-  if(!$id) {
-    error_log("tracker: $S->siteName, $filename: TIMER NO ID, $ip, $agent");
-    exit();
-  }
-
-  try {
-    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|4096, endtime=now(), ".
-           "difftime=timestampdiff(second, starttime, now()), lasttime=now() where id=$id";
-    
-    $S->query($sql);
-  } catch(Exception $e) {
-    error_log(print_r($e, true));
-  }
-  echo "Timer OK";
-  exit();
-}
-
 // otherwise just go away!
+
+$sql = "select finger from tracker where ip='$ip'";
+$S->query($sql);
+$finger = $S->fetchrow('num')[0] ?? "NONE";
+
+error_log("tracker GOAWAY: ip: $ip, finger: $finger, agent: $agent");
 
 echo <<<EOF
 <!DOCTYPE html>

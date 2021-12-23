@@ -13,29 +13,36 @@ $S = new Database($_site);
 $robots = file_get_contents($S->path."/robots.txt");
 echo $robots;
 
-$ip = $_SERVER['REMOTE_ADDR'];
-if($S->myUri) {
-  if(is_array($S->myUri)) {
-    foreach($S->myUri as $v) {
-      if($ip == gethostbyname($v)) {
-        return;
-      }
-    }
-  } else {
-    if($ip == gethostbyname($S->myUri)) {
-      return;
+// Get info from myip
+
+$S->query("select count(*) from information_schema.tables ".
+          "where (table_schema = '$S->masterdb') and (table_name = 'myip')");
+
+$ok = $S->fetchrow('num')[0];
+      
+if($ok == 1) {
+  // Check to see if this ip is in the myip table.
+  
+  $ip = $_SERVER['REMOTE_ADDR'];
+
+  $sql = "select myip from $S->masterdb.myip";
+  $S->query($sql);
+  
+  while($myip = $S->fetchrow('num')[0]) {
+    if($ip == $myip) {
+      return; // Found me so return and don't put my info into the bots table
     }
   }
 }
 
-$agent = $S->escape($_SERVER['HTTP_USER_AGENT']);
-
 $S->query("select count(*) from information_schema.tables ".
            "where (table_schema = '$S->masterdb') and (table_name = 'bots')");
 
-list($ok) = $S->fetchrow('num');
+$ok = $S->fetchrow('num')[0];
       
 if($ok == 1) {
+  $agent = $S->escape($_SERVER['HTTP_USER_AGENT']);
+
   try {
     //error_log("robots: $S->siteName, $ip, $agent");
 
@@ -66,7 +73,7 @@ if($ok == 1) {
 $S->query("select count(*) from information_schema.tables ".
            "where (table_schema = '$S->masterdb') and (table_name = 'bots2')");
 
-list($ok) = $S->fetchrow('num');
+$ok = $S->fetchrow('num')[0];
 
 if($ok) {
   // BLP 2021-11-12 -- 2 is for seen by robots.php.

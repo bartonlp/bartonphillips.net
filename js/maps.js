@@ -12,7 +12,7 @@
 'use strict';
 
 var map, marker;
-var geoAjax = "/geoAjax.php";
+//var geoAjax = "/geoAjax.php";
 var uiheight, uiwidth, uitop, uileft, resized = false;
 
 function initMap() {
@@ -144,7 +144,9 @@ $("#outer").resizable();
 
 function finger(self) {
   let finger = $(self).text();
-  $("#mygeo tbody tr").each(function() {
+  if(!finger) return;
+  
+  $(self).closest('tbody').find('tr').each(function() {
     let other = $("td:nth-of-type(3)", this).text();
     if(other != finger) {
       $(this).hide();
@@ -176,11 +178,17 @@ let flag, flagShowMe, flagShowAll; // flags. To start they are undefined (false)
 
 // taphold for phones
 
-$("#mygeo tbody td:nth-of-type(3)").on("taphold", function(e) {
+$("#mygeo, #tracker").on("taphold", " tbody td:nth-of-type(3)", function(e) {
   if(!flag) {
     finger(this);
   } else {
-    showtoday();
+    if($(e.target).closest('table')[0].id == "mygeo") {
+      showtoday(); // show only today. Show Me and Show All.
+    } else {
+      if(!($(this).text())) return;
+      hideIt('all');
+      flags = {all: false, webmaster: false, bots: false, ip6: true};
+    }
   }
   e.stopPropagation();
   flag = !flag;
@@ -188,12 +196,18 @@ $("#mygeo tbody td:nth-of-type(3)").on("taphold", function(e) {
 
 // Ctrl click for desktops
 
-$("#mygeo tbody td:nth-of-type(3)").on("click", function(e) {
+$("#mygeo, #tracker").on("click", " tbody td:nth-of-type(3)", function(e) {
   if(e.ctrlKey) {
     if(!(flag)) {
       finger(this);
     } else {
-      showtoday(); // show only today. Show Me and Show All.
+      if($(e.target).closest('table')[0].id == "mygeo") {
+        showtoday(); // show only today. Show Me and Show All.
+      } else {
+        if(!($(this).text())) return;
+        hideIt('all');
+        flags = {all: false, webmaster: false, bots: false, ip6: true};
+      }
     }
     e.stopPropagation();
     flag = !flag;

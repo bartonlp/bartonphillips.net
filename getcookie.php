@@ -14,12 +14,6 @@ $_site = require_once(getenv("SITELOADNAME"));
 ErrorClass::setDevelopment(true);
 $S = new $_site->className($_site);
 
-$DEBUG = false; // set to true to debug
-
-if($_GET['blp'] == "8653") {
-  $DEBUG = true;
-}
-
 // BLP 2021-10-26 -- From the 'form' with the siteNames.
 
 if(isset($_POST['submit'])) {
@@ -36,7 +30,13 @@ if(isset($_POST['submit'])) {
       header("Location: https://www.newbern-nc.info/getcookie.php");
       break;
     case 'Newbernzig':
-      header("Location: http://www.newbernzig.com/getcookie.php");
+      header("Location: https://www.newbernzig.com/getcookie.php");
+      break;
+    case 'Allnatural':
+      header("Location: https://www.allnaturalcleaningcompany.com/getcookie.php");
+      break;
+    case 'bartonhome':
+      header("Location: https://www.bartonphillips.org/getcookie.php");
       break;
     default:
       echo "OPS something went wrong: siteName: $siteName";
@@ -51,7 +51,11 @@ function isMe($S) {
   return (array_intersect([$S->ip], $S->myIp)[0] !== null) ? true : false;
 }
 
-$h->banner = "<h1>Reset Cookie</h1>";
+$h->banner = <<<EOF
+<h1>Reset Cookie<br>
+$S->siteName</h1>
+EOF;
+
 // Uncomment this to see an analysis of the head section.
 //$h->link = "<link rel='stylesheet' href='https://csswizardry.com/ct/ct.css' class='ct' />";
 
@@ -153,8 +157,6 @@ EOF;
 // Therefore even though this file is on GitHub and the key is being leaked to the public it can
 // only be used from one of my domains!
 
-$APIKEY = require_once("/var/www/bartonphillipsnet/PASSWORDS/maps-apikey");
-
 $b->script = <<<EOF
 <!-- mobile for taphold -->
 <script src="https://bartonphillips.net/js/jquery.mobile.custom.js"></script>
@@ -164,7 +166,7 @@ $b->script = <<<EOF
 <link rel="stylesheet" href="https://bartonphillips.net/js/jquery-ui-1.13.0.custom/jquery-ui.css">
 <script src="https://bartonphillips.net/js/maps.js"></script>
 <script
- src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async>
+ src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA6GtUwyWp3wnFH1iNkvdO9EO6ClRr_pWo&callback=initMap&v=weekly" async>
 </script>
 EOF;
 
@@ -174,9 +176,15 @@ EOF;
 
 $T = new dbTables($S);
 
-$sql = "select name, email, ip, agent, created, lasttime from bartonphillips.members";
+if($S->siteName != "bartonhome") {
+  $sql = "select name, email, ip, agent, created, lasttime from bartonphillips.members";
 
-[$members] = $T->maketable($sql, array('attr'=>array('border'=>'1', 'id'=>'members')));
+  [$members] = $T->maketable($sql, array('attr'=>array('border'=>'1', 'id'=>'members')));
+  $members = <<<EOF
+<h2><i>members</i> Table</h2>
+$members
+EOF;
+}
 
 $sql = "select myIp, createtime, lasttime from $S->masterdb.myip";
 
@@ -198,8 +206,9 @@ function myipfixup(&$row, &$rowdesc) {
 
 $today = date("Y-m-d");
 
-// BLP 2021-11-11 -- Get me from myfingerpriints.php
-$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
+// BLP 2021-11-11 -- Get the list of know fingerprints                                                    
+//$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
+$me = json_decode(file_get_contents("https://bartonphillips.net/myfingerprints.json"));
 
 function mygeofixup(&$row, &$rowdesc) {
   global $today, $me;
@@ -227,13 +236,10 @@ $sql = "select lat, lon, finger, created, lasttime from $S->masterdb.geo where s
 
 $cookies = $_COOKIE;
 
-//vardump("cookie", $cookies);
-
 // This is the standard bottom message
 
-$msg =<<<EOF
+$bottom =<<<EOF
 <hr>
-<h2><i>members</i> Table</h2>
 $members
 <h2><i>myip</i> Table</h2>
 <p class='less-margin'>My HOME IP is in <span class='myhome'>GREEN</span></p>
@@ -251,35 +257,30 @@ EOF;
 
 [$cookieIp, $cookieEmail] = explode(":", $cookies['SiteId']);
 
-if(!isMe($S) && $cookieEmail !== "bartonphillips@gmail.com" && !$DEBUG) {
+if(!isMe($S) && $cookieEmail !== "bartonphillips@gmail.com") {
   $msg = "<h1>No Cookie and Wrong IP</h1>"; // Just go away
-  error_log("bartonphillips.com/test_examples/getcookie.php: ip=$S->ip, cookie=" . print_r($cookies, true) . ", agent=$S->agent :: Go Away");
+  error_log("bartonphillips.net/getcookie.php: ip=$S->ip, cookie=" . print_r($cookies, true) . ", agent=$S->agent :: Go Away");
 } elseif(!$_COOKIE['SiteId']) {
-  $msg = "<h1>No Cookie</h1>$msg"; // add $msg to no cookie
-
-  // log some stuff
-
-  if($DEBUG) {
-    $msg = "$msg<br>ip: $S->ip<br>$members<br>$myip<br>";
-  }
-  //error_log("bartonphillips.com/test_examples/getcookie.php: ip=$S->ip, agent=$S->agent :: No Cookie");
-} else {
-  // This is the full message if we have a cookies
-
-  $all = '';
-  
-  foreach($cookies as $key=>$cookie) {
-    if($key == "mytime") {
-      $cookie = date("Y-m-d H:i:s", $cookie);
-    }
-    $all .= "<li><button class='reset'>Reset: <span>$key</span></button>$cookie</li>";
-  }
-  
   $msg = <<<EOF
-<ul id='resetmsg'>$all</ul>
-$msg
+<h1>No SiteId Cookie</h1>
 EOF;
 }
+
+// This is the full message if we have a cookies
+
+$all = '';
+  
+foreach($cookies as $key=>$cookie) {
+  if($key == "mytime") {
+    $cookie = date("Y-m-d H:i:s", $cookie);
+  }
+  $all .= "<li><button class='reset'>Reset: <span>$key</span></button>$cookie</li>";
+}
+  
+$msg .= <<<EOF
+<ul id='resetmsg'>$all</ul>
+$bottom
+EOF;
 
 // Render Page
 // BLP 2021-10-26 -- Add 'form'
@@ -293,6 +294,8 @@ $top
     <option>Bartonphillips</option>
     <option>Tysonweb</option>
     <option>Newbernzig</option>
+    <option>Allnatural</option>
+    <option>bartonhome</option>
   </select>
 
   <button type="submit" name='submit'>Submit</button>

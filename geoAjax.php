@@ -6,6 +6,7 @@
 
 $_site = require_once(getenv("SITELOADNAME"));
 ErrorClass::setDevelopment(true);
+$_site->noTrack = true;
 $S = new $_site->className($_site);
 
 //error_log("S" . print_r($S, true));
@@ -27,13 +28,13 @@ if($_POST['page'] == 'reset') {
 }
 
 // BLP 2021-10-07 -- AJAX for geo.js used in index.php for bartonphillips.com, tysonweb and
-// newbernzig.com
+// newbernzig.com (also bartonphillips.org on HP).
 
 if($_POST['page'] == 'geo') {
   $lat = $_POST['lat'];
   $lon = $_POST['lon'];
   $visitor = $_POST['visitor'];
-
+  
   $exp = time() + 60*60*24*365;
   
   if($S->setSiteCookie("BLP-geo", "$lat:$lon", $exp) === false) {
@@ -42,13 +43,7 @@ if($_POST['page'] == 'geo') {
     exit();
   }
 
-  if($S->setSiteCookie("BLP-Finger", $visitor, $exp) === false) {
-    error_log("geoAjax: setSiteCookie Finger Error");
-    echo "geoAjax: setSiteCookie Finger Error";
-    exit();
-  }
-  
-  //error_log("From geoAjax: $lat, $lon, $visitor");
+  //error_log("From geoAjax: $lat, $lon");
 
   $sql = "select lat, lon from $S->masterdb.geo where site = '$S->siteName' and finger = '$visitor'";
   $S->query($sql);
@@ -58,9 +53,10 @@ if($_POST['page'] == 'geo') {
   while([$slat, $slon] = $S->fetchrow('num')) {
     if($slat === $lat && $slon === $lon) {
       //error_log("lat and lon for $visitor exists so update lasttime");
-      $sql = "update $S->masterdb.geo set lasttime=now() where lat=$slat and lon=$slon and site = '$S->siteName' and finger='$visitor'";
+      $sql = "update $S->masterdb.geo set lasttime=now() where lat=$slat and lon=$slon and site='$S->siteName' and finger='$visitor'";
       $S->query($sql);
-      echo "Update";
+
+      echo "geo Update";
       exit();
     }
   }
@@ -72,6 +68,27 @@ if($_POST['page'] == 'geo') {
   $sql = "insert into $S->masterdb.geo (lat, lon, finger, site, created, lasttime) values('$lat', '$lon', '$visitor', '$S->siteName', now(), now())";
   $S->query($sql);
 
-  echo "Insert";
+  echo "geo Insert";
+  exit();
+}
+
+// Ajax for finger
+
+if($_POST['page'] == 'finger') {
+  $visitor = $_POST['visitor'];
+  $id = $_POST['id'];
+
+  if($S->setSiteCookie("BLP-Finger", $visitor, $exp) === false) {
+    error_log("geoAjax: setSiteCookie Finger Error");
+    echo "geoAjax: setSiteCookie Finger Error";
+    exit();
+  }
+
+  // tracker table was created in SiteClass
+
+  $sql = "update $S->masterdb.tracker set finger='$visitor' where id=$id";
+  $S->query($sql);
+
+  echo "finger Updated";
   exit();
 }

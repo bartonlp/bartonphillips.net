@@ -31,7 +31,7 @@ function postAjaxMsg(msg) {
 jQuery(document).ready(function($) {
   // logo is in banner.i.php and it is now fully instantiated. We got
   // lastId from below via the script's data-lastid attribute.
-  
+
   let image = $("#logo").attr("data-image");
   $("#logo").attr('src', "https://bartonphillips.net/tracker.php?page=script&id="+lastId+"&image="+image);
 });
