@@ -1,9 +1,6 @@
 <?php
-$_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setDevelopment(true);  
-$S = new $_site->className($_site);
+$fingers = ['one', 'two', 'three'];
+$fingers = json_encode($fingers);
 
-vardump($_GET);
+echo $fingers;
 
-echo (isset($_GET['csstest']) ? "true" : "false") . "<br>";
-echo (is_null($_GET['csstest']) ? "true" : "false") . "<br>";

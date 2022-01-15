@@ -141,12 +141,12 @@ function getcountry() {
 }
 
 jQuery(document).ready(function($) {
-  // Set up tablesorter
-  /*
-  $("#logip, #logagent, #counter, #counter2, #robots, #robots2").tablesorter()
-    .addClass('tablesorter'); // attach class tablesorter to all except our counter
-  */
-
+  const whichCodes = {"2": "robots.txt", "4": "Sitemap.xml", "8": "SiteClass", "16": "Zero"};
+  $("#robots2 td:nth-of-type(3)").each(function() {
+    let botCode = $(this).text();
+    $(this).text(botCode + ":" + whichCodes[botCode]);
+  });
+  
   $("#logip, #logagent, #counter, #counter2, #robots, #robots2").tablesorter({
     theme: 'blue',
     sortList: [[0][1]]
@@ -211,7 +211,7 @@ jQuery(document).ready(function($) {
         if(homeIp === ($(v).text())) {
           $(v).css({"color": "white", "background": "green"});
         } else {
-          $(v).css("color", "red");
+          $(v).css({"color": "black", "background": "lightgreen"});
         }
       }
     });
@@ -226,7 +226,7 @@ jQuery(document).ready(function($) {
         if(homeIp === ($(v).text())) {
           $(v).parent().css({ "color":"white", "background":"green"}).parent().addClass("webmaster").hide();
         } else {
-          $(v).parent().css("color", "red").parent().addClass("webmaster").hide();
+          $(v).parent().css({"color":"black", "background":"lightgreen"}).parent().addClass("webmaster").hide();
         }
       }
     });
@@ -516,14 +516,14 @@ jQuery(document).ready(function($) {
     // prents up.
 
     if($(this).closest("table").attr("id") != 'tracker') {
-      human = {3: "Robots", 0xc: "SiteClass", 0x30: "Sitemap", 0xc0: "Cron", 0x100: "Zero"};
+      human = {3: "robots.txt", 0xc: "SiteClass", 0x30: "Sitemap.xml", 0x100: "Zero"};
       xpos = e.pageX;
     } else {
       human = {
         1: "Start", 2: "Load", 4: "Script", 8: "Normal",
         0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
         0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
-        0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest"
+        0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest", 0x8000: "isMe", 0x10000: "Proxy"
       };
       xpos = e.pageX - 200;
     }
@@ -544,5 +544,17 @@ jQuery(document).ready(function($) {
                      "padding: 10px;'>"+h+"</div>");
 
     e.stopPropagation();
+  });
+
+  // BLP 2021-12-24 -- tracker agent field look for http: or https:
+
+  $("body").on("click", "#tracker td:nth-child(4)", function(e) {
+    if($(this).css("color") == "rgb(255, 0, 0)") {
+      const txt = $(this).text();
+      const pat = /(http.?:\/\/.*)[)]/;
+      const found = txt.match(pat);
+      window.open(found[1], "bot");
+      console.log("found: "+found);
+    }
   });
 });

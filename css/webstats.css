@@ -102,6 +102,7 @@ th, td {
 div {
         padding: .5rem 0;
 }
+/* bots table */
 #robots {
         width: 100%;
 }
@@ -118,17 +119,29 @@ div {
 #robots td:nth-child(3) {
         width: 1rem;
 }
+/* bots2 table */
 #robots2 {
         width: 100%;
 }
+/* ip */
 #robots2 td:first-child {
         word-break: break-all;
         width: 10rem;
 }
+/* agent */
 #robots2 td:nth-child(2) {
         font-size: .7em;
         word-break: break-all;
         width: 40rem;
+}
+/* which */
+#robots2 td:nth-child(3) {
+  width: 1px;
+  padding-left: 10px;
+}
+/* count */
+#robots2 td:nth-child(4) {
+  width: 1px;
 }
 #showhide {
         color: pink;

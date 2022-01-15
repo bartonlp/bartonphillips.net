@@ -16,11 +16,11 @@ function postAjaxMsg(msg) {
     data: {page: 'ajaxmsg', ipagent: true, msg: msg},
     type: 'post',
     success: function(data) {
-           console.log(data);
-         },
-         error: function(err) {
-           console.log(err);
-         }
+      console.log(data);
+    },
+    error: function(err) {
+      console.log(err);
+    }
   });             
 }
 
@@ -33,6 +33,7 @@ jQuery(document).ready(function($) {
   // lastId from below via the script's data-lastid attribute.
 
   let image = $("#logo").attr("data-image");
+  // BLP 2022-01-02 -- lastId is set below which happens before 'ready'.
   $("#logo").attr('src', "https://bartonphillips.net/tracker.php?page=script&id="+lastId+"&image="+image);
 });
 
@@ -42,12 +43,9 @@ jQuery(document).ready(function($) {
   // BLP 2021-06-05 -- We get the lastId from the script's data-lastid attribute.
   // Then we add the css link just before the script.
   
-  lastId = $("script[data-lastid]").attr("data-lastid");
+  lastId = $("script[data-lastid]").attr("data-lastid"); // BLP 2022-01-02 -- this happens before the 'ready' above!
   $("script[data-lastid]").before('<link rel="stylesheet" href="/csstest-' + lastId + '.css" title-"blp test">');
 
-  // BLP 2021-06-05 -- 
-  // Now tracker.php and beacon.php are at bartonphillips.net
-  
   var trackerUrl = "https://bartonphillips.net/tracker.php";
   var beaconUrl =  "https://bartonphillips.net/beacon.php";
 

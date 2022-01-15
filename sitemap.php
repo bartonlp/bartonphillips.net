@@ -18,12 +18,10 @@ echo $sitemap;
 $S->query("select count(*) from information_schema.tables ".
           "where (table_schema = '$S->masterdb') and (table_name = 'myip')");
 
-$ok = $S->fetchrow('num')[0];
-      
-if($ok == 1) {
+if($S->fetchrow('num')[0]) {
   // Check to see if this ip is in the myip table.
   
-  $ip = $_SERVER['REMOTE_ADDR'];
+  $ip = $S->ip;
 
   $sql = "select myip from $S->masterdb.myip";
   $S->query($sql);
@@ -38,13 +36,12 @@ if($ok == 1) {
 $S->query("select count(*) from information_schema.tables ".
            "where (table_schema = '$S->masterdb') and (table_name = 'bots')");
 
-$ok = $S->fetchrow('num')[0];
-      
-if($ok == 1) {
-  $agent = $S->escape($_SERVER['HTTP_USER_AGENT']);
+if($S->fetchrow('num')[0]) {
+  $agent = $S->agent;
 
   try {
-
+    // BLP 2021-12-26 -- robots is 4 for insert and robots=robots|8 for update.
+    
     $S->query("insert into $S->masterdb.bots (ip, agent, count, robots, site, creation_time, lasttime) ".
                "values('$ip', '$agent', 1, 4, '$S->siteName', now(), now())");
   }  catch(Exception $e) {
@@ -72,14 +69,13 @@ if($ok == 1) {
 $S->query("select count(*) from information_schema.tables ".
            "where (table_schema = '$S->masterdb') and (table_name = 'bots2')");
 
-$ok = $S->fetchrow('num')[0];
-
-if($ok) {
+if($S->fetchrow('num')[0]) {
   // BLP 2021-11-12 -- 4 for sitemap
-  
+  // BLP 2021-12-26 -- bots2 primary key is 'ip, agent, date, site, which'.
+
   $S->query("insert into $S->masterdb.bots2 (ip, agent, date, site, which, count, lasttime) ".
-             "values('$ip', '$agent', current_date(), '$S->siteName', 4, 1, now()) ".
-             "on duplicate key update count=count+1, lasttime=now()");
+            "values('$ip', '$agent', now(), '$S->siteName', 4, 1, now()) ".
+            "on duplicate key update count=count+1, lasttime=now()");
 } else {
   error_log("robots: $S->siteName bots2 does not exist in $S->masterdb database");
 }

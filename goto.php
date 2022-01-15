@@ -11,14 +11,18 @@ ErrorClass::setNoEmailErrs(true);
 $_site->count = false; // Don't count
 $_site->countMe = false; // Don't countMe
 $_site->noTrack = true; // don't track anything as we do it here.
-
+$_site->footerFile = null; // we want the default footer.
 $S = new $_site->className($_site);
 
 if($_POST['page']) {
-  extract($_POST);
-  //error_log("TEST: ". print_r($_POST, true));
-  
-  error_log("GOTO-$err: siteName: $S->siteName, finger: $visitor, ip: $ip, query: $query, agent: $agent,  ref: $ref");
+  extract($_POST); // tracker, visitor=visitorId, agent, err, ip, ref, query
+
+  // Put info into tracker.
+
+  $S->query("insert into $S->masterdb.tracker (site, page, finger, ip, agent, refid, isJavaScript, starttime, lasttime) ".
+          "values('$S->siteName', '$tracker', '$visitor', '$ip', '$agent', '$refid', 0x10000, now(), now())");
+
+  error_log("GOTO-$err: siteName: $S->siteName, trackerSite: $tracker, finger: $visitor, ip: $ip, query: $query, agent: $agent, ref: $ref");
   echo "OK";
   exit();
 }
@@ -26,11 +30,13 @@ if($_POST['page']) {
 function checkUser($S) {
   $query = $_SERVER['QUERY_STRING'];
   $query = preg_replace("~blp=ingrid&~", '', $query, -1, $c); // $c is the count of replacements
-  //$c = null;
-  if(!$c) {
+  //$c = null; // For testing
+  // $c is 1 if 'blp=ingrid&' was replaced with ''
+  
+  if(!$c) { // $c is not 1
     $msg = "<h1>Go to our <a href='https://www.bartonphillips.com'>Home Page</a> or just Go Way.</h1>";
     $err = "GoAway";
-  } else {
+  } else { // $c is 1
     $err = "OK";
   }
   return [$query, $msg, $err];
@@ -39,6 +45,7 @@ function checkUser($S) {
 [$query, $msg, $err] = checkUser($S);
 
 // Put info into counter2
+
 if($S->isBot) {
   $bot = 1;
   $count = 0;
@@ -47,10 +54,8 @@ if($S->isBot) {
   $count = 1;
 }
 
-// BLP 2021-03-10 -- no more member info. I have removed trackmember() from SiteClass.
-
-$query = substr($query, 0, 254);
-$query = $S->escape($query);
+$query = substr($query, 0, 254); // Make sure it is only 254 character long
+$query = $S->escape($query); // Make sure there are no ' etc.
 
 // Because 'count', 'countMe' and 'noTrack' SiteClass does not count. We do the counting for
 // counter, counter2 and tracker here.
@@ -61,22 +66,17 @@ $bot = $S->isBot ? 1 : 0;
 $real = $bot == 1 ? 0 : 1;
 $trackersite = substr($_SERVER['REQUEST_URI'], 0, 250);
 
-$S->query("insert into $S->masterdb.counter2 (site, date, filename, count, bots, lasttime) ".
+$S->query("insert into $S->masterdb.counter2 (site, date, filename, `real`, bots, lasttime) ".
           "values('$site', now(), '$trackersite', $real, $bot, now()) ".
-          "on duplicate key update count=count+$real, bots=bots+$bot, lasttime=now()");
+          "on duplicate key update `real`=`real`+$real, bots=bots+$bot, lasttime=now()");
 
 $S->query("insert into $S->masterdb.counter (filename, site, count, realcnt, lasttime) ".
           "values('$trackersite', '$site', 1, $bot, now()) ".
           "on duplicate key update count=count+1, realcnt=realcnt+$real, lasttime=now()");
 
-$agent = $S->escape($S->agent);
+$agent = $S->agent;
 $ip = $S->ip;
 $refid = $S->escape($S->refid) ?? "NONE";
-
-// Put info into tracker.
-
-$S->query("insert into $S->masterdb.tracker (site, page, ip, agent, refid, isJavaScript, starttime, lasttime) ".
-          "values('$site', '$trackersite', '$ip', '$agent', '$refid', 0, now(), now())");
 
 $h->title = "GOTO";
 $h->banner = $err == "OK" ? "<h1>Redirect Page</h1>" : "<h1>You Did Not Come From My Home Page</h1>";
@@ -86,7 +86,7 @@ $h->css = "<style>h1 { text-align: center }</style>";
 
 $b->script = <<<EOF
 <script>
-const agent = "$agent", ref = "$refid", ip = "$ip", err = "$err", query = "$query";
+const tracker = "$trackersite", agent = "$agent", ref = "$refid", ip = "$ip", err = "$err", query = "$query";
 const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo";
 
 const fpPromise = new Promise((resolve, reject) => {
@@ -113,6 +113,7 @@ fpPromise
     url: "goto.php",
     data: {
       page: 'finger',
+      tracker: tracker,
       visitor: visitorId,
       agent: agent,
       err: err,
@@ -140,7 +141,7 @@ fpPromise
 });
 </script>
 EOF;
-
+   
 [$top, $footer] = $S->getPageTopBottom($h, $b);
 
 echo <<<EOF

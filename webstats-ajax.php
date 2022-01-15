@@ -90,7 +90,7 @@ if($_POST['page'] == 'findbot') {
   
   $ip = $_POST['ip'];
 
-  $human = [3=>"Robots", 0xc=>"SiteClass", 0x30=>"Sitemap", 0xc0=>"cron", 0x100=>"zero"];
+  $human = [3=>"robots.txt", 0xc=>"SiteClass", 0x30=>"Sitemap.xml", 0x100=>"Zero"];
   
   $S->query("select agent, site, robots, count, creation_time from barton.bots where ip='$ip'");
 
@@ -155,32 +155,44 @@ if($_POST['page'] == 'gettracker') {
 
   // Callback function for maketable()
 
+  $me = json_decode(file_get_contents("https://bartonphillips.net/myfingerprints.json"));
+
+  //error_log("me: ".print_r($me, true));
+  
   function callback1(&$row, &$desc) {
-    global $S;
+    global $S, $me;
+
+    foreach($me as $key=>$val) {
+      if($row['finger'] == $key) {
+        $row['finger'] .= "<span class='ME' style='color: red'> : $val</span>";
+      }
+    }
 
     $ip = $S->escape($row['ip']);
 
-    $row['ip'] = "<span class='co-ip'>$ip</span><br>";
+    $row['ip'] = "<span class='co-ip'>$ip</span>";
     $row['refid'] = preg_replace('/\?.*/', '', $row['refid']);
 
-    if(($row['js'] & 0x2000) === 0x2000) {
+    if($row['js'] != 0x10000 && $row['js'] != 0x8000 && ($row['js'] == 0 || ($row['js'] & 0x2000) == 0x2000)) {
       $desc = preg_replace("~<tr>~", "<tr class='bots'>", $desc);
     }
     $row['js'] = dechex($row['js']);
     $t = $row['difftime'];
-    if(empty($t)) return;
+    if(is_null($t)) {
+      return;
+    }
     
-    $hr = floor($t/3600);
-    $min = floor(($t%3600)/60);
+    $hr = $t/3600;
+    $min = ($t%3600)/60;
     $sec = ($t%3600)%60;
-      //echo "$ip, t=$t, hr: $hr, min: $min, sec: $sec<br>";
+    
     $row['difftime'] = sprintf("%u:%02u:%02u", $hr, $min, $sec);
   } // End callback
 
-  $sql = "select ip, page, agent, starttime, endtime, difftime, isJavaScript as js, refid ".
+  $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, refid ".
          "from $S->masterdb.tracker " .
          "where site='$site' and starttime >= current_date() - interval 24 hour ". 
-         "order by starttime desc";
+         "order by lasttime desc";
 
   list($tracker) = $T->maketable($sql, array('callback'=>callback1,
                                              'attr'=>array('id'=>'tracker', 'border'=>'1')));

@@ -7,18 +7,21 @@ $S = new Database($_site);
 
 $DEBUG = false; // BLP 2021-06-30 -- for debugging
 
-// Database() does not set $agent or $ip!
-$agent = $_SERVER['HTTP_USER_AGENT'];
-$ip = $_SERVER['REMOTE_ADDR'];
+// BLP 2021-12-24 -- $S now has agent and id
+$agent = $S->agent;
+$ip = $S->ip;
+
+// BLP 2021-12-24 -- the input comes via php as json data not $_GET or $_POST
 
 $data = file_get_contents('php://input');
 $data = json_decode($data, true);
 $id = $data['id'];
 $w = $data['which'];
-$type = $data['type']; // BLP 2021-06-30 -- added here and in tracker.js
+$type = $data['type']; // BLP 2021-06-30 -- added here and in tracker.js. This will be 'pagehide', 'unload' or 'beforeunload' from e.type.
 
 if(!$id) {
-  error_log("beacon: $S->siteName: NO ID, which: $w, ip: $ip, agent: $agent");
+  $ref = $_SERVER['HTTP_REFERER'] ?? "NONE";
+  error_log("beacon: $S->siteName: NO ID, ref: $ref, which: $w, ip: $ip, agent: $agent");
   
   echo <<<EOF
 <!DOCTYPE html>
@@ -43,12 +46,12 @@ EOF;
 
   // BLP 2021-06-30 --
   
-  if($DEBUG) error_log("beacon: before check -- which=$w, type=$type,  $S->siteName");
+  //if($DEBUG) error_log("beacon: before check -- which=$w, type=$type,  $S->siteName");
   
   if(($js & ~(4127)) == 0) {
     // 'which' can be 1, 2, or 4
     // BLP 2021-06-30 -- 
-    if($DEBUG) error_log("beacon: which=$w, type=$type, $S->siteName, $id, $ip, $agent");
+    if($DEBUG) error_log("beacon: $S->siteName: which=$w, type=$type,  id=$id, ip=$ip, agent=$agent");
     
     $beacon = $w * 32; // 0x20, 0x40 or 0x80
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timediff(now(),starttime), ".

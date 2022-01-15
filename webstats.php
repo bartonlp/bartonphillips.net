@@ -2,7 +2,10 @@
 // All sites do a Symlink to ../bartonphillipsnet for webstats.php. The symlink is needed because we need to
 // get the mysitemap.json for the specific website.
 // The css is at https://bartonphillips.net/css/webstats.css
-// BLP 2021-12-20 -- trackerCallback, if $row['js'] == 0xffff don't do check for zero of 0x2000
+// BLP 2022-01-06 -- as of today 'countMe' is true for: Bartonphillips, Tysonweb, Newbernzib, BartonlpOrg,
+// BartonphillipsOrg (my https home site), and bartonhome (my http://bartonphillips.dyndns.org:8000
+// site), but false for Allnatural. See the mysitemap.json files for the above sites.
+// BLP 2021-12-20 -- trackerCallback, if $row['js'] == 0x8000 don't do check for zero of 0x2000
 // BLP 2021-11-11 -- Get me from myfingerpriints.php
 // BLP 2021-10-24 -- add Maps and geo logic like in getcookie.php
 // BLP 2021-10-22 -- See getcookie.php for info on debugging.
@@ -84,6 +87,11 @@ tables ul { margin-top: 0; }
 .home {
   color: white;
   background: green;
+  padding: 0 5px;
+}
+.inmyip {
+  color: black;
+  background: lightgreen;
   padding: 0 5px;
 }
 body { margin: 10px; }
@@ -192,10 +200,13 @@ $T = new dbTables($S); // My table class
   
 function blphome(&$row, &$rowdesc) {
   global $homeip;
-    
+
+  $ip = $row['myIp'];
+
   if($row['myIp'] == $homeip) {
-    $ip = $row['myIp'];
     $row['myIp'] = "<span class='home'>$ip</span>";
+  } else {
+    $row['myIp'] = "<span class='inmyip'>$ip</span>";
   }
   return false;
 }
@@ -213,7 +224,7 @@ $page = <<<EOF
 <h2>From table <i>myip</i></h2>
 <p>These are the IP Addresses used by the Webmaster.<br>
 When these addresses appear in the other tables they are in
-<span style="color: red">RED</span> or <span style="color: white; background: green; padding: 0 5px;">GREEN</span> if my home IP.</p>
+<span style="color: black; background: lightgreen; padding: 0 5px;">BLACK</span> or <span style="color: white; background: green; padding: 0 5px;">WHITE</span> if my home IP.</p>
 $tbl
 EOF;
 
@@ -315,7 +326,7 @@ $today = date("Y-m-d");
 
 // 'count' is actually the number of 'Real' vs 'Bots'. A true 'count' would be Real + Bots.
 
-$sql = "select filename as Page, count as 'Real', bots as Bots, lasttime as LastTime ".
+$sql = "select filename as Page, `real` as 'Real', bots as Bots, lasttime as LastTime ".
 "from $S->masterdb.counter2 ".
 "where site='$S->siteName' and lasttime >= current_date() order by lasttime desc";
 
@@ -340,7 +351,7 @@ $sql = "select sum(`real`+bots) as Count, sum(`real`) as 'Real', sum(bots) as 'B
 "where site='$S->siteName' and lasttime >= current_date() - interval 6 day";
 
 $S->query($sql);
-list($Count, $Real, $Bots, $Visits) = $S->fetchrow('num');
+[$Count, $Real, $Bots, $Visits] = $S->fetchrow('num');
 
 // Use 'tracker' to get the number of Visitors ie unique ip accesses.
 // BLP 2018-01-07 -- changed order by from starttime to lasttime.
@@ -357,43 +368,55 @@ $S->query("select ip, date(lasttime) ".
 
 $Visitors = 0;
 
-// There should be ONE UNIQUE ip in the rows. So count them into the date.
+// There should be ONE UNIQUE ip per row. So count them into the date.
 
 $tmp = [];
   
-while(list($ip, $date) = $S->fetchrow('num')) {
+while([$ip, $date] = $S->fetchrow('num')) {
   $tmp[$date][$ip] = '';
 }
 
-foreach($tmp as $d=>$v) { 
+// $d is the date and $v are the ips
+
+foreach($tmp as $d=>$v) {
   $visitors[$d] = $n = count($v);
   $Visitors += $n;
 }
   
 // This screens me out.
-// Looking for isJavaScript that does not have these bits set (0x201c) and is not a robot.
-// Those bits are bots, script, normal and noscript.
-  
-$sql = "select count(*), date(starttime) from $S->masterdb.tracker ".
-"where date(starttime)>=current_date() - interval 6 day and site='$S->siteName' and ".
-"isJavaScript & ~(0x201c) and not (isJavaScript & 0x2000) and ip not in($meIp) ".
-"group by date(starttime) order by date(starttime)";
+// Looking for isJavaScript that does not have these bits set (0x601c).
+// Those bits are bots, script, normal and noscript csstest.
+// BLP 2021-12-29 -- change to lasttime from starttime
+
+$sql = "select isJavaScript, date(lasttime) from $S->masterdb.tracker ".
+       "where date(lasttime)>=current_date() - interval 6 day and site='$S->siteName' ".
+       "and (isJavaScript&~0xe8fc)!=0 ".
+       //"and ip not in($meIp) ".
+       "order by lasttime";
   
 $S->query($sql);
 
+// BLP 2022-01-06 -- This is:
+// 0x4000 = Timer
+// 0x0700 = all three: beforeunload, unload, pagehide
+// 0x0003 = start and load
+// These are the only AJAX via tracker.js everything else come from some other access.
+// Note this will include webmaster (me) if mysitemap.json has countMe equal true.
+
 $jsenabled = 0;
 
-while(list($cnt, $date) = $S->fetchrow('num')) {
-  $jsEnabled[$date] += $cnt;
-  $jsenabled += $cnt;
+while([$java, $date] = $S->fetchrow('num')) {
+  ++$jsEnabled[$date];
+  ++$jsenabled;
 }
 
 $ftr = "<tr><th>Totals</th><th>$Visitors</th><th>$Count</th><th>$Real</th>".
 "<th>$jsenabled</th><th>$Bots</th><th>$Visits</th></tr>";
 
-// Get the table lines (daycounts does not count ME!)
+// Get the table lines (daycounts does not count ME unless countMe is true. See mysitemap.json to
+// see if it is true or false. As of BLP 2022-01-06 -- it is true.)
   
-$sql = "select date as Date, 'Visitors', `real`+bots as Count, `real` as 'Real', 'AJAX', ".
+$sql = "select `date` as Date, 'Visitors', `real`+bots as Count, `real` as 'Real', 'AJAX', ".
 "bots as 'Bots', visits as Visits ".
 "from $S->masterdb.daycounts where site='$S->siteName' and ".
 "lasttime >= current_date() - interval 6 day order by lasttime desc";
@@ -405,7 +428,6 @@ function visit(&$row, &$rowdesc) { // callback from maketable()
 
   $row['Visitors'] = $visitors[$row['Date']];
   $row['AJAX'] = $jsEnabled[$row['Date']];
-  return false;
 }
   
 list($tbl) = $T->maketable($sql, array('callback'=>'visit', 'footer'=>$ftr,
@@ -424,9 +446,9 @@ $page .= <<<EOF
 <li>'Visitors' is the number of distinct IP addresses (via 'tracker' table).
 <li>'Count' is the sum of 'Real' and 'Bots', the total number of HITS.
 <li>'Real' is the number of non-robots.
-<li>'AJAX' is the number of non-robots with AJAX functioning (via 'tracker' table) that are NOT Webmaster.
+<li>'AJAX' is the number of non-robots with AJAX functioning (via 'tracker' table).
 <li>'Bots' is the number of robots.
-<li>'Visits' are hits outside of a 10 minutes interval.
+<li>'Visits' are hits outside of a 10 minutes window.
 </ul>
 
 <p>So if you come to the site from two different IP addresses you would be two 'Visitors'.<br>
@@ -459,9 +481,9 @@ function trackerCallback(&$row, &$desc) {
   $row['ip'] = "<span class='co-ip'>$ip</span>";
   $row['refid'] = preg_replace('/\?.*/', '', $row['refid']);
 
-  // BLP 2021-12-20 -- SiteClass makes isJavaScript == 0xffff if isMe() is true.
+  // BLP 2021-12-20 -- SiteClass makes isJavaScript == 0x8000 if isMe() is true.
   
-  if($row['js'] != 0xffff && ($row['js'] == 0 || (($row['js'] & 0x2000) === 0x2000))) {
+  if($row['js'] != 0x10000 && $row['js'] != 0x8000 && ($row['js'] == 0 || ($row['js'] & 0x2000) == 0x2000)) {
     $desc = preg_replace("~<tr>~", "<tr class='bots'>", $desc);
   }
 
@@ -479,7 +501,7 @@ function trackerCallback(&$row, &$desc) {
 }
 
 // BLP 2018-01-07 -- changed from order by starttime to lasttime
-  
+
 $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, refid ".
 "from $S->masterdb.tracker ".
 "where site='$S->siteName' and starttime >= current_date() - interval 24 hour ". 
@@ -655,15 +677,14 @@ $page
 <h4>Only Showing $S->siteName</h4>
 <div>'js' is hex.
 <ul>
-<li>1, 2, 32(x20), 64(x40), 128(x80), 256(x100), 512(x200) and 4096(x1000) are done by 'webstats.js'.
 <li>4, 8 and 16(x10) via an &lt;img&gt; tag in the header
-<li>16384 (x4000) var an attempt to read 'csstest.css' from the 'head.i.php' file.
-<li>1=start, 2=load, 4=script, 8=normal, 16(x10)=noscript,
+<li>1=start, 2=load, 4=script, 8=normal, 16(x10)=noscript, 
 <li>32(x20)=beacon/pagehide, 64(x40)=beacon/unload, 128(x80)=beacon/beforeunload,
 <li>256(x100)=tracker/beforeunload, 512(x200)=tracker/unload, 1024(x400)=tracker/pagehide,
 <li>4096(x1000)=tracker/timer: hits once every 5 seconds via ajax.
 <li>8192(x2000)=SiteClass (PHP) determined this is a robot via analysis of the 'user agent' or scan of 'bots'.
 <li>16384(x4000)=tracker/csstest
+<li>32768(x8000)=isMe()
 </ul>
 The 'starttime' is done by SiteClass (PHP) when the file is loaded.<br>
 Rows with 'js' zero (0) are <b>curl</b> or something like <b>curl</b> (wget, lynx, etc) and counted as 'bots'</b>.</div>

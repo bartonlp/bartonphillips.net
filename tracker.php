@@ -388,6 +388,8 @@ if(isset($_GET['csstest'])) {
   $id = $_GET['id'];
 
   if(!$id) {
+    // BLP 2021-12-24 -- If there is no javascript running and .htaccess tries to load csstest it
+    // will have no LAST_ID.
     error_log("tracker csstest: NO ID, $ip, $agent");
     exit();
   }

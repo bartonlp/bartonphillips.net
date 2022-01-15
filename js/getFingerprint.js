@@ -1,9 +1,14 @@
-// BLP 2021-12-12 -- Just the fingerprint part of geo.js
-
+// BLP 2021-12-29 -- This file demonstrates how to capture the
+// fingerprint and how to use the default footer and add the script at
+// the end.
+'use strict';
+   
 const url = window.location.pathname;
 const ajaxFile = url.substring(url.lastIndexOf('/') +1);
                                          
 console.log(ajaxFile);
+console.log("lastId: "+lastId);
+//debugger; // BLP 2021-12-29 -- Force a breakpoint here
 
 const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo";
 
@@ -27,15 +32,13 @@ fpPromise
   const visitorId = result.visitorId;
     
   console.log("visitor: " + visitorId);
+
   $.ajax({
     url: ajaxFile,
-    data: { page: 'finger', visitor: visitorId, file: file, path: path, agent: agent, err: err, ip: ip, ref: ref },
+    data: { page: 'finger', visitor: visitorId },
     type: 'post',
     success: function(data) {
       console.log("return: " + data);
-      setTimeout(function(){
-        window.location.href = 'easter-example.php';
-      }, 5000)
     },
     error: function(err) {
       console.log(err);

@@ -170,6 +170,8 @@ $b->script = <<<EOF
 </script>
 EOF;
 
+$h->title = "GetCookie";
+
 [$top, $footer] = $S->getPageTopBottom($h, $b);
 
 // Get the two tables
