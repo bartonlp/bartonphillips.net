@@ -55,7 +55,7 @@ jQuery(document).ready(function($) {
 
   $.ajax({
     url: trackerUrl,
-    data: {page: 'start', id: lastId },
+    data: {page: 'start', id: lastId, filename: document.location.pathname },
     type: 'post',
     success: function(data) {
       console.log(data);
@@ -69,7 +69,7 @@ jQuery(document).ready(function($) {
     var type = e.type;
     $.ajax({
       url: trackerUrl,
-      data: {page: type, 'id': lastId},
+      data: {page: type, 'id': lastId, filename: document.location.pathname},
       type: 'post',
       success: function(data) {
         console.log(data);
@@ -97,9 +97,9 @@ jQuery(document).ready(function($) {
           which = 4;
           break;
       }
-      console.log("Which: " + which + ", type: " + e.type);
+      console.log("Which: " + which + ", type: " + e.type + ", filename: " + document.location.pathnam);
       
-      navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'type': e.type, 'which': which}));
+      navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'type': e.type, 'which': which, 'filename': document.location.pathname}));
     });
   } else {
     var msg = "NEW: Beacon NOT SUPPORTED";

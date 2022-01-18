@@ -1,6 +1,8 @@
-// BLP 2021-12-29 -- This file demonstrates how to capture the
-// fingerprint and how to use the default footer and add the script at
-// the end.
+// BLP 2022-01-16 -- This is used by bonnieburch.com/addcookie.php
+// It can be used by other files if needed. We pass page=finger and
+// visitor=visitorId via AJAX to the ajaxFile (which is the php file
+// that called this).
+
 'use strict';
    
 const url = window.location.pathname;

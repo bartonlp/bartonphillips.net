@@ -9,7 +9,9 @@
 $_site = require_once(getenv("SITELOADNAME"));
 $S = new Database($_site);
 
-$DEBUG = false; // BLP 2021-06-30 -- added for debugging
+//$DEBUG1 = true;  // BLP 2022-01-17 -- AJAX posts
+//$DEBUG2 = true; // BLP 2022-01-17 -- GET
+//$DEBUG3 = true; // BLP 2022-01-17 -- Timer
 
 // BLP 2021-10-25 -- I have fixed Database to now have ip and agent.
 
@@ -42,15 +44,16 @@ if($ok != 1) {
 
 if($_POST['page'] == 'start') {
   $id = $_POST['id'];
+  $filename = $_POST['filename'];
   
   if(!$id) {
-    error_log("tracker: $S->siteName: START NO ID, $ip, $agent");
+    error_log("tracker: $filename: START NO ID, $ip, $agent");
     exit();
   }
 
   // BLP 2021-06-30 -- debug added here and elsewhere.
   
-  if($DEBUG) error_log("tracker: start,    $S->siteName, $id, $ip, $agent");
+  if($DEBUG1) error_log("tracker: start, $filename, $id, $ip, $agent");
   
   $S->query("update $S->masterdb.tracker set isJavaScript=isJavaScript|1, lasttime=now() where id='$id'");
   echo "Start OK";
@@ -61,13 +64,14 @@ if($_POST['page'] == 'start') {
 
 if($_POST['page'] == 'load') {
   $id = $_POST['id'];
+  $filename = $_POST['filename'];
   
   if(!$id) {
-    error_log("tracker: $S->siteName: LOAD NO ID, $ip, $agent");
+    error_log("tracker: $filename LOAD NO ID, $ip, $agent");
     exit();
   }
 
-  if($DEBUG) error_log("tracker: load, $S->siteName, $id, $ip, $agent");
+  if($DEBUG1) error_log("tracker: load, $filename, $id, $ip, $agent");
 
   $S->query("update $S->masterdb.tracker set isJavaScript=isJavaScript|2, lasttime=now() where id='$id'");
   echo "Load OK";
@@ -79,9 +83,10 @@ if($_POST['page'] == 'load') {
 
 if($_POST['page'] == 'pagehide') {
   $id = $_POST['id'];
-
+  $filename = $_POST['filename'];
+  
   if(!$id) {
-    error_log("tracker: $S->siteName: PAGEHIDE NO ID, $ip, $agent");
+    error_log("tracker: $filename PAGEHIDE NO ID, $ip, $agent");
     exit();
   }
 
@@ -89,17 +94,15 @@ if($_POST['page'] == 'pagehide') {
   
   list($js) = $S->fetchrow('num');
 
-  // 0x701f is 0x4000: csstest, 0x2000: robots, 0x101F: 0x1000 timer, 0x10 noscript,
-  // 0xf start|load|script|normal
-  // So if js is zero after the &~ then we do not have a (32|64|128) beacon,
-  // or (256|512) tracker:beforeunload/unload. We should update.
+  $mask = (0x8000 | 0x4000 | 0x1000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
+  
+  if($DEBUG1) error_log("tracker: before check $filename -- $ip, js=" . dechex($js) . ", type=pagehide");
 
-  if($DEBUG) error_log("tracker: pagehide - before check");
-
-  if(($js & ~(0x701f)) == 0) {
-    if($DEBUG) error_log("tracker: beforeunload,   $S->siteName, $id, $ip, $agent, $js");
+  if((($js & ~$mask) & 0xe0) == 0) {
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
-              "isJavaScript=isJavaScript|1024, lasttime=now() where id=$id");
+              "isJavaScript=isJavaScript|0x400, lasttime=now() where id=$id");
+    if($DEBUG1) error_log("tracker: Set tracker $filename -- $ip, js=" . dechex($js | 0x400) . ", pagehide, id=$id, $agent");
+
     echo "pagehide OK";
   } else {
     echo "js: ".dechex($js)."\n";    
@@ -112,9 +115,10 @@ if($_POST['page'] == 'pagehide') {
 
 if($_POST['page'] == 'beforeunload') {
   $id = $_POST['id'];
-
+  $filename = $_POST['filename'];
+  
   if(!$id) {
-    error_log("tracker: $S->siteName: BEFOREUNLOAD NO ID, $ip, $agent");
+    error_log("tracker: $filename BEFOREUNLOAD NO ID, $ip, $agent");
     exit();
   }
 
@@ -122,17 +126,15 @@ if($_POST['page'] == 'beforeunload') {
   
   list($js) = $S->fetchrow('num');
 
-  // 0x701f is 0x4000: csstest, 0x2000: robots, 0x101F: 0x1000 timer, 0x10 noscript,
-  // 0xf start|load|script|normal
-  // So if js is zero after the &~ then we do not have a (32|64|128) beacon,
-  // or (256|512) tracker:beforeunload/unload. We should update.
-
-  if($DEBUG) error_log("tracker: beforeunload - before check");
+  $mask = (0x8000 | 0x4000 | 0x1000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
   
-  if(($js & ~(0x701f)) == 0) {
-    if($DEBUG) error_log("tracker: beforeunload,   $S->siteName, $id, $ip, $agent, $js");
+  if($DEBUG1) error_log("tracker: before check $filename -- $ip, js=" . dechex($js) . ", type=beforeunload");
+  
+  if((($js & ~ $mask) & 0xe0) == 0 ) {
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
-              "isJavaScript=isJavaScript|256, lasttime=now() where id=$id");
+              "isJavaScript=isJavaScript|0x100, lasttime=now() where id=$id");
+    if($DEBUG1) error_log("tracker: Set tracker $filename -- $ip, js=" . dechex($js | 0x100) . ", beforeunload, id=$id, $agent");
+
     echo "beforeunload OK";
   } else {
     echo "js: ".dechex($js)."\n";
@@ -145,9 +147,10 @@ if($_POST['page'] == 'beforeunload') {
 
 if($_POST['page'] == 'unload') {
   $id = $_POST['id'];
-
+  $filename = $_POST['filename'];
+  
   if(!$id) {
-    error_log("tracker: $S->siteName: UNLOAD NO ID, $ip, $agent");
+    error_log("tracker: $filename UNLOAD NO ID, $ip, $agent");
     exit();
   }
 
@@ -155,17 +158,16 @@ if($_POST['page'] == 'unload') {
   
   list($js) = $S->fetchrow('num');
 
-  // 0x701f is 0x4000: csstest, 0x2000: robots, 0x101F: 0x1000 timer, 0x10 noscript,
-  // 0xf start|load|script|normal
-  // So if js is zero after the &~ then we do not have a (32|64|128) beacon,
-  // or (256|512) tracker:beforeunload/unload. We should update.
+  $mask = (0x8000 | 0x4000 | 0x1000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
 
-  if($DEBUG) error_log("tracker: unload - before check");
+  if($DEBUG1) error_log("tracker: before check $filename -- $ip, js=" . dechex($js) . ", type=unload");
   
-  if(($js & ~(0x701f)) == 0) {
-    if($DEBUG) error_log("tracker: unload,   $S->siteName, $id, $ip, $agent, $js");
+  if((($js & ~$mask) & 0xe0) == 0) {
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
-              "isJavaScript=isJavaScript|512, lasttime=now() where id=$id");
+              "isJavaScript=isJavaScript|0x200, lasttime=now() where id=$id");
+
+    if($DEBUG1) error_log("tracker: Set tracker $filename -- $ip, js=" . dechex($js | 0x200) . ", beforeunload, id=$id, $agent");
+    
     echo "Unload OK";
   } else {
     echo "js: ".dechex($js)."\n";
@@ -183,15 +185,15 @@ if($_POST['page'] == 'timer') {
   $time = $_POST['time'] / 1000;
   $filename = $_POST['filename'];
   
-  if($DEBUG) error_log("tracker timer: $S->siteName, $filename, $ip, $time sec.");
+  if($DEBUG3) error_log("tracker timer: $filename, $ip, $time sec.");
   
   if(!$id) {
-    error_log("tracker: $S->siteName, $filename: TIMER NO ID, $ip, $agent");
+    error_log("tracker: $filename TIMER NO ID, $ip, $agent");
     exit();
   }
 
   try {
-    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|4096, endtime=now(), ".
+    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|0x1000, endtime=now(), ".
            "difftime=timestampdiff(second, starttime, now()), lasttime=now() where id=$id";
     
     $S->query($sql);
@@ -229,14 +231,14 @@ if($_GET['page'] == 'script') {
   $id = $_GET['id'];
   $image = $_GET['image'];
            
-  if($DEBUG) error_log("tracker script: trackerImg1: $image");
+  if($DEBUG2) error_log("tracker script: trackerImg1: $image");
   
   if(!$id || $id == 'undefined') {
     error_log("tracker script: NO ID, $ip, $agent");
     exit();
   }
 
-  if($DEBUG) error_log("tracker script: $id, $ip, $agent");
+  if($DEBUG2) error_log("tracker script: $id, $ip, $agent");
 
   try {
     $sql = "select page, agent from $S->masterdb.tracker where id=$id";
@@ -271,7 +273,7 @@ if($_GET['page'] == 'script') {
   }
   // If no $image then use the default full url.
   
-  if($DEBUG) error_log("tracker script: default-image: $img1");
+  if($DEBUG2) error_log("tracker script: default-image: $img1");
   
   $imageType = preg_replace("~^.*\.(.*)$~", "$1", $img1); // greedy \. so we only see the LAST .
   $img = file_get_contents("$img1");
@@ -344,7 +346,7 @@ if($_GET['page'] == 'noscript') {
     exit();
   }
 
-  if($DEBUG) error_log("tracker noscript: $id, $ip, $agent");
+  if($DEBUG2) error_log("tracker noscript: $id, $ip, $agent");
 
   try {
     $sql = "select page, agent from $S->masterdb.tracker where id=$id";
@@ -394,7 +396,7 @@ if(isset($_GET['csstest'])) {
     exit();
   }
 
-  if($DEBUG) error_log("tracker csstest: $id, $ip, $agent");
+  if($DEBUG2) error_log("tracker csstest: $id, $ip, $agent");
 
   // For csstest we will set bit 0x4000
   

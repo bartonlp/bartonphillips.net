@@ -3,6 +3,8 @@
 // This needs to be symlinked into each directory where it will be run along with getcookie.php and
 // webstats.php. The symlink is needed so $S will have the information form the local
 // mysitemap.json. This is needed for setSiteCookie().
+// *** Remember, this does not happen untill the entire page has been rendored so the
+// fingerprint and tracker info are not available for the PHP files!
 
 $_site = require_once(getenv("SITELOADNAME"));
 ErrorClass::setDevelopment(true);
@@ -72,7 +74,8 @@ if($_POST['page'] == 'geo') {
   exit();
 }
 
-// Ajax for finger
+// Ajax for finger. Remember, this does not happen untill the entire page has been rendored so the
+// fingerprint and tracker are not available for the PHP files!
 
 if($_POST['page'] == 'finger') {
   $visitor = $_POST['visitor'];
@@ -80,7 +83,7 @@ if($_POST['page'] == 'finger') {
 
   if($S->setSiteCookie("BLP-Finger", $visitor, $exp) === false) {
     error_log("geoAjax: setSiteCookie Finger Error");
-    echo "geoAjax: setSiteCookie Finger Error";
+    echo "geoAjax: setSiteCookie Finger Error"; // This is returned to the javascript that called this.
     exit();
   }
 
@@ -89,6 +92,6 @@ if($_POST['page'] == 'finger') {
   $sql = "update $S->masterdb.tracker set finger='$visitor' where id=$id";
   $S->query($sql);
 
-  echo "finger Updated";
+  echo "finger Updated"; // Returned to the javascript.
   exit();
 }
