@@ -61,10 +61,10 @@ $query = $S->escape($query); // Make sure there are no ' etc.
 // counter, counter2 and tracker here.
 // The 'site' in counter and counter2 will have Proxy added to the $S->siteName.
 
-$site = $S->siteName . "Proxy";
+$site = $S->siteName . "Proxy"; // Add Proxy to the site name.
 $bot = $S->isBot ? 1 : 0;
 $real = $bot == 1 ? 0 : 1;
-$trackersite = substr($_SERVER['REQUEST_URI'], 0, 250);
+$trackersite = substr($_SERVER['REQUEST_URI'], 0, 250); // This is the site that called this.
 
 $S->query("insert into $S->masterdb.counter2 (site, date, filename, `real`, bots, lasttime) ".
           "values('$site', now(), '$trackersite', $real, $bot, now()) ".

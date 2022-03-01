@@ -257,7 +257,9 @@ EOF;
 
 //$S->ip = "122.333.333.1"; // For testing only
 
-[$cookieIp, $cookieEmail] = explode(":", $cookies['SiteId']);
+if($cookies['SiteId'] !== null) {
+  [$cookieIp, $cookieEmail] = explode(":", $cookies['SiteId']);
+}
 
 if(!isMe($S) && $cookieEmail !== "bartonphillips@gmail.com") {
   $msg = "<h1>No Cookie and Wrong IP</h1>"; // Just go away

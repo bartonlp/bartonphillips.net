@@ -22,6 +22,8 @@
 // BLP 2018-01-07 -- changed tracker order by starttime to lasttime
 // BLP 2017-03-23 -- set up to work with https  
 
+//$DEBUG = true;
+
 // Form post. I do this because each domain has a symlink to webstats.php and I need to use the mysitemap.json form that domein.
 
 if(isset($_POST['submit'])) {
@@ -45,7 +47,7 @@ if(isset($_POST['submit'])) {
     case 'Newbernzig':
       header("Location: https://www.newbernzig.com/webstats.php?blp=8653");
       break;
-    case 'bartonhome': 
+    case 'BartonphillipsOrg': 
       header("Location: https://www.bartonphillips.org/webstats.php?blp=8653");
       break;
     default:
@@ -54,10 +56,11 @@ if(isset($_POST['submit'])) {
   exit();
 } 
 
+if($DEBUG) $start = hrtime(true);
+
 // Instantiate our SiteClass
 
 $_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setDevelopment(true);  
 $S = new $_site->className($_site);
 //vardump("S", $S);
 
@@ -83,7 +86,13 @@ EOF;
 $h->css = <<<EOF
 <style>
 /* 'tables' is not a real HTML tag but css allows it. See <tables> in code */  
-tables ul { margin-top: 0; }  
+tables ul { margin-top: 0; }
+/* For the human readable information.
+   We need these two relative so the pop up is in the right place.
+*/
+#tracker, #robots {
+  position: relative;
+}
 .home {
   color: white;
   background: green;
@@ -126,6 +135,10 @@ body { margin: 10px; }
   z-index: 20;
   padding-bottom: 30px;
 }
+/* make the 'count' and 'bots' row as small as posible. It will be as big as the elements in it. */
+#robots td:nth-of-type(4) { width: 1px; text-align: right; padding-right: 10px; }
+#robots td:nth-of-type(3) { width: 1px; text-align: right; padding-right: 10px; }
+
 @media (max-width: 850px) {
   html { font-size: 10px; }
   #geocontainer {
@@ -185,14 +198,53 @@ if(array_intersect([$S->siteName], ['Bartonphillips', 'Tysonweb', 'Newbernzig', 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA6GtUwyWp3wnFH1iNkvdO9EO6ClRr_pWo&callback=initMap&v=weekly" async></script>
 EOF;
 }
+if($DEBUG) {
+  $b->script .= <<<EOF
+<script>
+try {
+  // Create the performance observer.
+  const po = new PerformanceObserver((list) => {
+    //console.log("list: ", list);
+  
+    for(const entry of list.getEntries()) {
+      // Logs all server timing data for this response
+      //console.log("entry: ", entry);
+      let date = entry.serverTiming[0];
+      let time = entry.serverTiming[1];
+      console.log('Server Timing: date='+ date.description + ', time=' + time.duration / 1e6);
+    }
+  });
+  // Start listening for navigation entries to be dispatched.
+  
+  po.observe({type: 'navigation', buffered: true});
+} catch (e) {
+  // Do nothing if the browser doesn't support this API.
+  console.log("ERROR: ", e);
+}
+try {
+  const po1 = new PerformanceObserver(list => {
+    for(const entry of list.getEntries()) {
+      console.log("Name: " + entry.name + `
+  Type: `
+                  + entry.entryType +
+                  ", Start: " + entry.startTime +
+                  ", Duration: " + entry.duration
+                 );
+    }
+  });
+  po1.observe({type: 'resource', buffered: true});
+} catch(e) {}
+</script>
+EOF;
+}
 
 $h->title = "Web Statistics";
 
-$h->banner = "<h1 id='maintitle' class='center'>Web Stats For <b>$S->siteName</b></h1>";
+$h->banner = "<h1>Web Stats For <b>$S->siteName</b></h1>";
 
 [$top, $footer] = $S->getPageTopBottom($h, $b);
 
-$homeip = gethostbyname("bartonphillips.dyndns.org"); // My home ip. Updated via ddclient.
+//$homeip = gethostbyname("bartonphillips.dyndns.org"); // My home ip. Updated via ddclient.
  
 $T = new dbTables($S); // My table class
 
@@ -507,8 +559,8 @@ $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScri
 "where site='$S->siteName' and starttime >= current_date() - interval 24 hour ". 
 "order by lasttime desc";
 
-list($tracker) = $T->maketable($sql, array('callback'=>'trackerCallback',
-'attr'=>array('id'=>'tracker', 'border'=>'1')));
+$tracker = $T->maketable($sql, array('callback'=>'trackerCallback',
+'attr'=>array('id'=>'tracker', 'border'=>'1')))[0];
 
 $tracker = <<<EOF
 <div class="scrolling">
@@ -572,7 +624,8 @@ $form = <<<EOF
     <option>Bartonphillips</option>
     <option>Tysonweb</option>
     <option>Newbernzig</option>
-    <option>bartonhome</option>
+    <option>BartonphillipsOrg</option>
+    <option>Rpi</option>
   </select>
 
   <button type="submit" name='submit'>Submit</button>
@@ -647,6 +700,13 @@ $tbl
 EOF;
 } else {
   $botsnext = $geotbl ? "<a href='#table11'>Next</a>" : "<a href='#analysis-info'>Next</a>";
+}
+
+if($DEBUG) {
+  $end = hrtime(true);
+  $serverdate = date("Y-m-d_H_i_s");
+  header("Server-Timing: date;desc=$serverdate");
+  header("Server-Timing: time;desc=Test_Timing;dur=" . ($end - $start), false);
 }
 
 // Render page

@@ -8,7 +8,8 @@
 
 console.log("URL: " + window.location.href);
 
-const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo";
+const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo"; // This is safe because only my site can use it.
+
 var visitorId;
 const geoAjax = "/geoAjax.php"; 
 
@@ -23,12 +24,29 @@ function getGeo() {
         data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitorId },
         type: 'post',
         success: function(data) {
-          console.log("return: " + data);
+          console.log("getGeo -- return: " + data);
         },
         error: function(err) {
           console.log(err);
         }
       });
+    }, (error) => {
+      if(error.message == "User denied Geolocation") {
+        console.log("geo Error: " + error.message);
+        $.ajax({
+          url: geoAjax,
+          data: { page: 'geoFail', visitor: visitorId, id: lastId },
+          type: 'post',
+          success: function(data) {
+            console.log("geoFail -- return: " + data);
+          },
+          error: function(err) {
+            console.log("geoFail err: " + err);
+          }
+        });
+      } else {
+        console.log("geo Errof: " + error.message);
+      }
     });
   } else {
     console.log("Not Available");
@@ -62,7 +80,7 @@ fpPromise
     data: { page: 'finger', visitor: visitorId, id: lastId },
     type: 'post',
     success: function(data) {
-      console.log("return: " + data);
+      console.log("finger -- return: " + data);
       console.log(window.location.pathname);
       const fname = window.location.pathname;
       if(fname == '/' || fname == "/index.php") {

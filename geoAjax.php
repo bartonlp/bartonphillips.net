@@ -38,9 +38,9 @@ if($_POST['page'] == 'geo') {
   $visitor = $_POST['visitor'];
   
   $exp = time() + 60*60*24*365;
-  
+
   if($S->setSiteCookie("BLP-geo", "$lat:$lon", $exp) === false) {
-    error_log("geoAjax: setSiteCookie geo Error");
+    error_log("geoAjax: setSiteCookie geo Error: lat:lon=$lat:$lon, exp=$exp");
     echo "geoAjax: setSiteCookie geo Error";
     exit();
   }
@@ -74,6 +74,14 @@ if($_POST['page'] == 'geo') {
   exit();
 }
 
+if($_POST['page'] == 'geoFail') {
+  $id = $_POST['id'];
+  
+  $S->query("update $S->masterdb.tracker set nogeo=1 where id='$id'");
+  echo "geoFail: id=$id";
+  exit();
+}
+
 // Ajax for finger. Remember, this does not happen untill the entire page has been rendored so the
 // fingerprint and tracker are not available for the PHP files!
 
@@ -81,6 +89,8 @@ if($_POST['page'] == 'finger') {
   $visitor = $_POST['visitor'];
   $id = $_POST['id'];
 
+  $exp = time() + 60*60*24*365;
+  
   if($S->setSiteCookie("BLP-Finger", $visitor, $exp) === false) {
     error_log("geoAjax: setSiteCookie Finger Error");
     echo "geoAjax: setSiteCookie Finger Error"; // This is returned to the javascript that called this.
@@ -92,6 +102,6 @@ if($_POST['page'] == 'finger') {
   $sql = "update $S->masterdb.tracker set finger='$visitor' where id=$id";
   $S->query($sql);
 
-  echo "finger Updated"; // Returned to the javascript.
+  echo "finger Updated: $id"; // Returned to the javascript.
   exit();
 }

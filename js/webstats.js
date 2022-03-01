@@ -456,7 +456,11 @@ jQuery(document).ready(function($) {
     }
 
     let ip = $("span", this).text();
-    let ypos = e.pageY;
+    let pos = $(this).position();
+    let xpos = pos.left + $(this).width() + 10;
+    let ypos = pos.top;
+    let table = $(this).closest('table');
+    
     console.log("IP: "+ip);
 
     if(e.altKey) { // Alt key?
@@ -470,9 +474,9 @@ jQuery(document).ready(function($) {
           // need to worry about position fixed not working!
 
           $("#FindBot").remove();
-          $("<div id='FindBot' style='position: absolute;top: "+ypos+"px; "+
+          table.append("<div id='FindBot' style='position: absolute;top: "+ypos+"px;left:"+xpos+"px;"+
               "background-color: white; border: 5px solid black;padding: 10px'>"+
-              data+"</div>").appendTo("body");
+              data+"</div>");
         },
         error: function(err) {
           console.log(err);
@@ -512,23 +516,30 @@ jQuery(document).ready(function($) {
     let js = parseInt($(this).text(), 16),
     human, h = '', ypos, xpos;
 
+    let table = $(this).closest("table");
+    let pos = $(this).position(); // get the top and left
+    let id = table.attr("id");
+    
     // The td is in a tr which in in a tbody, so table is three
     // prents up.
 
-    if($(this).closest("table").attr("id") != 'tracker') {
+    if(id != 'tracker') {
+      // Robots (bots table)
+      
       human = {3: "robots.txt", 0xc: "SiteClass", 0x30: "Sitemap.xml", 0x100: "Zero"};
-      xpos = e.pageX;
+      xpos = pos.left + $(this).width() + 17; // add the one border and one padding (15px) plus a mig.
     } else {
+      // Tracker table.
+      
       human = {
         1: "Start", 2: "Load", 4: "Script", 8: "Normal",
         0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
         0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
         0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest", 0x8000: "isMe", 0x10000: "Proxy"
       };
-      xpos = e.pageX - 200;
+      xpos = pos.left - 300; // Push this to the left so it will render full size
     }
-
-    ypos = e.pageY;
+    ypos = pos.top;
 
     if(js == 0) {
       h = 'curl';
@@ -539,10 +550,21 @@ jQuery(document).ready(function($) {
     }
 
     $("#FindBot").remove();
-    $("body").append("<div id='FindBot' style='position: absolute; top: "+ypos+"px; left: "+xpos+"px; "+
-                     "background-color: white; border: 5px solid black; "+
-                     "padding: 10px;'>"+h+"</div>");
 
+    // Now append FindBot to the table.
+    
+    table.append("<div id='FindBot' style='position: absolute; top: "+ypos+"px; left: "+xpos+"px; "+
+                 "background-color: white; border: 5px solid black; "+
+                 "padding: 10px;'>"+h+"</div>");
+
+    if(id == "tracker") {
+      // For tracker recalculate the xpos based on the size of the
+      // FindBot item.
+      
+      xpos = pos.left - ($("#FindBot").width() + 35); // we add the border and padding (30px) plus a mig.
+      $("#FindBot").css("left", xpos + "px");
+    }
+    
     e.stopPropagation();
   });
 

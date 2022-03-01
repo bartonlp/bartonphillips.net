@@ -5,7 +5,7 @@
 $_site = require_once(getenv("SITELOADNAME"));
 $S = new Database($_site);
 
-$DEBUG = true; //false; // BLP 2021-06-30 -- for debugging
+//$DEBUG = true; //false; // BLP 2021-06-30 -- for debugging
 
 // BLP 2021-12-24 -- $S now has agent and id
 $agent = $S->agent;

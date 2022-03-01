@@ -1,3 +1,4 @@
+// Not a normal json this allows comments.
 // BLP 2021-10-29 -- No longer use password see note below
 {
     "siteDomain": "bartonphillips.net",
@@ -20,6 +21,15 @@
        */
       "database": "barton",
       "engine": "mysqli"
+    },
+    "errorMode": {
+      "development": true, // development automatically sets email to true.
+                         // If development is true then noEmail will be
+                         // set to true unless noEmail is set to false!
+                         // Only false not null or just missing.
+      "noEmail": null,   // Set it to null will not affect the true above which sets it to true also.
+      "noHtml": false,
+      "noOutput": false
     },
     "trackerImg1": "/images/blp-image.png", // /image/.. will get the image from bartonphillips.net.
     "headFile": "includes/head.i.php",

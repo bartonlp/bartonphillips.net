@@ -8,12 +8,13 @@
 // BLP 2017-11-01 -- all-cron.sh runs update-analysis.sh
 // BLP 2016-09-03 -- change ftp password to '7098653?' note without single quotes
 
-$_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setDevelopment(true);
-
 // Ajax from CRON job /var/www/bartonlp/scrits/update-analysis.sh which is run via all-cron.sh
 
+$_site = require_once(getenv("SITELOADNAME"));
+
 if($thisSite = $_GET['siteupdate']) {
+  //error_log("_site: " . print_r($_site, true));
+  
   $S = new $_site->className($_site);
   getAnalysis($S, $thisSite);
   exit();
@@ -83,7 +84,7 @@ $site = $_POST['site'] ?? 'ALL';
   
   $h->banner = "<h1 id='analysis-info'>Analysis Information for $site</h1>";
 
-  list($top, $footer) = $S->getPageTopBottom($h);
+  [$top, $footer] = $S->getPageTopBottom($h);
 
   $analysis = file_get_contents("https://bartonphillips.net/analysis/$site-analysis.i.txt");
 
@@ -102,8 +103,8 @@ return getAnalysis($S, $S->siteName);
 // Helper function to make the tables
 
 function maketable($sql, $S) {
-  $total = array();
-  $counts = array();
+  $total = [];
+  $counts = [];
 
   $n = $S->query($sql);
 
@@ -112,7 +113,7 @@ function maketable($sql, $S) {
           "http client|pecl::http|blackberry|windows|android|ipad|iphone|darwin|macintosh|".
           "x11|linux|bsd|cros|msie~i";
 
-  while(list($agent, $count) = $S->fetchrow('num')) {
+  while([$agent, $count] = $S->fetchrow('num')) {
     if(preg_match_all($pat1, $agent, $m)) {
       $mm = array_map('strtolower', $m[0]);
       $val = '';
@@ -224,7 +225,7 @@ function getAnalysis($S, $site='ALL') {
   $S->query("select created from $S->masterdb.logagent ".
             "where ip not in ($ips)$where1 order by created limit 1");
 
-  list($startDate) = $S->fetchrow('num');
+  $startDate = $S->fetchrow('num')[0];
 
   // Now select agent and count from logagent where it is not Me and the site if not ALL
   // This gets all of the records since the last time the table was truncated. Now it is truncated
@@ -233,7 +234,7 @@ function getAnalysis($S, $site='ALL') {
   
   $sql = "select agent, count from $S->masterdb.logagent where ip not in($ips)$where1";
   
-  list($totals, $counts, $n[0]) = maketable($sql, $S);
+  [$totals, $counts, $n[0]] = maketable($sql, $S);
 
   // Now we get only 60 days worth of data.
   
@@ -243,12 +244,12 @@ function getAnalysis($S, $site='ALL') {
             "where created >= current_date() - interval $days day ".
             "and ip not in ($ips)$where1 order by created limit 1");
   
-  list($sinceDate) = $S->fetchrow('num');
+  $sinceDate = $S->fetchrow('num')[0];
 
   $sql = "select agent, count from $S->masterdb.logagent ".
          "where created >= current_date() - interval $days day and ip not in ($ips)$where1";
 
-  list($totals2, $counts2, $n[1]) = maketable($sql, $S);
+  [$totals2, $counts2, $n[1]] = maketable($sql, $S);
   
   $os = [];
   $browser = [];
@@ -297,26 +298,26 @@ EOF;
   $browser[0] .= "</tbody></table>";
   $browser[1] .= "</tbody></table>"; 
 
-  if($site != 'Tysonweb') {
-    $form = <<<EOF
+  $form = <<<EOF
 <!-- If not Tysonweb give the options to view different sites -->
 <div id="siteanalysis">
-  <form method="post" action="analysis.php">
-    Get Site: 
-    <select name='site'>
-      <option>Allnatural</option>
-      <option>Bartonphillips</option>
-      <option>BartonlpOrg</option>
-      <option>Tysonweb</option>
-      <option>Newbernzig</option>
-      <option>ALL</option>
-    </select>
+<form method="post" action="analysis.php">
+  Get Site: 
+  <select name='site'>
+    <option>Allnatural</option>
+    <option>Bartonphillips</option>
+    <option>BartonlpOrg</option>
+    <option>Tysonweb</option>
+    <option>Newbernzig</option>
+    <option>BartonphillipsOrg</option>
+    <option>Rpi</option>
+    <option>ALL</option>
+  </select>
 
-    <button id="mysite" type="submit">Submit</button>
-  </form>
+  <button id="mysite" type="submit">Submit</button>
+</form>
 </div>
 EOF;
-  }
   
   $creationDate = date("Y-m-d H:i:s T");
 
@@ -378,10 +379,49 @@ $browser[1]
 </div>
 EOF;
 
-  //error_log("analysis.php: UPDATE analisys.i.txt for $site");
-  // Update the analysis.i.txt file
-  if(file_put_contents("/var/www/bartonphillipsnet/analysis/$site-analysis.i.txt", $analysis) === false) {
-    error_log("analysis: file_put_contents FAILED on $site-analysis.i.txt");
+  if(array_intersect([$S->siteName], ['BartonphillipsOrg', 'Rpi']) !== false) {
+    // BLP 2022-02-06 -- Special version for HP-envy
+
+    if(($ftp = ftp_connect("bartonphillips.net")) === false) {
+      echo "ftp_connect('bartonphillips.net') Failed<br>";
+      exit();
+    }
+
+    if(ftp_login($ftp, "barton", "7098653?") === false) {
+      echo "ftp_login() Failed<br>";
+      exit();
+    }
+
+    if(ftp_chdir($ftp, "www/bartonphillipsnet/analysis")) {
+      //echo "Current Dir: " . ftp_pwd($ftp) . "<br>";
+    } else {
+      echo "ftp_chdir('www/bartonphillipsnet/analysis') Failed</br>";
+      exit();
+    }
+
+    if(file_put_contents("/tmp/tempfile", $analysis) === false) {
+      echo "file_put_contents('/tmp/tempfile') Failed<br>";
+      exit();
+    }
+
+    $file = "/tmp/tempfile";
+
+    if(ftp_put($ftp, "$site-analysis.i.txt", $file, FTP_ASCII) === false) {
+      echo "There was a problem while uploading $file\n";
+      exit();
+    }
+    unlink("/tmp/tempfile");
+  } else {
+    //error_log("analysis.php: UPDATE analisys.i.txt for $site");
+    // Update the analysis.i.txt file
+
+    if(file_put_contents("/var/www/bartonphillipsnet/analysis/$site-analysis.i.txt", $analysis) === false) {
+      $e = error_get_last();
+      error_log("e: " . print_r($e, true));
+      echo "ERROR<br>";
+      error_log("analysis: file_put_contents FAILED on $site-analysis.i.txt");
+    }
   }
+  
   return $analysis;
 }
