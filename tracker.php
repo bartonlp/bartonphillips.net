@@ -407,10 +407,15 @@ if(isset($_GET['csstest'])) {
 
     $or = 0x4000;
     
-    if($agent != $orgagent) {
+    if($agent != $orgagent) { // NOT SURE THIS CAN HAPPEN?
+      // 0x6000 is 0x4000 (csstest) and 0x2000 (Bot).
+      
       $sql = "insert into $S->masterdb.tracker (site, ip, page, agent, starttime, refid, isJavaScript, lasttime) ".
              "values('$S->siteName', '$ip', '$page', '$agent', now(), '$id', 0x6000, now())";
 
+      // Not sure this can happen??
+      error_log("tracker.php: agent=$agent, orgagent=$orgagent, or=0x6000, " . __LINE__);
+      
       $S->query($sql);
       $or = 0x6000;
     }
