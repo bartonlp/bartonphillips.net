@@ -9,7 +9,7 @@
 $_site = require_once(getenv("SITELOADNAME"));
 $S = new Database($_site);
 
-//$DEBUG1 = true;  // BLP 2022-01-17 -- AJAX posts
+$DEBUG1 = true;  // BLP 2022-01-17 -- AJAX posts
 //$DEBUG2 = true; // BLP 2022-01-17 -- GET
 //$DEBUG3 = true; // BLP 2022-01-17 -- Timer
 
@@ -158,11 +158,29 @@ if($_POST['page'] == 'unload') {
   
   list($js) = $S->fetchrow('num');
 
-  $mask = (0x8000 | 0x4000 | 0x1000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
+  // 0x8000 (isMe)
+  // 0x4000 (csstest)
+  // 0x2000 (bot via SiteClass)
+  // 0x1000 (timer)
+  // 0x400 (t-pagehide)
+  // 0x200 (t-unload)
+  // 0x100 (t-beforeunload)
+  // 0x80 (b-beforeunload)
+  // 0x40 (b-unload)
+  // 0x20 (b-pagehide)
+  // 0x10 (noscript)
+  // 0xf (start,load,script,normal)
+  
+  //$mask = (0x8000 | 0x4000 | 0x2000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
 
   if($DEBUG1) error_log("tracker: before check $filename -- $ip, js=" . dechex($js) . ", type=unload");
+
+  // 0x20, 0x40, 0x80 (0xe0) means it was handled by beacon.
   
-  if((($js & ~$mask) & 0xe0) == 0) {
+  //if((($js & ~$mask) & 0xe0) == 0) {
+  // BLP 2022-03-16 --
+
+  if(($js & 0xe0) == 0) { // NOT handled by beacon
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
               "isJavaScript=isJavaScript|0x200, lasttime=now() where id=$id");
 
@@ -407,14 +425,14 @@ if(isset($_GET['csstest'])) {
 
     $or = 0x4000;
     
-    if($agent != $orgagent) { // NOT SURE THIS CAN HAPPEN?
+    if($agent != $orgagent) { // This can happen if $orgagent is blank or the agent does not match orgagent.
       // 0x6000 is 0x4000 (csstest) and 0x2000 (Bot).
       
       $sql = "insert into $S->masterdb.tracker (site, ip, page, agent, starttime, refid, isJavaScript, lasttime) ".
              "values('$S->siteName', '$ip', '$page', '$agent', now(), '$id', 0x6000, now())";
 
       // Not sure this can happen??
-      error_log("tracker.php: agent=$agent, orgagent=$orgagent, or=0x6000, " . __LINE__);
+      error_log("tracker.php: ip=$ip, agent=$agent, orgagent=$orgagent, or=0x6000, " . __LINE__);
       
       $S->query($sql);
       $or = 0x6000;
