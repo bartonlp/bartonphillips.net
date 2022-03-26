@@ -10,6 +10,7 @@
     "author": "Barton L. Phillips, mailto:bartonphillips@gmail.com",
     "address": "New Bern, North Carolina",
     // "nodb": true,
+    "noGeo" : true, // We want this to stay cookieless so don't do the geo script
     "masterdb": "barton",
     "dbinfo": {
       "host": "localhost",
