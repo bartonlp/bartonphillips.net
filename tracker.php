@@ -9,7 +9,9 @@
 $_site = require_once(getenv("SITELOADNAME"));
 $S = new Database($_site);
 
-$DEBUG1 = true;  // BLP 2022-01-17 -- AJAX posts
+//$DEBUG1 = true;  // BLP 2022-01-17 -- AJAX posts
+//$DEBUGa1 = true; // AJAX unload posts
+//$DEBUGb1 = true; // AJAX answers
 //$DEBUG2 = true; // BLP 2022-01-17 -- GET
 //$DEBUG3 = true; // BLP 2022-01-17 -- Timer
 
@@ -94,17 +96,29 @@ if($_POST['page'] == 'pagehide') {
   
   list($js) = $S->fetchrow('num');
 
-  $mask = (0x8000 | 0x4000 | 0x1000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
+  // 0x8000 (isMe)
+  // 0x4000 (csstest)
+  // 0x2000 (bot via SiteClass)
+  // 0x1000 (timer)
+  // 0x400 (t-pagehide)
+  // 0x200 (t-unload)
+  // 0x100 (t-beforeunload)
+  // 0x80 (b-beforeunload)
+  // 0x40 (b-unload)
+  // 0x20 (b-pagehide)
+  // 0x10 (noscript)
+  // 0xf (start,load,script,normal)
   
-  if($DEBUG1) error_log("tracker: before check $filename -- $ip, js=" . dechex($js) . ", type=pagehide");
+  if($DEBUGa1) error_log("tracker: before check $id, $filename -- $ip, js=" . dechex($js) . ", type=pagehide");
 
-  if((($js & ~$mask) & 0xe0) == 0) {
+  if(($js & 0xe0) == 0) {
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
               "isJavaScript=isJavaScript|0x400, lasttime=now() where id=$id");
-    if($DEBUG1) error_log("tracker: Set tracker $filename -- $ip, js=" . dechex($js | 0x400) . ", pagehide, id=$id, $agent");
+    if($DEBUGa1) error_log("tracker: Set tracker $id, $filename -- $ip, js=" . dechex($js | 0x400) . ", pagehide, $agent");
 
     echo "pagehide OK";
   } else {
+    if($DEBUGb2) error_log("tracker: pagehide Not Done $id, $filename -- $ip, js=". dechex($js) . ", $agent");
     echo "js: ".dechex($js)."\n";    
     echo "pagehide Not Done";
   }
@@ -126,17 +140,29 @@ if($_POST['page'] == 'beforeunload') {
   
   list($js) = $S->fetchrow('num');
 
-  $mask = (0x8000 | 0x4000 | 0x1000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
+  // 0x8000 (isMe)
+  // 0x4000 (csstest)
+  // 0x2000 (bot via SiteClass)
+  // 0x1000 (timer)
+  // 0x400 (t-pagehide)
+  // 0x200 (t-unload)
+  // 0x100 (t-beforeunload)
+  // 0x80 (b-beforeunload)
+  // 0x40 (b-unload)
+  // 0x20 (b-pagehide)
+  // 0x10 (noscript)
+  // 0xf (start,load,script,normal)
+
+  if($DEBUGa1) error_log("tracker: before check $id, $filename -- $ip, js=" . dechex($js) . ", type=beforeunload");
   
-  if($DEBUG1) error_log("tracker: before check $filename -- $ip, js=" . dechex($js) . ", type=beforeunload");
-  
-  if((($js & ~ $mask) & 0xe0) == 0 ) {
+  if(($js & 0xe0) == 0 ) {
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
               "isJavaScript=isJavaScript|0x100, lasttime=now() where id=$id");
-    if($DEBUG1) error_log("tracker: Set tracker $filename -- $ip, js=" . dechex($js | 0x100) . ", beforeunload, id=$id, $agent");
+    if($DEBUGa1) error_log("tracker: Set tracker $id, $filename -- $ip, js=" . dechex($js | 0x100) . ", beforeunload, $agent");
 
     echo "beforeunload OK";
   } else {
+    if($DEBUGb2) error_log("tracker: beforeunload Not Done $id, $filename -- $ip, js=". dechex($js) . ", $agent");    
     echo "js: ".dechex($js)."\n";
     echo "beforeunload Not Done";
   }
@@ -171,23 +197,19 @@ if($_POST['page'] == 'unload') {
   // 0x10 (noscript)
   // 0xf (start,load,script,normal)
   
-  //$mask = (0x8000 | 0x4000 | 0x2000 | 0x1000 | 0x80 | 0x40 | 0x20 | 0x10 | 0xf); // should be 0xd0ff
-
-  if($DEBUG1) error_log("tracker: before check $filename -- $ip, js=" . dechex($js) . ", type=unload");
+  if($DEBUGa1) error_log("tracker: before check $id, $filename -- $ip, js=" . dechex($js) . ", type=unload");
 
   // 0x20, 0x40, 0x80 (0xe0) means it was handled by beacon.
   
-  //if((($js & ~$mask) & 0xe0) == 0) {
-  // BLP 2022-03-16 --
-
   if(($js & 0xe0) == 0) { // NOT handled by beacon
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
               "isJavaScript=isJavaScript|0x200, lasttime=now() where id=$id");
 
-    if($DEBUG1) error_log("tracker: Set tracker $filename -- $ip, js=" . dechex($js | 0x200) . ", beforeunload, id=$id, $agent");
+    if($DEBUGa1) error_log("tracker: Set tracker $id, $filename -- $ip, js=" . dechex($js | 0x200) . ", beforeunload, $agent");
     
     echo "Unload OK";
   } else {
+    if($DEBUGb2) error_log("tracker: unload Not Done $id, $filename -- $ip, js=". dechex($js) . ", $agent");    
     echo "js: ".dechex($js)."\n";
     echo "Unload Not Done";
   }
@@ -203,7 +225,7 @@ if($_POST['page'] == 'timer') {
   $time = $_POST['time'] / 1000;
   $filename = $_POST['filename'];
   
-  if($DEBUG3) error_log("tracker timer: $filename, $ip, $time sec.");
+  if($DEBUG3) error_log("tracker: timer $filename, $ip, $time sec.");
   
   if(!$id) {
     error_log("tracker: $filename TIMER NO ID, $ip, $agent");
@@ -431,8 +453,9 @@ if(isset($_GET['csstest'])) {
       $sql = "insert into $S->masterdb.tracker (site, ip, page, agent, starttime, refid, isJavaScript, lasttime) ".
              "values('$S->siteName', '$ip', '$page', '$agent', now(), '$id', 0x6000, now())";
 
-      // Not sure this can happen??
-      error_log("tracker.php: ip=$ip, agent=$agent, orgagent=$orgagent, or=0x6000, " . __LINE__);
+      // if orgagent is empty or the two are not the same.
+      
+      if($DEBUG2) error_log("tracker: id=$id, ip=$ip, agent=$agent, orgagent=$orgagent, or=0x6000, " . __LINE__);
       
       $S->query($sql);
       $or = 0x6000;
