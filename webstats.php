@@ -50,6 +50,9 @@ if(isset($_POST['submit'])) {
     case 'BartonphillipsOrg': 
       header("Location: https://www.bartonphillips.org/webstats.php?blp=8653");
       break;
+    case 'Rpi':
+      header("location: http://www.bartonphillips.dyndns.org:8080/webstats.php?blp=8653");
+      break;
     default:
       echo "OPS something went wrong: siteName: $siteName";
   }
@@ -780,7 +783,6 @@ $geotbl
 </tables>
 <div id="analysis-info">
 <hr>
-<h2>Analysis Information for $S->siteName</h2>
 $analysis
 </div>
 <hr>
