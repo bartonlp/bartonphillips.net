@@ -100,106 +100,124 @@ EOF;
 
 return getAnalysis($S, $S->siteName);
 
-// Helper function to make the tables
+// make table 2 test
 
-function maketable($sql, $S) {
+function maketable2($sql, $S) {
   $total = [];
   $counts = [];
-
+  
   $n = $S->query($sql);
+  $r = $S->getResult();
+  
+  while([$agent, $count, $ip] = $S->fetchrow($r, 'num')) {
+    // Do the same check as in SiteClass
+    $agent = $S->escape($agent);
+    
+    if($S->query("select ip from $S->masterdb.bots where ip='$ip' and agent='$agent'") !== 0) {
+      $total['os'][0] += $count;
+      $total['os'][1] += $count;
+      $total['browser'][0] += $count;
+      $total['browser'][1] += $count;
+      $counts['os']['ROBOT'] += $count;
+      $counts['browser']['ROBOT'] += $count;
+      continue;
+    }
 
-  $pat1 = "~https?://|python|java|wget|nutch|perl|libwww|lwp-trivial|curl|php/|urllib|".
-          "gt::www|snoopy|mfc_tear_sample|http::lite|phpcrawl|uri::fetch|zend_http_client|".
-          "http client|pecl::http|blackberry|windows|android|ipad|iphone|darwin|macintosh|".
-          "x11|linux|bsd|cros|msie~i";
+    $pat1 = "~blackberry|windows|android|ipad|iphone|darwin|macintosh|x11|linux|bsd|cros|msie~i";
 
-  while([$agent, $count] = $S->fetchrow('num')) {
     if(preg_match_all($pat1, $agent, $m)) {
       $mm = array_map('strtolower', $m[0]);
-      $val = '';
-      
-      if(array_intersect(array("http://","https://","python","java","wget","nutch","perl","libwww",
-                               "lwp-trivial","curl","php/","urllib","gt::www","snoopy","mfc_tear_sample",
-                               "http::lite","phpcrawl","uri::fetch","zend_http_client",
-                               "http client","pecl::http"),
-                         $mm))
-      {
-        $val = 'ROBOT';
-        $total['os'][1] += $count;
-      } elseif(array_intersect(array('blackberry'), $mm)) {
-        $val = 'BlackBerry';
-      } elseif(array_intersect(array('darwin'), $mm)) {
-        $val = 'Darwin';
-      } elseif(array_intersect(array('android'), $mm)) {
-        $val = 'Android';
-      } elseif(array_intersect(array('windows','msie'), $mm)) {
-        $val = 'Windows';
-      } elseif(array_intersect(array('ipad'), $mm)) {
-        $val = 'iPad';
-      } elseif(array_intersect(array('iphone'), $mm)) {
-        $val = 'iPhone';
-      } elseif(array_intersect(array('macintosh'), $mm)) {
-        $val = 'Macintosh';
-      } elseif(array_intersect(array('cros'), $mm)) {
-        $val = 'CrOS';
-      } elseif(array_intersect(['x11','linux','bsd'], $mm)) {
-        $val = 'Unix/Linux/BSD';
+
+      switch($mm[0]) {
+        case 'blackberry':
+          $val = 'BlackBerry';
+          break;
+        case 'darwin':
+          $val = 'Darwin';
+          break;
+        case 'android':
+          if($mm[1] == 'linux') {
+            $val = 'AndroidPhone';
+          } else {
+            $val = 'Android';
+          }
+          break;
+        case 'windows':
+        case 'msie':
+          $val = 'Windows';
+          break;
+        case 'ipad':
+          $val = 'iPad';
+          break;
+        case 'iphone':
+          $val = 'iPhone';
+          break;
+        case 'macintosh':
+          $val = 'Macintosh';
+          break;
+        case 'cros':
+          $val = 'CrOS';
+          break;
+        case 'x11':
+        case 'linux':
+        case 'bsd':
+          if($mm[1] == 'android') {
+            $val = 'AndroidPhone';
+          } else {
+            $val = 'Unix/Linux/BSD';
+          }
+          break;
+        default:
+          $val = 'Other';
+          break;
       }
       $counts['os'][$val] += $count;
     } else {
-      //echo "Other, $count: $agent<br>";
       $counts['os']['Other'] += $count;
     }
+
     $total['os'][0] += $count;
 
-    // Now browsers
-
-    $pat2 = "~https?://|python|java|wget|nutch|perl|libwww|lwp-trivial|curl|php/|urllib|".
-            "gt::www|snoopy|mfc_tear_sample|http::lite|phpcrawl|uri::fetch|zend_http_client|".
-            "http client|pecl::http|".
-            "firefox|chrome|safari|trident|msie| edge/|opera|konqueror~i";
+    $pat2 = "~firefox|chrome|safari|trident|msie| edge/|opera|konqueror~i";
 
     if(preg_match_all($pat2, $agent, $m)) {
       $mm = array_map('strtolower', $m[0]);
 
-      if(array_intersect(array("http://","https://","python","java","wget","nutch","perl","libwww",
-                               "lwp-trivial","curl","php/","urllib","gt::www","snoopy","mfc_tear_sample",
-                               "http::lite","phpcrawl","uri::fetch","zend_http_client",
-                               "http client","pecl::http"),
-                         $mm))
-      {
-        $counts['browser']['ROBOT'] += $count;
-        $total['browser'][0] += $count;
-        $total['browser'][1] += $count;
-        continue;
+      switch($mm[0]) {
+        case 'opera':
+          $name = 'Opera';
+          break;
+        case ' edge/':
+          $name = 'MS-Edge';
+          break;
+        case 'trident':
+        case 'msie':
+          $name = 'MsIe';
+          break;
+        case 'chrome':
+          $name = 'Chrome';
+          break;
+        case 'safari':
+          $name = 'Safari';
+          break;
+        case 'firefox':
+          $name = 'Firefox';
+          break;
+        case 'konqueror':
+          $name = 'Konqueror';
+          break;
+        default:
+          $name = 'Other';
+          break;
       }
-
-      // NOTE the order of these tests. Check for 'opera' first then the "MsIe" variants then
-      // 'chrome' and then the rest.
-      
-      if(array_intersect(['opera'], $mm)) {
-        $name = 'Opera';
-      } elseif(array_intersect([' edge/'], $mm)) {
-        $name = 'MS-Edge';
-      } elseif(array_intersect(['trident','msie'], $mm)) {
-        $name = 'MsIe';
-      } elseif(array_intersect(['chrome'], $mm)) {
-        $name = 'Chrome';
-      } elseif(array_intersect(['safari'], $mm)) {
-        $name = 'Safari';
-      } elseif(array_intersect(['firefox'], $mm)) {
-        $name = 'Firefox';
-      } elseif(array_intersect(['konqueror'], $mm)) {
-        $name = 'Konqueror';
-      } 
       $counts['browser'][$name] += $count;
     } else {
-      $counts['browser']['Other'] += $count;
+      $counts['browser'][$name] += $count;
     }
     $total['browser'][0] += $count;
   }
 
-  return array($total, $counts, $n);
+  return [$total, $counts, $n];
 }
 
 // Main function to get analysis
@@ -227,15 +245,20 @@ function getAnalysis($S, $site='ALL') {
 
   $startDate = $S->fetchrow('num')[0];
 
+  //echo "startDate: $startDate<br>";
+  
   // Now select agent and count from logagent where it is not Me and the site if not ALL
   // This gets all of the records since the last time the table was truncated. Now it is truncated
   // in cleanuptables.php which is run from cron. See crontab -l and
-  // /var/www/bartonlp/scripts/celanuptables.php for details.
+  // /var/www/bartonlp/scripts/cleanuptables.php for details.
   
-  $sql = "select agent, count from $S->masterdb.logagent where ip not in($ips)$where1";
+  $sql = "select agent, count, ip from $S->masterdb.logagent where ip not in($ips)$where1";
   
-  [$totals, $counts, $n[0]] = maketable($sql, $S);
+  [$totals, $counts, $n[0]] = maketable2($sql, $S);
 
+  vardump("totals", $totals);
+  vardump("counts", $counts);
+  
   // Now we get only 60 days worth of data.
   
   $days = 60;
@@ -246,10 +269,14 @@ function getAnalysis($S, $site='ALL') {
   
   $sinceDate = $S->fetchrow('num')[0];
 
-  $sql = "select agent, count from $S->masterdb.logagent ".
+  $sql = "select agent, count, ip from $S->masterdb.logagent ".
          "where created >= current_date() - interval $days day and ip not in ($ips)$where1";
 
-  [$totals2, $counts2, $n[1]] = maketable($sql, $S);
+  [$totals2, $counts2, $n[1]] = maketable2($sql, $S);
+  vardump("totals", $totals2);
+  vardump("counts", $counts2);
+  vardump("n", $n);
+  
   
   $os = [];
   $browser = [];
@@ -257,7 +284,7 @@ function getAnalysis($S, $site='ALL') {
   // Make the tables.
   
   for($i=1; $i<3; ++$i) {
-    foreach(array('os','browser') as $v) {
+    foreach(['os','browser'] as $v) {
       $V = ucwords($v);
       ${$v}[$i-1] = <<<EOF
 <table id='$v$i' class='pure-table pure-table-bordered pure-table-striped'>
@@ -327,6 +354,7 @@ EOF;
   // BLP 2021-03-24 -- removed extranious divs where pure stuff was.
   
   $analysis = <<<EOF
+<h2>Analysis Information for $S->siteName</h2>
 <p class="h-update">Last updated $creationDate.</p>
 $form
 <p>These tables show the number and percentage of Operating Systems and Browsers.<br>
@@ -379,49 +407,70 @@ $browser[1]
 </div>
 EOF;
 
-  if(array_intersect([$S->siteName], ['BartonphillipsOrg', 'Rpi']) !== false) {
-    // BLP 2022-02-06 -- Special version for HP-envy
+  $analysis_dir = "/var/www/bartonphillipsnet/analysis/";
 
+  // Look to see if this is BartonphillipsOrg or Rpi. These are on remote sites and we need to do
+  // ftp to access the file on the server.
+  
+  if(array_intersect([$S->siteName], ['BartonphillipsOrg', 'Rpi'])[0] !== null) {
+    // We will use ftp to access the server
+    
     if(($ftp = ftp_connect("bartonphillips.net")) === false) {
       echo "ftp_connect('bartonphillips.net') Failed<br>";
-      exit();
+      debug("analysis $S->siteName: ftp_connect('bartonphillips.net') Failed");
     }
 
     if(ftp_login($ftp, "barton", "7098653?") === false) {
       echo "ftp_login() Failed<br>";
-      exit();
+      debug("analysis $S->siteName: ftp_login() Failed");
     }
 
-    if(ftp_chdir($ftp, "www/bartonphillipsnet/analysis")) {
-      //echo "Current Dir: " . ftp_pwd($ftp) . "<br>";
-    } else {
-      echo "ftp_chdir('www/bartonphillipsnet/analysis') Failed</br>";
-      exit();
+    if(ftp_chdir($ftp, "www/bartonphillipsnet/analysis") === false) {
+      error_log("ftp_chdir failed trying to make directory");
+      if(ftp_mkdir($ftp, "www/bartonphillipsnet/analysis") === false) {
+        echo "ftp_mkdir Failed</br>";
+        debug("analysis $S->siteName: ftp_mkdir('www/bartonphillipsnet/analysis') Failed");
+      }
+      if(ftp_chdir($ftp, "www/bartonphillipsnet/analysis") === false) {
+        debug("analysis $S->siteName: ftp_chdir() Failed");
+      }
     }
 
     if(file_put_contents("/tmp/tempfile", $analysis) === false) {
-      echo "file_put_contents('/tmp/tempfile') Failed<br>";
-      exit();
+      echo "file_put_contents('/tmp/tempfile', \$analysis) Failed<br>";
+      debug("analysis $S->siteName: file_put_contents('/tmp/tempfile', \$analysis) Failed");      
     }
 
-    $file = "/tmp/tempfile";
-
-    if(ftp_put($ftp, "$site-analysis.i.txt", $file, FTP_ASCII) === false) {
-      echo "There was a problem while uploading $file\n";
-      exit();
+    if(file_exists("/tmp/tempfile") === false) {
+      debug("Can't find /tmp/tempfile");
     }
-    unlink("/tmp/tempfile");
+    
+    if(ftp_put($ftp, "$site-analysis.i.txt", "/tmp/tempfile") === false) {
+      debug("analysis $S->siteName: ftp_put(\$ftp, '$site-analysis.i.txt', '/tmp/tempfile', ...) Failed");      
+    }
+
+    if(unlink("/tmp/tempfile") === false) {
+      debug("analysis $S->siteName: unlink('/tmp/tempfile') Failed");
+    }
   } else {
-    //error_log("analysis.php: UPDATE analisys.i.txt for $site");
-    // Update the analysis.i.txt file
+    if(file_exists($analysis_dir) === false) {
+      if(mkdir($analysis_dir, 0770) === false) {
+        debug("analysis $S->siteName: mkdir($analysis_dir, 0770) Failed");
+      }
+    }
 
     if(file_put_contents("/var/www/bartonphillipsnet/analysis/$site-analysis.i.txt", $analysis) === false) {
       $e = error_get_last();
-      error_log("e: " . print_r($e, true));
-      echo "ERROR<br>";
-      error_log("analysis: file_put_contents FAILED on $site-analysis.i.txt");
+      debug("analysis $S->siteName: file_put_content('/var/www/bartonphillipsnet/analysis/$site-analysis.i.txt') Failed err= ". print_r($e, true));
     }
   }
   
   return $analysis;
+}
+
+// Debug function. send message to error_log() and exit.
+
+function debug($msg) {
+  error_log("$msg");
+  exit();
 }
