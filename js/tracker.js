@@ -44,7 +44,7 @@ jQuery(document).ready(function($) {
   // Then we add the css link just before the script.
   
   lastId = $("script[data-lastid]").attr("data-lastid"); // BLP 2022-01-02 -- this happens before the 'ready' above!
-  $("script[data-lastid]").before('<link rel="stylesheet" href="/csstest-' + lastId + '.css" title-"blp test">');
+  $("script[data-lastid]").before('<link rel="stylesheet" href="/csstest-' + lastId + '.css" title="blp test">');
 
   var trackerUrl = "https://bartonphillips.net/tracker.php";
   var beaconUrl =  "https://bartonphillips.net/beacon.php";
@@ -97,7 +97,7 @@ jQuery(document).ready(function($) {
           which = 4;
           break;
       }
-      console.log("Which: " + which + ", type: " + e.type + ", filename: " + document.location.pathnam);
+      console.log("Which: " + which + ", type: " + e.type + ", filename: " + document.location.pathname);
       
       navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'type': e.type, 'which': which, 'filename': document.location.pathname}));
     });
