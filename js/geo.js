@@ -80,8 +80,8 @@ fpPromise
     data: { page: 'finger', visitor: visitorId, id: lastId },
     type: 'post',
     success: function(data) {
-      console.log("finger -- return: " + data);
-      console.log(window.location.pathname);
+      console.log("finger: " + data);
+      //console.log(window.location.pathname);
       const fname = window.location.pathname;
       if(fname == '/' || fname == "/index.php") {
         getGeo();
