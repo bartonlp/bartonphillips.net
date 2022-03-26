@@ -197,7 +197,7 @@ header .phone {
   color: red;
   margin-left: 5px; /*1rem;*/
 }
-#bignavbar ul {
+#bignavbar {
   display: inline-flex;
   justify-content: space-between;
   list-style-type: none;
@@ -206,14 +206,14 @@ header .phone {
   margin-left: 5px; /*1rem;*/
   font-size: .8rem;
 }
-#bignavbar ul >li {
+#bignavbar >li {
   background: url('https://bartonphillips.net/images/header-bg.png') right top no-repeat;
   background-size: 3px; /*.1rem;*/
 }
-#bignavbar ul >li:last-of-type {
+#bignavbar >li:last-of-type {
   background-image: none;
 }
-#bignavbar ul li a, .dropbtn {
+#bignavbar li a, .dropbtn {
   display: block;
   z-index: 100;
   color: black;
@@ -225,7 +225,7 @@ header .phone {
 Home | Services | Info | Contact
 I want Home and Contact to turn red when hovered over but not Services and Info
 */
-#bignavbar ul >li:hover >a:hover {
+#bignavbar >li:hover >a:hover {
   color: red;
 }
 /* Here I want the sub menues of Services and Info to turn red when they are hovered over */
