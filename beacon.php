@@ -1,11 +1,12 @@
 <?php
+// BLP 2022-03-25 - fixed diff time
 // BLP 2021-06-30 -- Moved to bartonphillips.net. No longer using symlinks.
 // BLP 2014-03-06 -- ajax for tracker.js
 
 $_site = require_once(getenv("SITELOADNAME"));
 $S = new Database($_site);
 
-$DEBUG = true; //false; // BLP 2021-06-30 -- for debugging
+//$DEBUG = true; //false; // BLP 2021-06-30 -- for debugging
 
 // BLP 2021-12-24 -- $S now has agent and id
 $agent = $S->agent;
@@ -57,24 +58,17 @@ EOF;
   // 0x10 (noscript)
   // 0xf (start,load,script,normal)
 
-  //$mask = (0x8000 | 0x4000 | 0x1000 | 0x800 | 0x400 | 0x200 | 0x10 | 0xf); // should be 0xde1f
-  
-  if($DEBUG) error_log("beacon: before check $filename -- $ip, js=" . dechex($js) .", type=$type, which=$w");
-
-  // BLP 2022-03-16 -- 
-  //if((($js & ~$mask) & 0x700) == 0) { // 0x200 | 0x400 | 0x800
+  if($DEBUG) error_log("beacon: before check $id, $filename -- $ip, js=" . dechex($js) .", type=$type, which=$w");
 
   if(($js & 0x700) == 0) { // not handled by tracker.
-    // 'which' can be 1, 2, or 4
-    // BLP 2021-06-30 -- 
+    // 'which' can be 1, 2, or 4: pagehide, unload, beforeunload
     
-    $beacon = $w * 32; // 0x20, 0x40 or 0x80
+    $beacon = $w * 32; // 0x20, 0x40 or 0x80 
 
-    $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timediff(now(),starttime), ".
+    $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
               "isJavaScript=isJavaScript|$beacon, lasttime=now() where id=$id");
 
-  if($DEBUG) error_log("beacon: Set Beacon $filename -- $ip, js= ". dechex($js | $beacon) . ", which=$w, type=$type, agent=$agent");
-
+    if($DEBUG) error_log("beacon: Set Beacon $id, $filename -- $ip, js= ". dechex($js | $beacon) . ", which=$w, type=$type, agent=$agent");
   }
   exit();
 }
