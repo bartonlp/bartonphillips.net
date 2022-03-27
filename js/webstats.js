@@ -181,7 +181,6 @@ jQuery(document).ready(function($) {
   
   $("#os1, #os2, #browser1, #browser2")
       .tablesorter({ headers: { 1: {sorter: 'strnum'}, 2: {sorter: false}, 3: {sorter: false}}, sortList: [[1,1]]});
-  //.addClass('tablesorter');
 
   // Set up tracker for tablesorter
   

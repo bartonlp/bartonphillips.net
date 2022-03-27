@@ -8,9 +8,9 @@
 // BLP 2017-11-01 -- all-cron.sh runs update-analysis.sh
 // BLP 2016-09-03 -- change ftp password to '7098653?' note without single quotes
 
-// Ajax from CRON job /var/www/bartonlp/scrits/update-analysis.sh which is run via all-cron.sh
-
 $_site = require_once(getenv("SITELOADNAME"));
+
+// Ajax from CRON job /var/www/bartonlp/scrits/update-analysis.sh which is run via all-cron.sh
 
 if($thisSite = $_GET['siteupdate']) {
   //error_log("_site: " . print_r($_site, true));
@@ -20,14 +20,14 @@ if($thisSite = $_GET['siteupdate']) {
   exit();
 }
 
-// Ajax from webstats.js
-
-if($thisSite = $_GET['site']) {
+/* NOT USED
+if($thisSite = $_GET['site']) { 
   $analysis = file_get_contents("https://bartonphillips.net/analysis/$thisSite-analysis.i.txt");
-
+  error_log("analysis.php: $thisSite");
   echo $analysis;
   exit();
 }
+*/
 
 // POST from this file when standalone.
 
@@ -80,7 +80,7 @@ button {
   </style>
 EOF;
 
-$site = $_POST['site'] ?? 'ALL';
+  $site = $_POST['site'] ?? 'ALL';
   
   $h->banner = "<h1 id='analysis-info'>Analysis Information for $site</h1>";
 
@@ -88,6 +88,7 @@ $site = $_POST['site'] ?? 'ALL';
 
   $analysis = file_get_contents("https://bartonphillips.net/analysis/$site-analysis.i.txt");
 
+  error_log("analysis.php: POST, site=$site");
   echo <<<EOF
 $top
 <div id="content">
@@ -100,7 +101,7 @@ EOF;
 
 return getAnalysis($S, $S->siteName);
 
-// make table 2 test
+// BLP 2022-03-27 - New version of maketable.
 
 function maketable2($sql, $S) {
   $total = [];
@@ -108,16 +109,22 @@ function maketable2($sql, $S) {
   
   $n = $S->query($sql);
   $r = $S->getResult();
+
+  // Look at the records from logagent. This is done two time first with ALL of the records and
+  // then wit 60 days of records.
   
   while([$agent, $count, $ip] = $S->fetchrow($r, 'num')) {
     // Do the same check as in SiteClass
     $agent = $S->escape($agent);
+
+    // Now check the bots table. SiteClass looks at each record and determins if it thinks this is
+    // a robot and if yes adds it to the bots table.
     
     if($S->query("select ip from $S->masterdb.bots where ip='$ip' and agent='$agent'") !== 0) {
       $total['os'][0] += $count;
-      $total['os'][1] += $count;
+      //$total['os'][1] += $count;
       $total['browser'][0] += $count;
-      $total['browser'][1] += $count;
+      //$total['browser'][1] += $count;
       $counts['os']['ROBOT'] += $count;
       $counts['browser']['ROBOT'] += $count;
       continue;
@@ -256,9 +263,6 @@ function getAnalysis($S, $site='ALL') {
   
   [$totals, $counts, $n[0]] = maketable2($sql, $S);
 
-  vardump("totals", $totals);
-  vardump("counts", $counts);
-  
   // Now we get only 60 days worth of data.
   
   $days = 60;
@@ -273,10 +277,16 @@ function getAnalysis($S, $site='ALL') {
          "where created >= current_date() - interval $days day and ip not in ($ips)$where1";
 
   [$totals2, $counts2, $n[1]] = maketable2($sql, $S);
-  vardump("totals", $totals2);
-  vardump("counts", $counts2);
+
+  /*
+  vardump("totals", $totals);
+  vardump("counts", $counts);
+  vardump("totals2", $totals2);
+  vardump("counts2", $counts2);
   vardump("n", $n);
+  */
   
+  // These two arrays will hold the html. The rows are added to ${$k} where $k is 'os' or 'browser'
   
   $os = [];
   $browser = [];
@@ -284,8 +294,15 @@ function getAnalysis($S, $site='ALL') {
   // Make the tables.
   
   for($i=1; $i<3; ++$i) {
+    // For 'os' and 'browser'
+    
     foreach(['os','browser'] as $v) {
+      // here $v is 'os' or 'browser'
+      
       $V = ucwords($v);
+
+      // like below we are adding the table html to $os or $browser.
+      
       ${$v}[$i-1] = <<<EOF
 <table id='$v$i' class='pure-table pure-table-bordered pure-table-striped'>
 <thead>
@@ -296,18 +313,31 @@ EOF;
     }
   }
 
+  // $k is 'os' or 'browser'
+  // $v is the name (or val).
+  
   foreach($counts as $k=>$v) {
+    // Take $v apart into $kk is name and $vv is count.
+    
     foreach($v as $kk=>$vv) {
-      $percent = number_format($vv/$totals[$k][0]*100, 2);
-      $percent2 = number_format($vv/($totals[$k][0] - $totals[$k][1])*100, 2);
+      $percent = number_format($vv/$totals[$k][0]*100, 2); // Percent of count divided by totals (os or browser)
+      $percent2 = number_format($vv/($totals[$k][0] - $totals[$k][1])*100, 2); // Percent difference
       $vv = number_format($vv, 0);
+
+      // If this is ROBOT disregard the difference.
+
       if($kk == "ROBOT") {
         $percent2 = '';
       }
+
+      // make 'os' or 'browser' into a variable and append the html to it.
+      
       ${$k}[0] .= "<tr><td>{$kk}</td><td>{$vv}</td><td>$percent</td><td>$percent2</td></tr>";
     }
   }
 
+  // The same for counts2 and totals2
+  
   foreach($counts2 as $k=>$v) {
     foreach($v as $kk=>$vv) {
       $percent = number_format($vv/$totals2[$k][0]*100, 2);
@@ -320,13 +350,15 @@ EOF;
     }
   }
 
+  // use the two created variable and add the table end. $os[0] is All and $os[1] is 60 days. Same
+  // for browser.
+  
   $os[0] .= "</tbody></table>";
   $os[1] .= "</tbody></table>";
   $browser[0] .= "</tbody></table>";
   $browser[1] .= "</tbody></table>"; 
 
   $form = <<<EOF
-<!-- If not Tysonweb give the options to view different sites -->
 <div id="siteanalysis">
 <form method="post" action="analysis.php">
   Get Site: 
@@ -359,7 +391,6 @@ EOF;
 $form
 <p>These tables show the number and percentage of Operating Systems and Browsers.<br>
 The Totals show the number of Records and Counts for the entire table and the last N days.<br>
-The OS and Browser totals should be the same. <br>
 The two sets of tables give you an idea
 of how the market is trending.</p>
 <p>These table are created from the 'logagent' table.</p>
