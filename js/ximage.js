@@ -1,6 +1,6 @@
 /*
- * For the image slideshow at the top of http://bartonphillips.org:8080/index.php on rpi2 (the backup computer).
- *  This uses glob.proxy.php on www.bartonphillips.org:8080.
+ * For the image slideshow at http://bartonphillips.dyndns.org:8080/index.php on rpi2.
+ *  This uses glob.proxy.php on www.bartonphillips.dyndns.org:8080.
  *  glob.proxy.php returns a list of files in the 'path' of dobanner()
  *  The bannershow() function uses the 'bannerImages' array created by dobanner().
  *  'bannershow() displayes the images in "#show"
@@ -14,7 +14,7 @@ var bannerImages = new Array, binx = 0;
 // path is a pattern to glob on.
 // obj: {size: size, recursive: yes|no, mode: seq|rand}
 
-function dobanner(path, obj) {
+function dobanner(path, name, obj) {
   // obj has three members: size, recursive, mode.
 
   let recursive = obj.recursive;
@@ -24,13 +24,14 @@ function dobanner(path, obj) {
 
   $.ajax({
     // Note this must be http NOT https
-    url: 'http://www.bartonphillips.org:8080/glob.proxy.php',
+    //url: 'http://www.bartonphillips.dyndns.org:8080/glob.proxy.php',
+    // or it can be bartonphillips.org:8080/...
+    url: 'http://www.bartonphillips.dyndns.org:8080/glob.proxy.php',
     type: 'get',
     data: {path: path, recursive: recursive, size: size, mode: mode},
     success: function(data) {
-      //console.log("data", data);
       bannerImages = data.split("\n");
-      $("#show").html("<h3 class='center'>" + path + "</h3><img>");
+      $("#show").html("<h3 class='center'>" + name + "</h3><img>");
       bannershow(obj.mode); // pass mode to bannershow()
     },
     error: function(err) {

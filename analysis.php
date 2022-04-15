@@ -1,5 +1,6 @@
 <?php
 // This program is run from crontab via all-cron.sh in www/bartonlp/scripts.
+// BLP 2022-03-28 - If no $S then go away.
 // BLP 2021-03-24 -- removed links to yahoo pure stuff. Added webstats.css which has the pure
 // stuff we need. Removed extranious divs also.
 // NOTE: this file is not usually called directly by anything other than a cron. All of the
@@ -20,18 +21,35 @@ if($thisSite = $_GET['siteupdate']) {
   exit();
 }
 
-/* NOT USED
-if($thisSite = $_GET['site']) { 
-  $analysis = file_get_contents("https://bartonphillips.net/analysis/$thisSite-analysis.i.txt");
-  error_log("analysis.php: $thisSite");
-  echo $analysis;
+function goaway() {
+  global $_site, $S, $h;
+
+  if(!$S) {
+    $S = new $_site->className($_site);
+  }
+  
+  //$h->banner = "<h1>You Got Here Wrongly</h1>";
+  $h->css = "<style>h1,h2 { text-align: center; }</style>";
+  
+  [$top, $footer] = $S->getPageTopBottom($h);
+
+  echo <<<EOF
+$top
+<div id="content">
+<h1>You Got Here Wrongly</h1>
+<h2>You should not try to use this directly.<br>It should only be called from <b>WebStats</b><br>
+<a href="/">Go to our home page</a></h2>
+</div>
+$footer
+EOF;
   exit();
 }
-*/
+  
+// POST from https://bartonphillips.net/analysis/$site-analysis.i.txt OR
 
-// POST from this file when standalone.
-
-if(isset($_POST['submit']) || !$S) {
+if(isset($_POST['site'])) {
+  if($_POST['blp'] != '8653') goaway();
+  
   $S = new $_site->className($_site);
 
   $h->title = "Analysis";
@@ -88,7 +106,6 @@ EOF;
 
   $analysis = file_get_contents("https://bartonphillips.net/analysis/$site-analysis.i.txt");
 
-  error_log("analysis.php: POST, site=$site");
   echo <<<EOF
 $top
 <div id="content">
@@ -99,7 +116,10 @@ EOF;
   exit();
 }
 
-return getAnalysis($S, $S->siteName);
+if($S) {
+  return getAnalysis($S, $S->siteName);
+}
+goaway();
 
 // BLP 2022-03-27 - New version of maketable.
 
@@ -372,8 +392,8 @@ EOF;
     <option>Rpi</option>
     <option>ALL</option>
   </select>
-
-  <button id="mysite" type="submit">Submit</button>
+  <input type="hidden" name="blp" value="8653">
+  <button type="submit" >Submit</button>
 </form>
 </div>
 EOF;
@@ -393,7 +413,7 @@ $form
 The Totals show the number of Records and Counts for the entire table and the last N days.<br>
 The two sets of tables give you an idea
 of how the market is trending.</p>
-<p>These table are created from the 'logagent' table.</p>
+<p>These table are created from the 'logagent' table and ROBOTs are via the 'bots' table.</p>
 <div class="scrolling">
 <table id="CompareTbl">
 <thead>

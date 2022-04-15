@@ -1,11 +1,14 @@
 <?php
 // Reset Cookie. Show the member, myip and geo tables. Show a map of geo lat/long.
 // This file needs to be symlinked into the local directories.
-// BLP 2021-11-11 -- Get me from myfingerpriints.php
-// BLP 2021-10-26 -- add 'form' and POST logic.
-// BLP 2021-10-22 -- Added Google maps:
-// To Remotely debug from my Tablet:
-// In the desktop browser: chrome://inspect/#devices
+// BLP 2021-11-06 -- IMPORTANT: The key is further restricted to my domains only so it can appear
+// here inplain text. Even though this file is on GitHub and the key is being leaked to the public
+// it can only be used from one of my domains!
+// See https://console.cloud.google.com/google/maps-apis/overview?project=barton-1324
+// BLP 2021-11-11 -- Get me from myfingerpriints.json. This works with HP and Rpi while require
+// does not.
+// BLP 2021-10-22 -- To Remotely debug from my Tablet:
+// On my desktop browser: chrome://inspect/#devices
 // Plug the tablet into the USB port. You should see "Chrome" and each of the domains that are open on the tablet.
 // You can then debug the tablet if you click on "inspect". It will open the dev-tools.
 // BLP 2021-09-23 -- Created
@@ -14,7 +17,7 @@ $_site = require_once(getenv("SITELOADNAME"));
 ErrorClass::setDevelopment(true);
 $S = new $_site->className($_site);
 
-// BLP 2021-10-26 -- From the 'form' with the siteNames.
+// POST from the 'form' with the siteNames.
 
 if(isset($_POST['submit'])) {
   $siteName = $_POST['site'];
@@ -37,6 +40,9 @@ if(isset($_POST['submit'])) {
       break;
     case 'bartonhome':
       header("Location: https://www.bartonphillips.org/getcookie.php");
+      break;
+    case 'Bonnieburch':
+      header("Location: https://www.bonnieburch.com/getcookie.php");
       break;
     default:
       echo "OPS something went wrong: siteName: $siteName";
@@ -63,7 +69,6 @@ EOF;
 //$h->meta = '<meta name=viewport content="width=device-width initial-scale=.7">';
 
 $h->css =<<<EOF
-<style>
 #members {
   margin: 10px 0;
 }
@@ -147,11 +152,9 @@ $h->css =<<<EOF
     width: 50px;
   }
 }
-</style>
 EOF;
 
 // This goes after footer
-// Get the google maps api key form a secure location.
 // BLP 2021-11-06 -- This key is further restricted to my domains only. See
 // https://console.cloud.google.com/google/maps-apis/overview?project=barton-1324
 // Therefore even though this file is on GitHub and the key is being leaked to the public it can
@@ -209,7 +212,8 @@ function myipfixup(&$row, &$rowdesc) {
 $today = date("Y-m-d");
 
 // BLP 2021-11-11 -- Get the list of know fingerprints                                                    
-//$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php");
+//$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php"); // NOTE require can't work
+//on HP or Rpi so do a json. Note this is REAL json so NO COMMENTS!
 $me = json_decode(file_get_contents("https://bartonphillips.net/myfingerprints.json"));
 
 function mygeofixup(&$row, &$rowdesc) {
@@ -287,7 +291,6 @@ $bottom
 EOF;
 
 // Render Page
-// BLP 2021-10-26 -- Add 'form'
 
 echo <<<EOF
 $top
@@ -299,6 +302,7 @@ $top
     <option>Tysonweb</option>
     <option>Newbernzig</option>
     <option>Allnatural</option>
+    <option>Bonnieburch</option>
     <option>bartonhome</option>
   </select>
 

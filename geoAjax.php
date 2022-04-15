@@ -7,7 +7,6 @@
 // fingerprint and tracker info are not available for the PHP files!
 
 $_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setDevelopment(true);
 $_site->noTrack = true;
 $S = new $_site->className($_site);
 
