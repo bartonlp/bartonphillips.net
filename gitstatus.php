@@ -1,12 +1,17 @@
 <?php
 // BLP 2014-04-29 -- Do various git functions
 $_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setDevelopment(true);  
-
-$sites = ['/vendor/bartonlp/site-class', 'allnaturalcleaningcompany', '/bartonlp', '/bartonphillips.com', '/bartonphillipsnet', '/newbernzig.com', '/tysonweb'];
+$sites = [
+          '/vendor/bartonlp/site-class',
+          'allnaturalcleaningcompany',
+          '/bartonlp',
+          '/bartonphillips.com',
+          '/bartonphillipsnet',
+          '/newbernzig.com',
+          '/tysonweb'
+         ];
 
 if($site = $_POST['readme']) {
-  error_log("readme: $site");
   $ret = file_get_contents("https://bartonphillips.com/showmarkdown.php?filename=../$site/README.md");
 
   $ret = "data:text/html;base64," . base64_encode($ret);
@@ -16,9 +21,9 @@ if($site = $_POST['readme']) {
 
 if($cmd = $_POST['more']) {
   $site = $_POST['site'];
-  
-  chdir("/var/www/$site");
-  exec("git $cmd", $out);
+  $out = $ret = null;
+  exec("GIT_DIR=/var/www/$site/.git git $cmd", $out, $ret);
+  if($ret) echo "retval=$ret<br>";
   $out = implode("\n", $out);
   $out = escapeltgt($out);
   echo <<<EOF
@@ -34,8 +39,9 @@ if($cmd = $_POST['page']) {
   $ret = '';
   
   foreach($sites as $site) {
-    chdir("/var/www/$site");
-    exec("git $cmd", $out);
+    $out = $retval = null;
+    exec("GIT_DIR=/var/www/$site/.git git $cmd", $out, $retval);
+    if($retval) echo "GIT ERROR: $retval<br>";
     $out = implode("\n", $out);
     $out = escapeltgt($out);
     $ret .= <<<EOF
@@ -50,8 +56,13 @@ EOF;
   exit();
 }
 
-$h->script =<<<EOF
-<script>
+// Start of main page
+
+$S = new $_site->className($_site);
+
+// Inline Script
+
+$h->inlineScript =<<<EOF
 jQuery(document).ready(function($) {
   $("#more").hide();
   $(".results").hide();
@@ -109,11 +120,9 @@ jQuery(document).ready(function($) {
     });
   });
 });
-</script>
 EOF;
 
 $h->css =<<<EOF
-  <style>
 #status,
 #moreInfo button {
   border-radius: .5rem;
@@ -135,13 +144,11 @@ $h->css =<<<EOF
   border-radius: .5rem;
   background-color: pink;
 }
-  </style>
 EOF;
 
 $h->title = "GIT Status All";
-$h->banner = "<h1>bartonlp.org</h1><h2>Show GIT Status All</h2>";
+$h->banner = "<h1>$S->siteName</h1><h2>Show GIT Status All</h2>";
 
-$S = new $_site->className($_site);
 list($top, $footer) = $S->getPageTopBottom($h);
 
 $data = '';
@@ -173,10 +180,8 @@ $top
 <button id='status'>Status</button>
 <div class='results'></div>
 </div>
-
 <div id='more'>
 $data
 </div>
-
 $footer
 EOF;
