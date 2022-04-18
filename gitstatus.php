@@ -1,5 +1,9 @@
 <?php
-// BLP 2014-04-29 -- Do various git functions
+// BLP 2022-04-18 - This is broken. It worked great for several years but has stopped working.
+// Removed form use. The git commit prior to this has the old gitstatus.php which suddenly started
+// returning 128 errors. I tried to fix this version by doing GIT_DIR=... which kinda works for log
+// and most other things but fails for status by showing tons of uncommited items.
+
 $_site = require_once(getenv("SITELOADNAME"));
 $sites = [
           '/vendor/bartonlp/site-class',
@@ -21,6 +25,8 @@ if($site = $_POST['readme']) {
 
 if($cmd = $_POST['more']) {
   $site = $_POST['site'];
+  echo "cmd: $cmd<br>";
+  
   $out = $ret = null;
   exec("GIT_DIR=/var/www/$site/.git git $cmd", $out, $ret);
   if($ret) echo "retval=$ret<br>";
@@ -36,6 +42,7 @@ EOF;
 }
 
 if($cmd = $_POST['page']) {
+  echo "cmd: $cmd<br>";
   $ret = '';
   
   foreach($sites as $site) {
@@ -85,8 +92,7 @@ jQuery(document).ready(function($) {
         type: 'post',
         success: function(data) {
           console.log("readme: " + data);
-          result.html("<iframe class='frame' src='" + data +
-          "'></iframe>").css('overflow', 'hidden').show();
+          result.html("<iframe class='frame' src='" + data + "'></iframe>").css('overflow', 'hidden').show();
         },
         error: function(err) {
           console.log(err);
