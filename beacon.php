@@ -1,74 +1,86 @@
 <?php
-// BLP 2022-03-25 - fixed diff time
 // BLP 2021-06-30 -- Moved to bartonphillips.net. No longer using symlinks.
-// BLP 2014-03-06 -- ajax for tracker.js
 
 $_site = require_once(getenv("SITELOADNAME"));
 $S = new Database($_site);
 
-//$DEBUG = true; //false; // BLP 2021-06-30 -- for debugging
+require_once(SITECLASS_DIR . "/defines.php");
 
-// BLP 2021-12-24 -- $S now has agent and id
-$agent = $S->agent;
-$ip = $S->ip;
+//$DEBUG1 = true; // Set beacon
+//$DEBUG2 = true; // real+1 and real+1 bots-1
 
-// BLP 2021-12-24 -- the input comes via php as json data not $_GET or $_POST
+function isMe($ip) {
+  global $S;
+  return (array_intersect([$ip], $S->myIp)[0] === null) ? false : true;
+}
+
+// The input comes via php as json data not $_GET or $_POST
 
 $data = file_get_contents('php://input');
+
 $data = json_decode($data, true);
 $id = $data['id'];
-$w = $data['which'];
-$type = $data['type']; // BLP 2021-06-30 -- added here and in tracker.js. This will be 'pagehide', 'unload' or 'beforeunload' from e.type.
-$filename = $data['filename'];
+$type = $data['type'];
+$site = $data['site'];
+$ip = $data['ip'];
+$visits = $data['visits'];
 
 if(!$id) {
-  $ref = $_SERVER['HTTP_REFERER'] ?? "NONE";
-  error_log("beacon: $filename NO ID, ref: $ref, which: $w, ip: $ip, agent: $agent");
-  
-  echo <<<EOF
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
-<h1>Go Away!</h1>
-</body>
-</html>
-EOF;
-
+  error_log("beacon $site, $ip: NO ID, typs: $type");
   exit();
-} else {
-  $S->query("select isJavaScript from $S->masterdb.tracker where id=$id");
-  list($js) = $S->fetchrow('num');
+}
 
-  // We want to know if tracker has already updated this record.
-  // So if js is not  0x400, 0x200, 0x100 then add the beacon.
-  // BLP 2022-01-17 -- 
+// Now get botAs and isJavaScrip
 
-  // 0x8000 (isMe)
-  // 0x4000 (csstest)
-  // 0x2000 (bot via SiteClass)
-  // 0x1000 (timer)
-  // 0x400 (t-pagehide)
-  // 0x200 (t-unload)
-  // 0x100 (t-beforeunload)
-  // 0x80 (b-beforeunload)
-  // 0x40 (b-unload)
-  // 0x20 (b-pagehide)
-  // 0x10 (noscript)
-  // 0xf (start,load,script,normal)
+$S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
+[$botAs, $java] = $S->fetchrow('num');
 
-  if($DEBUG) error_log("beacon: before check $id, $filename -- $ip, js=" . dechex($js) .", type=$type, which=$w");
+//error_log("**** beacon $type $id, $site, $ip -- botAs=$botAs, java=" . dechex($java));
 
-  if(($js & 0x700) == 0) { // not handled by tracker.
-    // 'which' can be 1, 2, or 4: pagehide, unload, beforeunload
-    
-    $beacon = $w * 32; // 0x20, 0x40 or 0x80 
+// Check if this has been done by tracker.
 
-    $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
-              "isJavaScript=isJavaScript|$beacon, lasttime=now() where id=$id");
-
-    if($DEBUG) error_log("beacon: Set Beacon $id, $filename -- $ip, js= ". dechex($js | $beacon) . ", which=$w, type=$type, agent=$agent");
+if(($java & TRACKER_MASK) == 0) { // not handled by tracker.
+  switch($type) {
+    case "pagehide":
+      $beacon = BEACON_PAGEHIDE;
+      break;
+    case "unload":
+      $beacon = BEACON_UNLOAD;
+      break;
+    case "beforeunload":
+      $beacon = BEACON_BEFOREUNLOAD;
+      break;
+    case "visibilitychange":
+      $beacon = BEACON_VISIBILITYCHANGE;
+      break;
+    default:
+      error_log("beacon.php: ERROR type=$type");
+      exit();
   }
-  exit();
+
+  // If This was found in the bots table and we are here it probably isn't a bot. If it says
+  // 'preg_match' then it probably is a bot so don't remove it.
+  
+  $bots = 0;
+
+  if($botAs != BOTAS_COUNTED) {
+    if($java & TRACKER_BOT && ($botAs == BOTAS_TABLE || strpos($botAs, ',') !== false)) {
+      $java &= ~TRACKER_BOT; // Remove BOT if present
+      $bots = -1;
+    } 
+  }
+
+  $java |= $beacon;
+
+  if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
+    $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visits where date=current_date() and site='$site'");
+    if($DEBUG2) error_log("beacon DEBUG2 $type, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
+  }
+
+  $S->query("update $S->masterdb.tracker set botAs='" . BOTAS_COUNTED . "', endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
+            "isJavaScript=$java, lasttime=now() where id=$id");
+
+  if($DEBUG1) error_log("beacon DEBUG1 Set $type, $id, $site, $ip -- visits=$visits, java=" . dechex($java));
+} else {
+  error_log("beacon $id, $site, $ip: $type was handalled by tracker");
 }

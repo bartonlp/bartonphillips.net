@@ -1,8 +1,10 @@
 <?php
-// BLP 2016-02-18 -- This file is a substitute for Sitemap.xml. This file is RewriteRuled in
+// This file is a substitute for Sitemap.xml. This file is RewriteRuled in
 // .htaccess to read Sitemap.xml and output it. It also writes a record into the bots table
 
 $_site = require_once(getenv("SITELOADNAME"));
+require_once(SITECLASS_DIR . "/defines.php");
+
 $S = new Database($_site);
 
 if(!file_exists($S->path . "/Sitemap.xml")) {
@@ -43,7 +45,7 @@ if($S->fetchrow('num')[0]) {
     // BLP 2021-12-26 -- robots is 4 for insert and robots=robots|8 for update.
     
     $S->query("insert into $S->masterdb.bots (ip, agent, count, robots, site, creation_time, lasttime) ".
-               "values('$ip', '$agent', 1, 4, '$S->siteName', now(), now())");
+               "values('$ip', '$agent', 1, " . BOTS_SITEMAP . ", '$S->siteName', now(), now())");
   }  catch(Exception $e) {
     if($e->getCode() == 1062) { // duplicate key
       $S->query("select site from $S->masterdb.bots where ip='$ip'");
@@ -56,7 +58,7 @@ if($S->fetchrow('num')[0]) {
       if(strpos($who, $S->siteName) === false) {
         $who .= ", $S->siteName";
       }
-      $S->query("update $S->masterdb.bots set robots=robots|8, count=count+1, site='$who', lasttime=now() ".
+      $S->query("update $S->masterdb.bots set robots=robots|" . BOTS_SITEMAP . ", count=count+1, site='$who', lasttime=now() ".
                  "where ip='$ip'");
     } else {
       error_log("robots: ".print_r($e, true));
@@ -74,7 +76,7 @@ if($S->fetchrow('num')[0]) {
   // BLP 2021-12-26 -- bots2 primary key is 'ip, agent, date, site, which'.
 
   $S->query("insert into $S->masterdb.bots2 (ip, agent, date, site, which, count, lasttime) ".
-            "values('$ip', '$agent', now(), '$S->siteName', 4, 1, now()) ".
+            "values('$ip', '$agent', now(), '$S->siteName', " . BOTS_SITEMAP . ", 1, now()) ".
             "on duplicate key update count=count+1, lasttime=now()");
 } else {
   error_log("robots: $S->siteName bots2 does not exist in $S->masterdb database");

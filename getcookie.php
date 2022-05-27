@@ -1,31 +1,42 @@
 <?php
+// BLP 2022-05-05 - IMPORTANT this DOES need to be a symlink because we need to get the cookie.
 // Reset Cookie. Show the member, myip and geo tables. Show a map of geo lat/long.
 // This file needs to be symlinked into the local directories.
-// BLP 2021-11-06 -- IMPORTANT: The key is further restricted to my domains only so it can appear
+// BLP 2021-11-06 -- IMPORTANT: The key is further restricted to my domains so it can appear
 // here inplain text. Even though this file is on GitHub and the key is being leaked to the public
 // it can only be used from one of my domains!
 // See https://console.cloud.google.com/google/maps-apis/overview?project=barton-1324
-// BLP 2021-11-11 -- Get me from myfingerpriints.json. This works with HP and Rpi while require
-// does not.
 // BLP 2021-10-22 -- To Remotely debug from my Tablet:
 // On my desktop browser: chrome://inspect/#devices
 // Plug the tablet into the USB port. You should see "Chrome" and each of the domains that are open on the tablet.
 // You can then debug the tablet if you click on "inspect". It will open the dev-tools.
-// BLP 2021-09-23 -- Created
 
 $_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setDevelopment(true);
+
+// We set these up so we have a generic look not tied to a website.
+
+$_site->headFile = "/var/www/bartonphillips.com/includes/head.i.php";
+$_site->bannerFile = "/var/www/bartonphillips.com/includes/banner.i.php";
+$_site->footerFile = "/var/www/bartonphillips.com/includes/footer.i.php";
+$_site->defaultCss = null; // Normal default blp.csss
+$_site->base = null; // no base
+$_site->trackerImg1 = "/images/blp-image.png"; // my photo
+$_site->trackerImg2 = null; // blank
+
+// We will get the things like copyright, author, desc etc.
+
 $S = new $_site->className($_site);
 
 // POST from the 'form' with the siteNames.
+// We need to use a symlink in each of these directories to be able to get the $_COOKIE correctly
 
 if(isset($_POST['submit'])) {
-  $siteName = $_POST['site'];
+  $site = $_POST['site'];
 
   // use header() to go to the loocation.
-  // This is so we use the mysitemap.json from the corresponding domain.
+  // This is so we use the mysitemap.json from the corresponding domain and can get the COOKIE.
   
-  switch($siteName) {
+  switch($site) {
     case 'Bartonphillips':
       header("Location: https://www.bartonphillips.com/getcookie.php");
       break;
@@ -38,15 +49,16 @@ if(isset($_POST['submit'])) {
     case 'Allnatural':
       header("Location: https://www.allnaturalcleaningcompany.com/getcookie.php");
       break;
-    case 'bartonhome':
-      header("Location: https://www.bartonphillips.org/getcookie.php");
-      break;
+// Remove until I figure out how to do this.
+//    case 'bartonhome':
+//      header("Location: https://www.bartonphillips.org/getcookie.php");
+//      break;
     case 'Bonnieburch':
       header("Location: https://www.bonnieburch.com/getcookie.php");
       break;
     default:
-      echo "OPS something went wrong: siteName: $siteName";
-      error_log("getcookie.php: Something went wrong: siteName: $siteName");
+      echo "OPS something went wrong: siteName: $site";
+      error_log("getcookie.php: Something went wrong: siteName: $site");
   }
   exit();
 } 
@@ -214,6 +226,7 @@ $today = date("Y-m-d");
 // BLP 2021-11-11 -- Get the list of know fingerprints                                                    
 //$me = require_once("/var/www/bartonphillipsnet/myfingerprints.php"); // NOTE require can't work
 //on HP or Rpi so do a json. Note this is REAL json so NO COMMENTS!
+
 $me = json_decode(file_get_contents("https://bartonphillips.net/myfingerprints.json"));
 
 function mygeofixup(&$row, &$rowdesc) {
@@ -235,7 +248,7 @@ function mygeofixup(&$row, &$rowdesc) {
 
 // So it depends on the mysitemap.json which one we are using.
 
-$sql = "select lat, lon, finger, created, lasttime from $S->masterdb.geo where site='$S->siteName' order by lasttime desc";
+$sql = "select lat, lon, finger, ip, created, lasttime from $S->masterdb.geo where site='$S->siteName' order by lasttime desc";
 [$mygeo] = $T->maketable($sql, array('callback'=>'mygeofixup', 'attr'=>array('border'=>'1', 'id'=>'mygeo')));
 
 // Get the SiteId cookie
@@ -303,7 +316,7 @@ $top
     <option>Newbernzig</option>
     <option>Allnatural</option>
     <option>Bonnieburch</option>
-    <option>bartonhome</option>
+<!--    <option>bartonhome</option> -->
   </select>
 
   <button type="submit" name='submit'>Submit</button>

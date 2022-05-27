@@ -2,7 +2,13 @@
 // Does all of the AJAX for webstats.js
 // The main program is webstats.php
 
+// https://ipinfo.io/account/home for access key etc.
+// https://ipinfo.io/developers for developer api information.
+
+use ipinfo\ipinfo\IPinfo; 
+
 $_site = require_once(getenv("SITELOADNAME"));
+require_once(SITECLASS_DIR . "/defines.php");
 
 // Turn an ip address into a long. This is for the country lookup
 
@@ -15,7 +21,6 @@ function Dot2LongIP($IPaddr) {
       return ($ips[3] + $ips[2] * 256 + $ips[1] * 256 * 256 + $ips[0] * 256 * 256 * 256);
     }
   } else {
-    //error_log("IPaddr: $IPaddr");
     $int = inet_pton($IPaddr);
     $bits = 15;
     $ipv6long = 0;
@@ -30,7 +35,6 @@ function Dot2LongIP($IPaddr) {
       $bits--;
     }
     $ipv6long = gmp_strval(gmp_init($ipv6long, 2), 10);
-    //error_log("ipv6long: $ipv6long");
     return $ipv6long;
   }
 }
@@ -57,13 +61,11 @@ if($list = $_POST['list']) {
     $S->query($sql);
     
     list($name) = $S->fetchrow('num');
-    //error_log("name: $name");
     
     $ar[$ip] = $name;
   }
 
   $ret = json_encode($ar);
-  //error_log("ret: $ret");
   echo $ret;
   exit();
 }
@@ -73,11 +75,16 @@ if($list = $_POST['list']) {
 if($_POST['page'] == 'curl') {
   $ip = $_POST['ip'];
 
-  $cmd = "http://ipinfo.io/$ip";
-  $ch = curl_init($cmd);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  $loc = json_decode(curl_exec($ch));
-  $locstr = "Hostname: $loc->hostname<br>$loc->city, $loc->region $loc->postal<br>Location: $loc->loc<br>ISP: $loc->org<br>";
+  $access_token = '41bd05979892b1';
+  $client = new IPinfo($access_token);
+  $ip_address = "$ip";
+  $loc = $client->getDetails($ip_address);
+
+  //error_log("loc: " . print_r($loc, true));
+
+  //$loc = json_decode(file_get_contents("https://ipinfo.io/$ip"));
+
+  $locstr = "Hostname: $loc->hostname<br>$loc->city, $loc->region $loc->postal $loc->country<br>Location: $loc->loc<br>ISP: $loc->org<br>Timezone: $loc->timezone<br>";
 
   echo $locstr;
   exit();
@@ -90,9 +97,10 @@ if($_POST['page'] == 'findbot') {
   
   $ip = $_POST['ip'];
 
-  $human = [3=>"robots.txt", 0xc=>"SiteClass", 0x30=>"Sitemap.xml", 0x100=>"Zero"];
-  
-  $S->query("select agent, site, robots, count, creation_time from barton.bots where ip='$ip'");
+  $human = [BOTS_ROBOTS=>"robots", BOTS_SITECLASS=>"SiteClass",
+            BOTS_SITEMAP=>"sitemap", BOTS_CRON_ZERO=>"Zero"];
+
+  $S->query("select agent, site, robots, count, creation_time from $S->masterdb.bots where ip='$ip'");
 
   $ret = '';
 
@@ -157,8 +165,6 @@ if($_POST['page'] == 'gettracker') {
 
   $me = json_decode(file_get_contents("https://bartonphillips.net/myfingerprints.json"));
 
-  //error_log("me: ".print_r($me, true));
-  
   function callback1(&$row, &$desc) {
     global $S, $me;
 
@@ -171,9 +177,8 @@ if($_POST['page'] == 'gettracker') {
     $ip = $S->escape($row['ip']);
 
     $row['ip'] = "<span class='co-ip'>$ip</span>";
-    $row['refid'] = preg_replace('/\?.*/', '', $row['refid']);
 
-    if($row['js'] != 0x10000 && $row['js'] != 0x8000 && ($row['js'] == 0 || ($row['js'] & 0x2000) == 0x2000)) {
+    if($row['js'] != TRACKER_GOTO && $row['js'] != TRACKER_ME && ($row['js'] == TRACKER_ZERO || ($row['js'] & TRACKER_BOT) == TRACKER_BOT)) {
       $desc = preg_replace("~<tr>~", "<tr class='bots'>", $desc);
     }
     $row['js'] = dechex($row['js']);
@@ -189,14 +194,24 @@ if($_POST['page'] == 'gettracker') {
     $row['difftime'] = sprintf("%u:%02u:%02u", $hr, $min, $sec);
   } // End callback
 
-  $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, refid ".
+  $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, refid, id ".
          "from $S->masterdb.tracker " .
-         "where site='$site' and starttime >= current_date() - interval 24 hour ". 
+         "where site='$site' and starttime >= current_date() " .
          "order by lasttime desc";
 
-  list($tracker) = $T->maketable($sql, array('callback'=>callback1,
-                                             'attr'=>array('id'=>'tracker', 'border'=>'1')));
+  $tracker = $T->maketable($sql, array('callback'=>'callback1', 'attr'=>array('id'=>'tracker', 'border'=>'1')))[0];
+  echo $tracker;
+  exit();
+}
 
+if($_POST['page'] == 'getrefid') {
+  $S = new Database($_site);
+  $T = new dbTables($S);
+
+  $id = $_POST['ref'];
+
+  $sql = "select id, ip, page, finger, agent, starttime as start, endtime as end, difftime as diff, hex(isJavaScript) as js from $S->masterdb.tracker where id=$id";
+  $tracker = $T->maketable($sql, array('attr'=>array('id'=>'getrefid', 'border'=>'1')))[0];
   echo $tracker;
   exit();
 }

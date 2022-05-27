@@ -1,19 +1,30 @@
 // Track user activity
 // Goes hand in hand with tracker.php
-// BLP 2021-06-05 -- new logic
-// BLP 2021-03-26 -- get lastId from the <head> section
 
 'use strict';
 
-var lastId;
+let visits = 0;
+let lastId;
+const trackerUrl = "https://bartonphillips.net/tracker.php";
+const beaconUrl =  "https://bartonphillips.net/beacon.php";
 
-// Post a AjaxMsg. Local function
+// Post a AjaxMsg. For debugging
 
-function postAjaxMsg(msg) {
-  msg = "NEW: " + msg;
+function postAjaxMsg(msg, ip='', agent='') {
+  let ipagent = '';
+  
+  if(ip != '') {
+    ipagent = ", " + ip;
+  }
+  if(ipagent != '' && agent != '') {
+    ipagent += ", " + agent;
+  } else if(agent != '') {
+    ipagent = ", " + agent;
+  }
+  
   $.ajax({
     url: trackerUrl,
-    data: {page: 'ajaxmsg', ipagent: true, msg: msg},
+    data: {page: 'ajaxmsg', msg: msg, ipagent: ipagent},
     type: 'post',
     success: function(data) {
       console.log(data);
@@ -21,41 +32,27 @@ function postAjaxMsg(msg) {
     error: function(err) {
       console.log(err);
     }
-  });             
+  });
+  exit();
 }
 
-// BLP 2021-06-05 -- get the image from image logo's data-image
-// attribute. Then set the src attribute to the 'lastId' and the
-// 'image' from logo.
+// Get the image from image logo's data-image attribute.
+// Then set the src attribute to the 'lastId' and the 'image' from logo.
 
 jQuery(document).ready(function($) {
-  // logo is in banner.i.php and it is now fully instantiated. We got
-  // lastId from below via the script's data-lastid attribute.
+  // logo is in banner.i.php and it is now fully instantiated. 
 
-  let image = $("#logo").attr("data-image");
-  // BLP 2022-01-02 -- lastId is set below which happens before 'ready'.
-  $("#logo").attr('src', "https://bartonphillips.net/tracker.php?page=script&id="+lastId+"&image="+image);
-});
-
-// The rest of this is for everybody!
-
-(function($) {
-  // BLP 2021-06-05 -- We get the lastId from the script's data-lastid attribute.
-  // Then we add the css link just before the script.
-  
-  lastId = $("script[data-lastid]").attr("data-lastid"); // BLP 2022-01-02 -- this happens before the 'ready' above!
+  lastId = $("script[data-lastid]").attr("data-lastid"); // this happens before the 'ready' above!
   $("script[data-lastid]").before('<link rel="stylesheet" href="/csstest-' + lastId + '.css" title="blp test">');
+  
+  let image = $("#logo").attr("data-image");
+  $("#logo").attr('src', "https://bartonphillips.net/tracker.php?page=script&id="+lastId+"&image="+image);
 
-  var trackerUrl = "https://bartonphillips.net/tracker.php";
-  var beaconUrl =  "https://bartonphillips.net/beacon.php";
-
-  // 'start' is done weather or not 'load' happens. As long as
-  // javascript works. Otherwise we should get information from the
-  // image in the noscript section of banner.i.php
-
+/*  
+  let ipsite = thesite + ', ' + theip;
   $.ajax({
     url: trackerUrl,
-    data: {page: 'start', id: lastId, filename: document.location.pathname },
+    data: {page: 'ajaxmsg', msg: 'tracker javascript before_start', ipagent: ipsite},
     type: 'post',
     success: function(data) {
       console.log(data);
@@ -64,12 +61,38 @@ jQuery(document).ready(function($) {
       console.log(err);
     }
   });
+*/
 
-  $(window).on("load beforeunload unload pagehide", function(e) {
-    var type = e.type;
+  // The rest of this is for everybody!
+
+  (function($) {
+    console.log("thesite: " + thesite + ", theip: " + theip + ", lastId: " + lastId);
+
+    // New. Get the cookie. If it has 'mytime' we set 'visits' to zero.
+    
+    visits = (document.cookie.match(/(mytime)=/)) ? 0 : 1; 
+
+    // Always reset cookie for 10 min.
+    let date = new Date();
+    let value = date.getTime();
+    date.setTime(date.getTime() + (60 * 10 * 1000)); // getTime() returns milliseconds
+    let expires = "; expires=" + date.toGMTString();
+    //console.log("date: ", date);
+    //console.log("expires" + expires);
+    document.cookie = "mytime=" + value + expires + ";path=/";
+
+    // Now both 'start' and 'load' will set visits.
+
+    // Usually the image stuff (script, normal and noscript) will
+    // happen before 'start' or 'load'.
+    
+    // 'start' is done weather or not 'load' happens. As long as
+    // javascript works. Otherwise we should get information from the
+    // image in the <noscript> section of includes/banner.i.php
+
     $.ajax({
       url: trackerUrl,
-      data: {page: type, 'id': lastId, filename: document.location.pathname},
+      data: {page: 'start', id: lastId, site: thesite, ip: theip, visits: visits}, // added 'visits' from above.
       type: 'post',
       success: function(data) {
         console.log(data);
@@ -78,59 +101,73 @@ jQuery(document).ready(function($) {
         console.log(err);
       }
     });
-  });
 
-  // We will use beacon also
-
-  if(navigator.sendBeacon) {
-    $(window).on("pagehide unload beforeunload", function(e) {
-      let which;
-      
-      switch(e.type) {
-        case 'pagehide':
-          which = 1;
-          break;
-        case 'unload':
-          which = 2;
-          break;
-        case 'beforeunload':
-          which = 4;
-          break;
-      }
-      console.log("Which: " + which + ", type: " + e.type + ", filename: " + document.location.pathname);
-      
-      navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'type': e.type, 'which': which, 'filename': document.location.pathname}));
+    $(window).on("load", function(e) {
+      var type = e.type;
+      $.ajax({
+        url: trackerUrl,
+        data: {page: type, 'id': lastId, site: thesite, ip: theip, visits: visits},
+        type: 'post',
+        success: function(data) {
+          console.log(data);
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
     });
-  } else {
-    var msg = "NEW: Beacon NOT SUPPORTED";
-    console.log(msg);
-  }
 
-  // Now lets try a timer to update the endtime
+    // Check for pagehide unload beforeunload nd visibilitychange
+    // These are the exit codes as the page disapears.
 
-  var cnt = 0;
-  var time = 0;
-  
-  function runtimer() {
-    if(cnt++ < 50) {
-      // Time should increase to about 8 plus minutes
-      time += 10000;
+    $(window).on("visibilitychange pagehide unload beforeunload", function(e) {
+      // Can we use beacon?
+
+      if(navigator.sendBeacon) {
+        navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'type': e.type, 'site': thesite, 'ip': theip, 'visits': visits}));
+      } else {
+        console.log("Beacon NOT SUPPORTED");
+
+        var type = e.type;
+        $.ajax({
+          url: trackerUrl,
+          data: {page: type, 'id': lastId, site: thesite, ip: theip, visits: visits},
+          type: 'post',
+          success: function(data) {
+            console.log(data);
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });
+      }
+    });
+
+    // Now lets try a timer to update the endtime
+
+    var cnt = 0;
+    var time = 0;
+
+    function runtimer() {
+      if(cnt++ < 50) {
+        // Time should increase to about 8 plus minutes
+        time += 10000;
+      }
+      $.ajax({
+        url: trackerUrl,
+        data: {page: 'timer', id: lastId, time: time, site: thesite, ip: theip, visits: visits},
+        type: 'post',
+        success: function(data) {
+          console.log(data);
+          $("#TrackerCount").html("Tracker every " + time/1000 + " sec.<br>");
+          setTimeout(runtimer, time)
+        },
+        error: function(err) {
+          console.log(err);
+        }
+      });
     }
-    $.ajax({
-      url: trackerUrl,
-      data: {page: 'timer', id: lastId, time: time, filename: document.location.pathname},
-      type: 'post',
-      success: function(data) {
-        console.log(data);
-        $("#TrackerCount").html("Tracker every " + time/1000 + " sec.<br>");
-        setTimeout(runtimer, time)
-      },
-      error: function(err) {
-        console.log(err);
-      }
-    });
-  }
 
-  runtimer();
-})(jQuery);
-
+    runtimer();
+  })(jQuery);
+});

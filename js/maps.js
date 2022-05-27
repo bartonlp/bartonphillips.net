@@ -1,18 +1,16 @@
 // Javascript for google maps API
-// BLP 2021-11-06 -- 
 // This is only used by getcookie.php and webstats.php
 // We do this at the bottom of the above two pages:
-// $APIKEY = require_once("/var/www/bartonphillipsnet/google-maps-key/maps-apikey");
 // <script src="https://bartonphillips.net/js/maps.js"></script>
-// <script src="https://maps.googleapis.com/maps/api/js?key=$APIKEY&callback=initMap&v=weekly" async></script>
-// NOTE the $APIKEY can still be seen using DevTools so we have further
-// restricted the key to our web domains. See
+// <script src="https://maps.googleapis.com/maps/api/js?key=theAPIKEY&callback=initMap&v=weekly" async></script>
+// The key is restricted to our domains, see:
 // https://console.cloud.google.com/google/maps-apis/overview?project=barton-1324.
 
 'use strict';
 
 var map, marker;
-//var geoAjax = "/geoAjax.php";
+//var geoAjax = "https://bartonphillips.net/geoAjax.php";
+
 var uiheight, uiwidth, uitop, uileft, resized = false;
 
 function initMap() {
@@ -38,8 +36,6 @@ if(isMobile()) {
 $(".reset").on("click", function() {
   let cookieName = $('span', this).text();
   let self = this; // pass this into the ajax
-
-  // call POST to remove the cookie
 
   $.ajax({
     url: geoAjax,

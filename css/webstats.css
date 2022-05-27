@@ -40,6 +40,67 @@ button {
 th, td {
         padding: .5rem;
 }
+/* 'tables' is not a real HTML tag but css allows it. See <tables> in code */  
+tables ul { margin-top: 0; }
+/* For the human readable information.
+   We need these two relative so the pop up is in the right place.
+*/
+#tracker, #robots {
+  position: relative;
+}
+#getrefid { position: relative; width: 100%; }
+#getrefid td:nth-of-type(3) { width: 200px; word-break: break-all; }
+.home {
+  color: white;
+  background: green;
+  padding: 0 5px;
+}
+.inmyip {
+  color: black;
+  background: lightgreen;
+  padding: 0 5px;
+}
+/* The foundBotAs field in tracker agent */
+.botas {
+  color: black;
+  background: lightgreen;
+  padding: 0 5px;
+}
+body { margin: 10px; }
+#mygeo td {
+  padding: 10px;
+  cursor: pointer;
+}
+#geocontainer {
+  width: 500px;
+  height: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 5px solid black;
+  z-index: 20;
+}
+#showMe, #showAll {
+  border-radius: 5px;
+  color: white;
+  background: green;
+  padding: 2px;
+}
+#removemsg {
+  color: white;
+  background: red;
+  border-radius: 5px;
+  padding: 2px;
+}
+#outer {
+  display: none;
+  position:
+  absolute;
+  z-index: 20;
+  padding-bottom: 30px;
+}
+/* make the 'count' and 'bots' row as small as posible. It will be as big as the elements in it. */
+#robots td:nth-of-type(4) { width: 1px; text-align: right; padding-right: 10px; }
+#robots td:nth-of-type(3) { width: 1px; text-align: right; padding-right: 10px; }
 #counter td:first-child {
         word-break: break-all;
         width: 40rem;
@@ -95,9 +156,11 @@ th, td {
         width: 1rem;
 }
 /* 9=refid */
-#tracker td:nth-child(9) {
-        width: 10rem;
-        word-break: break-all;
+/*#tracker td:nth-of-type(9) {
+        width: 12rem;
+}*/
+#tracker td:nth-of-type(9):hover {
+  cursor: pointer;
 }
 div {
         padding: .5rem 0;
@@ -219,3 +282,27 @@ table .header {
                 width: 2%;
         }
 }
+
+@media (max-width: 850px) {
+  html { font-size: 10px; }
+  #geocontainer {
+    width: 360px;
+    height: 360px;
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  html { font-size: 10px; }
+  #resetmsg { padding-inline-start: 5px; }
+  #members td { width: 50px; };  
+  /* mygeo is the table */
+  #mygeo td {
+    padding: 2px 2px 2px 5px;
+    width: 50px;
+  }
+  /* geo is the div for the image */
+  #geocontainer {
+    width: 360px;
+    height: 360px;
+  }
+}
+

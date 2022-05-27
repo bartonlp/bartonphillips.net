@@ -1,44 +1,44 @@
 <?php
-// BLP 2021-12-15 -- cosmetic changes to error_log messages etc.
-// BLP 2021-06-30 -- Added $DEBUG etc. No longer using symlinks. This lives at bartonphillips.net
-// BLP 2014-03-06 -- ajax for tracker.js
-// BLP 2016-12-29 -- NOTE: the $_site info is from a mysitemap.json that is where the tracker.php
+// Track the various thing that happen. Some of this is done via JavaScript while others are by the
+// header images and the csstest that is in the .htaccess file as a RewirteRule.
+// NOTE: the $_site info is from a mysitemap.json that is where the tracker.php
 // is located (or a directory above it) not necessarily from the mysitemap.json that lives with the
 // target program.
 
-$_site = require_once(getenv("SITELOADNAME"));
+$_site = require_once(getenv("SITELOADNAME")); // mysitemap.json has count false.
 $S = new Database($_site);
 
-//$DEBUG1 = true;  // BLP 2022-01-17 -- AJAX posts
-//$DEBUGa1 = true; // AJAX unload posts
-//$DEBUGb1 = true; // AJAX answers
-//$DEBUG2 = true; // BLP 2022-01-17 -- GET
-//$DEBUG3 = true; // BLP 2022-01-17 -- Timer
+//error_log("tracker \$S: " . print_r($S, true));
 
-// BLP 2021-10-25 -- I have fixed Database to now have ip and agent.
+require_once(SITECLASS_DIR . "/defines.php"); // constants for TRACKER, BOTS, BEACON.
 
-$ip = $S->ip;
-$agent = $S->agent;
+//$DEBUG1 = true; // AJAX: start, load
+//$DEBUG2 = true; // AJAX: pagehide, beforeunload, unload
+//$DEBUG3 = true; // AJAX: 'not done' pagehide, beforeunload, unload
+//$DEBUG4 = true; // GET: script, normal, noscript
+//$DEBUG5 = true; // JavaScript: timer
+//$DEBUG6 = true; // RewriteRule: csstest
+//$DEBUG7 = true; // show real+1 and real+1 bots-1
+$DEBUG10 = true; // ref info
+$DEBUG11 = true; // start with visits
+
+function isMe($ip) {
+  global $S;
+  return (array_intersect([$ip], $S->myIp)[0] === null) ? false : true;
+}
+
+// ****************************************************************
+// All of the following are the result of a javascript interactionl
+// ****************************************************************
 
 // Post an ajax error message
 
 if($_POST['page'] == 'ajaxmsg') {
   $msg = $_POST['msg'];
-  // NOTE: $_POST['ipagent'] is a string not a boolian! So === true does NOT work but == true
-  // or == 'true' does work.
-  $ipagent = ($_POST['ipagent'] == 'true') ? ": $ip, $agent" : '';
-  error_log("tracker AJAXMSG: $S->siteName, '$msg'" . $ipagent);
+  $ipagent = $_POST['ipagent'];
+  
+  error_log("tracker AJAXMSG $S->siteName: '$msg' " . $ipagent);
   echo "AJAXMSG OK";
-  exit();
-}
-
-$S->query("select count(*) from information_schema.tables ".
-          "where (table_schema = '$S->masterdb') and (table_name = 'tracker')");
-
-list($ok) = $S->fetchrow('num');
-
-if($ok != 1) {
-  error_log("tracker: No tracker in $S->masterdb");
   exit();
 }
 
@@ -46,19 +46,46 @@ if($ok != 1) {
 
 if($_POST['page'] == 'start') {
   $id = $_POST['id'];
-  $filename = $_POST['filename'];
-  
+  $site = $_POST['site'];
+  $ip = $_POST['ip']; // This is the real ip of the program. $S->ip will be the ip of ME.
+  $visits = $_POST['visits']; // Visits may be 1 or zero. tracker.js sets the mytime cookie.
+
   if(!$id) {
-    error_log("tracker: $filename: START NO ID, $ip, $agent");
+    error_log("tracker $site, $ip: START NO ID");
     exit();
   }
 
-  // BLP 2021-06-30 -- debug added here and elsewhere.
+  if(isMe($ip)) {
+    $visits = 0;
+  }
   
-  if($DEBUG1) error_log("tracker: start, $filename, $id, $ip, $agent");
+  $S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
+  [$botAs, $java] = $S->fetchrow('num');
+
+  //error_log("start: botAs=$botAs, java=" . dechex($java));
   
-  $S->query("update $S->masterdb.tracker set isJavaScript=isJavaScript|1, lasttime=now() where id='$id'");
-  echo "Start OK";
+  $bots = 0;
+  
+  if($botAs != BOTAS_COUNTED) {
+    if($java & TRACKER_BOT && ($botAs == BOTAS_TABLE || strpos($botAs, ',') !== false)) {
+      $java &= ~TRACKER_BOT; // Remove BOT if present
+      $bots = -1;
+    } 
+  }
+
+  $java |= TRACKER_START; 
+
+  if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
+    $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visits where date=current_date() and site='$site'");
+    if($DEBUG7 || $DEBUG11) error_log("tracker DEBUG7/11 start, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
+  }
+
+  $S->query("update $S->masterdb.tracker set botAs='" . BOTAS_COUNTED . "' where id=$id");
+
+  if($DEBUG1) error_log("tracker DEBUG1 start, $id, $site, $ip -- visits=$visits, java=" . dechex($java));
+  
+  $S->query("update $S->masterdb.tracker set isJavaScript=$java, lasttime=now() where id='$id'");
+  echo "Start OK, visits=$visits, \$java=" . dechex($java);
   exit();
 }
 
@@ -66,17 +93,42 @@ if($_POST['page'] == 'start') {
 
 if($_POST['page'] == 'load') {
   $id = $_POST['id'];
-  $filename = $_POST['filename'];
-  
+  $site = $_POST['site'];
+  $ip = $_POST['ip'];
+  $visits = $_POST['visits'];
+        
   if(!$id) {
-    error_log("tracker: $filename LOAD NO ID, $ip, $agent");
+    error_log("tracker $site, $ip: LOAD NO ID");
     exit();
   }
 
-  if($DEBUG1) error_log("tracker: load, $filename, $id, $ip, $agent");
+  $S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
+  [$botAs, $java] = $S->fetchrow('num');
 
-  $S->query("update $S->masterdb.tracker set isJavaScript=isJavaScript|2, lasttime=now() where id='$id'");
-  echo "Load OK";
+  //error_log("load: botAs=$botAs, java=" . dechex($java));
+
+  $bots = 0;
+  
+  if($botAs != BOTAS_COUNTED) {
+    if($java & TRACKER_BOT && ($botAs == BOTAS_TABLE || strpos($botAs, ',') !== false)) {
+      $java &= ~TRACKER_BOT; // Remove BOT if present
+      $bots = -1;
+    } 
+  }
+
+  $java |= TRACKER_LOAD;
+  
+  if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
+    $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visit where date=current_date() and site='$site'");
+    if($DEBUG7 || $DEBUG11) error_log("tracker DEBUG7/11 load, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
+  }
+
+  $S->query("update $S->masterdb.tracker set botAs='" . BOTAS_COUNTED . "' where id=$id");
+
+  if($DEBUG1) error_log("tracker DEBUG1 load, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
+
+  $S->query("update $S->masterdb.tracker set isJavaScript=$java, lasttime=now() where id='$id'");
+  echo "Load OK, \$java=" . dechex($java);
   exit();
 }
 
@@ -85,42 +137,46 @@ if($_POST['page'] == 'load') {
 
 if($_POST['page'] == 'pagehide') {
   $id = $_POST['id'];
-  $filename = $_POST['filename'];
+  $site = $_POST['site'];
+  $ip = $_POST['ip'];
+  $visits = $_POST['visits'];
   
   if(!$id) {
-    error_log("tracker: $filename PAGEHIDE NO ID, $ip, $agent");
+    error_log("tracker $site, $ip: PAGEHIDE NO ID");
     exit();
   }
 
-  $S->query("select isJavaScript from $S->masterdb.tracker where id=$id");
-  
-  list($js) = $S->fetchrow('num');
+  $S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
+  [$botAs, $java] = $S->fetchrow('num');
 
-  // 0x8000 (isMe)
-  // 0x4000 (csstest)
-  // 0x2000 (bot via SiteClass)
-  // 0x1000 (timer)
-  // 0x400 (t-pagehide)
-  // 0x200 (t-unload)
-  // 0x100 (t-beforeunload)
-  // 0x80 (b-beforeunload)
-  // 0x40 (b-unload)
-  // 0x20 (b-pagehide)
-  // 0x10 (noscript)
-  // 0xf (start,load,script,normal)
-  
-  if($DEBUGa1) error_log("tracker: before check $id, $filename -- $ip, js=" . dechex($js) . ", type=pagehide");
+  if(($java & BEACON_MASK) == 0) {
+    $bots = 0;
 
-  if(($js & 0xe0) == 0) {
+    if($botAs != BOTAS_COUNTED) {
+      if($java & TRACKER_BOT && ($botAs == BOTAS_TABLE || strpos($botAs, ',') !== false)) {
+        $java &= ~TRACKER_BOT; // Remove BOT if present
+        $bots = -1;
+      } 
+    }
+
+    $java |= TRACKER_PAGEHIDE;
+
+    if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
+      $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visits where date=current_date() and site='$site'");
+      if($DEBUG7) error_log("tracker DEBUG7 pagehide, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
+    }
+    $S->query("update $S->masterdb.tracker set botAs='" . BOTAS_COUNTED . "' where id=$id");
+
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
-              "isJavaScript=isJavaScript|0x400, lasttime=now() where id=$id");
-    if($DEBUGa1) error_log("tracker: Set tracker $id, $filename -- $ip, js=" . dechex($js | 0x400) . ", pagehide, $agent");
+              "isJavaScript=$java, lasttime=now() where id=$id");
 
-    echo "pagehide OK";
+    if($DEBUG2) error_log("tracker DEBUG2 Set pagehide, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
+
+    echo "Pagehide OK, \$java=" . dechex($java);
   } else {
-    if($DEBUGb2) error_log("tracker: pagehide Not Done $id, $filename -- $ip, js=". dechex($js) . ", $agent");
+    if($DEBUG3) error_log("tracker DEBUG3 pagehide Not Done $id, $site, $ip -- visits: $visits, java=" . dechex($java));
     echo "js: ".dechex($js)."\n";    
-    echo "pagehide Not Done";
+    echo "tracker, pagehide Not Done";
   }
   exit();
 }
@@ -129,42 +185,46 @@ if($_POST['page'] == 'pagehide') {
 
 if($_POST['page'] == 'beforeunload') {
   $id = $_POST['id'];
-  $filename = $_POST['filename'];
+  $site = $_POST['site'];
+  $ip = $_POST['ip'];
+  $visits = $_POST['visits'];
   
   if(!$id) {
-    error_log("tracker: $filename BEFOREUNLOAD NO ID, $ip, $agent");
+    error_log("tracker $site, $ip: BEFOREUNLOAD NO ID");
     exit();
   }
 
-  $S->query("select isJavaScript from $S->masterdb.tracker where id=$id");
-  
-  list($js) = $S->fetchrow('num');
+  $S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
+  [$botAs, $java] = $S->fetchrow('num');
 
-  // 0x8000 (isMe)
-  // 0x4000 (csstest)
-  // 0x2000 (bot via SiteClass)
-  // 0x1000 (timer)
-  // 0x400 (t-pagehide)
-  // 0x200 (t-unload)
-  // 0x100 (t-beforeunload)
-  // 0x80 (b-beforeunload)
-  // 0x40 (b-unload)
-  // 0x20 (b-pagehide)
-  // 0x10 (noscript)
-  // 0xf (start,load,script,normal)
+  if(($java & BEACON_MASK) == 0 ) {
+    $bots = 0;
 
-  if($DEBUGa1) error_log("tracker: before check $id, $filename -- $ip, js=" . dechex($js) . ", type=beforeunload");
-  
-  if(($js & 0xe0) == 0 ) {
+    if($botAs != BOTAS_COUNTED) {
+      if($java & TRACKER_BOT && ($botAs == BOTAS_TABLE || strpos($botAs, ',') !== false)) {
+        $java &= ~TRACKER_BOT; // Remove BOT if present
+        $bots = -1;
+      } 
+    }
+
+    $java |= TRACKER_BEFOREUNLOAD;
+
+    if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
+      $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visits where date=current_date() and site='$site'");
+      if($DEBUG7) error_log("tracker DEBUG7 beforeunload, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
+    }
+    $S->query("update $S->masterdb.tracker set botAs='" . BOTAS_COUNTED . "' where id=$id");
+    
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
-              "isJavaScript=isJavaScript|0x100, lasttime=now() where id=$id");
-    if($DEBUGa1) error_log("tracker: Set tracker $id, $filename -- $ip, js=" . dechex($js | 0x100) . ", beforeunload, $agent");
+              "isJavaScript=$java, lasttime=now() where id=$id");
 
-    echo "beforeunload OK";
+    if($DEBUG2) error_log("tracker DEBUG2 Set beforeunload, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
+
+    echo "Beforeunload OK, \$java=" . dechex($java);
   } else {
-    if($DEBUGb2) error_log("tracker: beforeunload Not Done $id, $filename -- $ip, js=". dechex($js) . ", $agent");    
+    if($DEBUG3) error_log("tracker DEBUG3 beforeunload Not Done $id, $site, $ip -- visits: $visits, java=" . dechex($java));    
     echo "js: ".dechex($js)."\n";
-    echo "beforeunload Not Done";
+    echo "tracker, beforeunload Not Done";
   }
   exit();
 }
@@ -173,45 +233,46 @@ if($_POST['page'] == 'beforeunload') {
 
 if($_POST['page'] == 'unload') {
   $id = $_POST['id'];
-  $filename = $_POST['filename'];
+  $site = $_POST['site'];
+  $ip = $_POST['ip'];
+  $visits = $_POST['visits'];
   
   if(!$id) {
-    error_log("tracker: $filename UNLOAD NO ID, $ip, $agent");
+    error_log("tracker $site, $ip: UNLOAD NO ID");
     exit();
   }
-
-  $S->query("select isJavaScript from $S->masterdb.tracker where id=$id");
   
-  list($js) = $S->fetchrow('num');
-
-  // 0x8000 (isMe)
-  // 0x4000 (csstest)
-  // 0x2000 (bot via SiteClass)
-  // 0x1000 (timer)
-  // 0x400 (t-pagehide)
-  // 0x200 (t-unload)
-  // 0x100 (t-beforeunload)
-  // 0x80 (b-beforeunload)
-  // 0x40 (b-unload)
-  // 0x20 (b-pagehide)
-  // 0x10 (noscript)
-  // 0xf (start,load,script,normal)
+  $S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
+  [$botAs , $java] = $S->fetchrow('num');
   
-  if($DEBUGa1) error_log("tracker: before check $id, $filename -- $ip, js=" . dechex($js) . ", type=unload");
+  if(($java & BEACON_MASK) == 0) { // NOT handled by beacon
+    $bots = 0;
 
-  // 0x20, 0x40, 0x80 (0xe0) means it was handled by beacon.
-  
-  if(($js & 0xe0) == 0) { // NOT handled by beacon
+    if($botAs != BOTAS_COUNTED) {
+      if($java & TRACKER_BOT && ($botAs == BOTAS_TABLE || strpos($botAs, ',') !== false)) {
+        $java &= ~TRACKER_BOT; // Remove BOT if present
+        $bots = -1;
+      } 
+    }
+
+    $java |= TRACKER_UNLOAD;
+
+    if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
+      $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visits where date=current_date() and site='$site'");
+      if($DEBUG7) error_log("tracker DEBUG7 unload, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
+    }
+    $S->query("update $S->masterdb.tracker set botAs='" . BOTAS_COUNTED . "' where id=$id");
+
     $S->query("update $S->masterdb.tracker set endtime=now(), difftime=timestampdiff(second, starttime, now()), ".
-              "isJavaScript=isJavaScript|0x200, lasttime=now() where id=$id");
+              "isJavaScript=$java, lasttime=now() where id=$id");
 
-    if($DEBUGa1) error_log("tracker: Set tracker $id, $filename -- $ip, js=" . dechex($js | 0x200) . ", beforeunload, $agent");
+    if($DEBUG2) error_log("tracker DEBUG2 Set unload, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
     
-    echo "Unload OK";
+    echo "Unload OK, \$java=" . dechex($java);
   } else {
-    if($DEBUGb2) error_log("tracker: unload Not Done $id, $filename -- $ip, js=". dechex($js) . ", $agent");    
+    if($DEBUG3) error_log("tracker DEBUG3 unload Not Done $id, $site, $ip -- visits: $visits, java=" . dechex($java));    
     echo "js: ".dechex($js)."\n";
-    echo "Unload Not Done";
+    echo "tracker, Unload Not Done";
   }
   exit();
 }
@@ -223,32 +284,61 @@ if($_POST['page'] == 'unload') {
 if($_POST['page'] == 'timer') {  
   $id = $_POST['id'];
   $time = $_POST['time'] / 1000;
-  $filename = $_POST['filename'];
-  
-  if($DEBUG3) error_log("tracker: timer $filename, $ip, $time sec.");
+  $site = $_POST['site'];
+  $ip = $_POST['ip'];
+  $visits = $_POST['visits'];
   
   if(!$id) {
-    error_log("tracker: $filename TIMER NO ID, $ip, $agent");
+    error_log("tracker $site, $ip: TIMER NO ID");
     exit();
   }
 
+  // If we have a TIMER then this is probably NOT a bot. So remove BOT if it's there.
+  
+  $S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
+  [$botAs, $java] = $S->fetchrow('num');
+
+  $bots = 0;
+  
+  if($botAs != BOTAS_COUNTED) {
+    if($java & TRACKER_BOT && ($botAs == BOTAS_TABLE || strpos($botAs, ',') !== false)) {
+      $java &= ~TRACKER_BOT; // Remove BOT if present
+      $bots = -1;
+    } 
+  }
+
+  $java |= TRACKER_TIMER; // Or in TIMER
+
+  if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
+    $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visits where date=current_date() and site='$site'");
+    if($DEBUG5) error_log("tracker DEBUG5 timer, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
+  }
+  $S->query("update $S->masterdb.tracker set botAs='" . BOTAS_COUNTED . "' where id=$id");
+  
+  if($DEBUG5) error_log("tracker DEBUG5 timer: $id, $site, $ip -- visits: $visits, java=" . dechex($java));
+  
   try {
-    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|0x1000, endtime=now(), ".
+    $sql = "update $S->masterdb.tracker set isJavaScript=$java, endtime=now(), ".
            "difftime=timestampdiff(second, starttime, now()), lasttime=now() where id=$id";
     
     $S->query($sql);
   } catch(Exception $e) {
     error_log(print_r($e, true));
   }
-  echo "Timer OK";
+
+  echo "Timer OK, \$java=" . dechex($java);
   exit();
 }
 
-// START OF IMAGE FUNCTIONS
+// *********************************************
+// This is the END of the javascript AJAX calls.
+// *********************************************
+
+// START OF IMAGE FUNCTIONS. These are NOT javascript but rather use $_GET.
 // NOTE: The image functions are GET calls from the original php file. These are not done by
 // tracker.js!
 
-// BLP 2021-06-30 -- Here is an example of the banner.i.php:
+// Here is an example of the banner.i.php:
 // <header>
 //   <a href="https://www.bartonphillips.com">
 //    <img id='logo' data-image="image" src="https://bartonphillips.net/images/blp-image.png"></a>
@@ -265,43 +355,37 @@ if($_POST['page'] == 'timer') {
 //
 // tracker.js changes the <img id='logo' ... from the above to 'src' attribute:
 // src="https://bartonphillips.net/tracker.php?page=script&id="+lastId+"&image="+image);
-// BLP 2021-06-30 -- END
+// When tracker.php is called to get the image 'page' has the values script, normal or noscript.
+
+$ref = $_SERVER['HTTP_REFERER']; // Get the referer
 
 if($_GET['page'] == 'script') {
   $id = $_GET['id'];
   $image = $_GET['image'];
-           
-  if($DEBUG2) error_log("tracker script: trackerImg1: $image");
+
+  if($S->isBot) {
+    error_log("tracker script, $id, $S->siteName, $S->ip -- image=$image, THIS IS A BOT"); 
+    return; // If this is a bot don't bother
+  }
   
-  if(!$id || $id == 'undefined') {
-    error_log("tracker script: NO ID, $ip, $agent");
+  if(!$id) {
+    error_log("tracker script: NO ID, $ip");
     exit();
   }
 
-  if($DEBUG2) error_log("tracker script: $id, $ip, $agent");
-
-  try {
-    $sql = "select page, agent from $S->masterdb.tracker where id=$id";
-    $S->query($sql);
-
-    list($page, $orgagent) = $S->fetchrow('num');
-
-    $or = 0x4;
-    
-    if($agent != $orgagent) {
-      $sql = "insert into $S->masterdb.tracker (site, ip, page, agent, starttime, refid, isJavaScript, lasttime) ".
-             "values('$S->siteName', '$ip', '$page', '$agent', now(), '$id', 0x2004, now())";
-
-      $S->query($sql);
-      $or = 0x2004;
-    }
+  $S->query("select site from $S->masterdb.tracker where id=$id");
+  $site = $S->fetchrow('num')[0];
   
-    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
-    $S->query($sql);
-  } catch(Exception $e) {
-    error_log(print_r($e, true));
-  }
+  if($DEBUG10) error_log("tracker DEBUG10 script $id, $site, $S->ip -- referer=$ref");
+  
+  $or = TRACKER_SCRIPT;
+  
+  $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
+  $S->query($sql);
+
   $img1 = "https://bartonphillips.net/images/blank.png"; // default needs full url
+
+  if($DEBUG4) error_log("tracker DEBUG4 script $id, $site, $S->ip -- trackerImg1: $image, default: $img1");
 
   if($image) {
     $pos = strpos($image, "http"); // Look for http at start. It could be http: or https:
@@ -312,9 +396,7 @@ if($_GET['page'] == 'script') {
     }
   }
   // If no $image then use the default full url.
-  
-  if($DEBUG2) error_log("tracker script: default-image: $img1");
-  
+
   $imageType = preg_replace("~^.*\.(.*)$~", "$1", $img1); // greedy \. so we only see the LAST .
   $img = file_get_contents("$img1");
   header("Content-type: image/$imageType");
@@ -330,33 +412,29 @@ if($_GET['page'] == 'script') {
 if($_GET['page'] == 'normal') {
   $id = $_GET['id'];
   $image = $_GET['image'];
+
+  if($S->isBot) {
+    error_log("tracker normal, $id, $S->siteName, $S->ip -- image=$image, THIS IS A BOT"); 
+    return; // If this is a bot don't bother
+  }
   
   if(!$id) {
-    error_log("tracker normal: NO ID, $ip, $agent");
+    error_log("tracker normal: NO ID, $S->ip, $S->agent");
     exit();
   }
 
-  try {
-    $sql = "select page, agent from $S->masterdb.tracker where id=$id";
-    $S->query($sql);
-    list($page, $orgagent) = $S->fetchrow('num');
-
-    $or = 0x8;
-    
-    if($agent != $orgagent) {
-      $sql = "insert into $S->masterdb.tracker (site, ip, page, agent, starttime, refid, isJavaScript, lasttime) ".
-             "values('$S->siteName', '$ip', '$page', '$agent', now(), '$id', 0x2008, now())";
-
-      $S->query($sql);
-      $or = 0x2008;
-    }
-
-    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
-    $S->query($sql);
-  } catch(Exception $e) {
-    error_log(print_r($e, true));
-  }
+  $S->query("select site from $S->masterdb.tracker where id=$id");
+  $site = $S->fetchrow('num')[0];
+  
+  if($DEBUG10) error_log("tracker DEBUG10 normal $id, $site, $S->ip -- referer=$ref");
+  
+  $or = TRACKER_NORMAL;
+  $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
+  $S->query($sql);
+  
   $img2 = "https://bartonphillips.net/images/blank.png";
+
+  if($DEBUG4) error_log("tracker DEBUG4 normal $id, $site, $S->ip -- trackerImg2: $image, default: $img2");
 
   if($image) {
     $pos = strpos($image, "http");
@@ -366,7 +444,7 @@ if($_GET['page'] == 'normal') {
       $img2 = "https://bartonphillips.net" . $image;
     }
   }
-  
+
   $imageType = preg_replace("~.*\.(.*)$~", "$1", $img2);
   
   $img = file_get_contents("$img2");
@@ -381,34 +459,29 @@ if($_GET['page'] == 'normal') {
 if($_GET['page'] == 'noscript') {
   $id = $_GET['id'];
 
+  if($S->isBot) {
+    error_log("tracker noscript, $id, $S->siteName, $S->ip -- image=$image, THIS IS A BOT"); 
+    return; // If this is a bot don't bother
+  }
+  
   if(!$id) {
-    error_log("tracker noscript: NO ID, $ip, $agent");
+    error_log("tracker noscript: NO ID, $ip, $S->agent");
     exit();
   }
 
-  if($DEBUG2) error_log("tracker noscript: $id, $ip, $agent");
+  $S->query("select site from $S->masterdb.tracker where id=$id");
+  $site = $S->fetchrow('num')[0];
+  
+  if($DEBUG10) error_log("tracker DEBUG10 noscript $id, $site, $S->ip -- referer=$ref");
 
-  try {
-    $sql = "select page, agent from $S->masterdb.tracker where id=$id";
-    $S->query($sql);
-    list($page, $orgagent) = $S->fetchrow('num');
-
-    $or = 0x10;
-    
-    if($agent != $orgagent) {
-      $sql = "insert into $S->masterdb.tracker (site, ip, page, agent, starttime, refid, isJavaScript, lasttime) ".
-             "values('$S->siteName', '$ip', '$page', '$agent', now(), '$id', 0x2010, now())";
-
-      $S->query($sql);
-      $or = 0x2010;
-    }
-
-    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
-    $S->query($sql);
-  } catch(Exception $e) {
-    error_log(print_r($e, true));
-  }
+  $or = TRACKER_NOSCRIPT;
+  $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
+  $S->query($sql);
+  
   $img = file_get_contents("https://bartonphillips.net/images/blank.png");
+
+  if($DEBUG4) error_log("tracker DEBUG4 noscript $id, $site, $S->ip -- default: $img");
+
   header("Content-type: image/png");
   echo $img;
   exit();
@@ -429,55 +502,51 @@ if($_GET['page'] == 'noscript') {
 if(isset($_GET['csstest'])) {
   $id = $_GET['id'];
 
+  if($S->isBot) {
+    error_log("tracker csstest, $id, $S->siteName, $S->ip -- THIS IS A BOT"); 
+    return; // If this is a bot don't bother
+  }
+  
   if(!$id) {
     // BLP 2021-12-24 -- If there is no javascript running and .htaccess tries to load csstest it
     // will have no LAST_ID.
-    error_log("tracker csstest: NO ID, $ip, $agent");
+    error_log("tracker csstest: NO ID, $ip, $S->agent");
     exit();
   }
 
-  if($DEBUG2) error_log("tracker csstest: $id, $ip, $agent");
+  $S->query("select site from $S->masterdb.tracker where id=$id");
+  $site = $S->fetchrow('num')[0];
+  
+  if($DEBUG10) error_log("tracker DEBUG10 csstest $id, $site, $S->ip -- referer=$ref");
 
   // For csstest we will set bit 0x4000
   
-  try {
-    $sql = "select page, agent from $S->masterdb.tracker where id=$id";
-    $S->query($sql);
-    list($page, $orgagent) = $S->fetchrow('num');
+  $or = TRACKER_CSS;
+  $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
+  $S->query($sql);
 
-    $or = 0x4000;
-    
-    if($agent != $orgagent) { // This can happen if $orgagent is blank or the agent does not match orgagent.
-      // 0x6000 is 0x4000 (csstest) and 0x2000 (Bot).
-      
-      $sql = "insert into $S->masterdb.tracker (site, ip, page, agent, starttime, refid, isJavaScript, lasttime) ".
-             "values('$S->siteName', '$ip', '$page', '$agent', now(), '$id', 0x6000, now())";
-
-      // if orgagent is empty or the two are not the same.
-      
-      if($DEBUG2) error_log("tracker: id=$id, ip=$ip, agent=$agent, orgagent=$orgagent, or=0x6000, " . __LINE__);
-      
-      $S->query($sql);
-      $or = 0x6000;
-    }
-
-    $sql = "update $S->masterdb.tracker set isJavaScript=isJavaScript|$or, lasttime=now() where id=$id";
-    $S->query($sql);
-  } catch(Exception $e) {
-    error_log(print_r($e, true));
-  }
+  if($DEBUG6) error_log("tracker DEBUG6 csstest: $id, $site, $S->ip");
+  
   header("Content-Type: text/css");
   echo "/* csstest.css */";
   exit();
 }
 
+// This is a mystry to me. How someone tried to use tracker.
+
+$id = $_GET['id'] ?? $_POST['id'];
+
+if($id) {
+  $S->query("update $S->masterdb.tracker set isJavaScript=isJavaScript|" . TRACKER_GOAWAY . " where id=$id");
+}
+
 // otherwise just go away!
 
-$sql = "select finger from tracker where ip='$ip'";
+$sql = "select finger from tracker where ip='$S->ip'";
 $S->query($sql);
 $finger = $S->fetchrow('num')[0] ?? "NONE";
 
-error_log("tracker GOAWAY: ip: $ip, finger: $finger, agent: $agent");
+error_log("tracker GOAWAY $S->siteName, $S->ip, $S->agent, finger: $finger, id=$id");
 
 echo <<<EOF
 <!DOCTYPE html>

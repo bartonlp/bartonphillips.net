@@ -60,9 +60,11 @@ if(isset($_POST['site'])) {
   <link rel="stylesheet" href="https://bartonphillips.net/css/newtblsort.css">
 EOF;
 
-  $h->extra = <<<EOF
+  $h->script = <<<EOF
   <script src="https://bartonphillips.net/tablesorter-master/dist/js/jquery.tablesorter.min.js"></script>
-  <script>
+EOF;
+  
+  $h->inlineScript = <<<EOF
 jQuery(document).ready(function($) {
   $.tablesorter.addParser({
     id: 'strnum',
@@ -80,11 +82,9 @@ jQuery(document).ready(function($) {
     .tablesorter({ headers: { 1: {sorter: 'strnum'}, 2: {sorter: false}, 3: {sorter: false}}, sortList: [[1,1]]})
     .addClass('tablesorter');
 });
-  </script>
 EOF;
 
   $h->css = <<<EOF
-  <style>
 body {
   margin: 1rem;
 }
@@ -95,7 +95,6 @@ button {
 .scrolling {
   overflow-x: auto;
 }
-  </style>
 EOF;
 
   $site = $_POST['site'] ?? 'ALL';
@@ -119,6 +118,7 @@ EOF;
 if($S) {
   return getAnalysis($S, $S->siteName);
 }
+
 goaway();
 
 // BLP 2022-03-27 - New version of maketable.

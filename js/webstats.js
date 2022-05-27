@@ -1,17 +1,19 @@
 /*
- * webstats.js for http://www.bartonphillips.net/webstats.php.
- * webstats.php is symlinked in each of my domains. This lets me use
- * the mysitemap.json to configure webstats.
-*/
+ * webstats.js for http://www.bartonphillips.net/webstats.php. Uses
+ * webstats-ajax.php for AJAX calls.
+ */
 // BLP 2021-10-25 -- Maps and geo logic moved to geo.js
 // BLP 2021-03-24 -- see comments this date.
 // BLP 2016-11-27 -- see comments this date.
 
-var flags = {all: false, webmaster: false, bots: false, ip6: true};
-var path = document.location.pathname;
-var ajaxurl = 'https://bartonphillips.net/webstats-ajax.php'; // URL for all ajax calls.
+const flags = {all: false, webmaster: false, bots: false, ip6: true};
+const path = document.location.pathname;
+const ajaxurl = 'https://bartonphillips.net/webstats-ajax.php'; // URL for all ajax calls.
 
 // For 'tracker'
+// The .bots class is set in webstats-ajax.php.
+// homeIp, thesite, myIp, whichCodes, robots and tracker are set in
+// webstats.php in the inlineScript.
 
 function hideIt(f) {
   switch(f) {
@@ -29,7 +31,7 @@ function hideIt(f) {
       break;
   }
   flags[f] = false;
-  var msg = "Show ";
+  let msg = "Show ";
   $("#"+ f).text(msg + f);
   calcAv();
   return;
@@ -50,31 +52,32 @@ function showIt(f) {
       break;
   }
   flags[f] = true;
-  var msg = "Hide ";
+  let msg = "Hide ";
   $("#"+ f).text(msg + f);
   calcAv();
   return;
 }
 
 function calcAv() {
-    // Calculate the average time spend using the NOT hidden elements
-  var av = 0, cnt = 0;
+  // Calculate the average time spend using the NOT hidden elements
+
+  let av = 0, cnt = 0;
 
   $("#tracker tbody :not(:hidden) td:nth-child(7)").each(function(i, v) {
-    var t = $(this).text();
+    let t = $(this).text();
     if(t == '' || t == 0 || (typeof t == 'undefined')) {
-        //console.log("t:", t);
+      //console.log("t:", t);
       return true; // Continue, don't count blank
     }
 
-      //console.log("t", t);
+    //console.log("t", t);
 
-    var ar = t.match(/^(\d+):(\d{2}):(\d{2})$/);
-      //console.log("ar: " + ar + "t:", t);
+    let ar = t.match(/^(\d+):(\d{2}):(\d{2})$/);
+    //console.log("ar: " + ar + "t:", t);
     t = parseInt(ar[1], 10) * 3600 + parseInt(ar[2],10) * 60 + parseInt(ar[3],10);
 
     if(t > 7200) {
-        //console.log("Don't count: " + t);
+      //console.log("Don't count: " + t);
       return true; // Continue if over two hours 
     }
     av += t;
@@ -84,34 +87,34 @@ function calcAv() {
   if(av) {
     av = av/cnt; // Average
   }
-  var hours = Math.floor(av / (3600)); 
+  let hours = Math.floor(av / (3600)); 
 
-  var divisor_for_minutes = av % (3600);
-  var minutes = Math.floor(divisor_for_minutes / 60);
+  let divisor_for_minutes = av % (3600);
+  let minutes = Math.floor(divisor_for_minutes / 60);
 
-  var divisor_for_seconds = divisor_for_minutes % 60;
-  var seconds = Math.ceil(divisor_for_seconds);
+  let divisor_for_seconds = divisor_for_minutes % 60;
+  let seconds = Math.ceil(divisor_for_seconds);
 
-  var tm = hours.pad()+":"+minutes.pad()+":"+seconds.pad();
+  let tm = hours.pad()+":"+minutes.pad()+":"+seconds.pad();
 
   $("#average").html(tm);
 }
 
 Number.prototype.pad = function(size) {
-  var s = String(this);
+  let s = String(this);
   while (s.length < (size || 2)) {s = "0" + s;}
   return s;
 }
 
 function getcountry() {
-  var ip = $("#tracker tr td:first-child");
-  var ar = new Array;
+  let ip = $("#tracker tr td:first-child");
+  let ar = new Array;
 
   ip.each(function() {
-    var ipval = $(this).text();
-      // remove dups. If ipval is not in the ar array add it once.
+    let ipval = $(this).text();
+    // remove dups. If ipval is not in the ar array add it once.
     if(!ar[ipval]) {
-      ar[ipval] = 1;
+      ar[ipval] = 1; // true
     }
   });
 
@@ -123,13 +126,13 @@ function getcountry() {
     type: 'post',
     data: {list: ar},
     success: function(co) {
-      var com = JSON.parse(co); // com is an array of countries by ip.
+      let com = JSON.parse(co); // com is an array of countries by ip.
             
       ip.each(function(i) { // ip is the first td. We look at each td.
         ip = $(this).text();
-        co = com[ip];
-        //console.log(co);
-        // We make co-ip for the ip and country for co.
+        co = com[ip]; // co is the country
+    
+        // We make co-ip means country-ip.
 
         $(this).html("<span class='co-ip'>"+ip+"</span><br><div class='country'>"+co+"</div>");
       });
@@ -140,11 +143,331 @@ function getcountry() {
   });
 }
 
+// Function to do all the stuff for tracker when it is Ajaxed in
+
+function dotracker() {
+  // To start Webmaster is hidden
+  
+  $("#logagent tbody td:nth-child(1)").each(function(i, v) {
+    if(myIp.indexOf($(v).text()) !== -1) { // myIp was set in webstats.php in inlineScript
+      if(homeIp === ($(v).text())) { // homeIp was set in webstats.php in inlineScript
+        $(v).css({"color": "white", "background": "green"});
+      } else {
+        $(v).css({"color": "black", "background": "lightgreen"});
+      }
+    }
+  });
+
+  $("#logagent tbody td:nth-child(2)").each(function(i, v) {
+    v = $(v);
+    v.html((v.html().replaceAll(/</g, "&lt;")).replaceAll(/>/g, "&gt;"));
+  });
+
+  // Set class webmaster colors.
+  
+  $("#tracker tbody td:nth-child(1) span.co-ip").each(function(i, v) {
+    if(myIp.indexOf($(v).text()) !== -1) { // myIp was set in webstats.php in inlineScript
+      if(homeIp === ($(v).text())) { // homeIp was set in webstats.php in inlineScript
+        $(v).parent().css({ "color":"white", "background":"green"}).parent().addClass("webmaster").hide();
+      } else {
+        $(v).parent().css({"color":"black", "background":"lightgreen"}).parent().addClass("webmaster").hide();
+      }
+    }
+  });
+
+  // To start bots are hidden
+
+  $(".bots td:nth-child(4)").css("color", "red").parent().hide();
+  
+  // What ever is left is normal
+
+  $("#tracker tbody tr:not(:hidden)").addClass("normal");
+
+  calcAv();
+}
+
+function ipaddress(e, self) {
+  if(e.ctrlKey) {
+    let msg;
+    
+    console.log("delegateTarget.id: " + e.delegateTarget.id);
+
+    if(e.delegateTarget.id == 'tracker') {
+      if(flags.ip) {
+        flags.ip = false;
+        $(".ip").removeClass("ip").hide();
+        for(let f in flags) {
+          if(flags[f] == true) {
+            $("."+f).show();
+          }
+        }
+        $(".normal").show();
+        msg = "Show Only ID";
+      } else {
+        flags.ip = true;
+        let ip = $(self).text();
+        $("#tracker td:first-child").each(function(i, v) {
+          if($(v).text() == ip) {
+            $(v).parent().addClass('ip');
+          }
+        });
+        $("#tracker tbody tr").not(".ip").hide();
+        msg = "Show All ID";
+      }
+      $("#ip").text(msg);
+      flag0 = !flag0;
+      return;
+    }
+  }
+
+  let ip = $("span", self).text();
+  let pos = $(self).position();
+  let xpos = pos.left + $(self).width() + 10;
+  let ypos = pos.top;
+  let table = $(self).closest('table');
+
+  console.log("IP: "+ip);
+
+  if(e.altKey) { // Alt key?
+    $.ajax(ajaxurl, {
+        //url: directory+"/webstats-ajax.php",
+      data: {page: 'curl', ip: ip},
+      type: "post",
+      success: function(data) {
+        console.log(data);
+          // For mobile devices there is NO ctrKey! so we don't
+          // need to worry about position fixed not working!
+
+        $("#FindBot").remove();
+        table.append("<div id='FindBot' style='position: absolute;top: "+ypos+"px;left:"+xpos+"px;"+
+                     "background-color: white; border: 5px solid black;padding: 10px'>"+
+                     data+"</div>");
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });
+  } else { // No alt.
+    let bottom = $(self).offset()['top'] + $(self).height();
+
+    $.ajax(ajaxurl, {
+        //url: directory+"/webstats-ajax.php",
+      data: {page: 'findbot', ip: ip},
+      type: "post",
+      success: function(data) {
+        $("#FindBot").remove();
+        $("<div id='FindBot' style='position: fixed;top: 10px; "+
+            "background-color: white; border: 5px solid black;padding: 10px'>"+
+            data+"</div>").appendTo("body");
+
+        if($("#FindBot").height() > window.innerHeight) {
+          $("#FindBot").remove();
+          $("<div id='FindBot' style='position: absolute;top: "+bottom+"px; "+
+              "background-color: white; border: 5px solid black;padding: 10px'>"+
+              data+"</div>").appendTo("body");
+        }
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });
+  }
+  e.stopPropagation();
+}
+
+function gettracker() {
+  $.ajax(ajaxurl, {
+    //url: directory+'/webstats-ajax.php',
+    data: {page: 'gettracker', site: thesite}, // thesite is set in webstats via inlineScript
+    type: 'post',
+    success: function(data) {
+      $("#trackerdiv").html(data);
+      $("#tracker").tablesorter({theme: 'blue', headers: {6: {sorter: 'hex'}}});
+
+      // Put a couple of buttons before the tracker table
+
+      $("#tracker").parent().before("<div id='beforetracker'>Ctrl Click on the 'ip' items to <span id='ip'>Show Only ip</span>.<br>"+
+                                    "Alt Click on the 'ip' items to <span class='red'>Show http://ipinfo.io info</span><br>"+
+                                    "Double Click on the 'page' items to <span id='page'>Show Only page</span>.<br>"+
+                                    "Click on the 'js' items to see human readable info.<br>"+
+                                    "Average stay time: <span id='average'></span> (times over two hours are discarded.)<br>"+
+                                    "<button id='webmaster'>Show webmaster</button>"+
+                                    "<button id='bots'>Show bots</button>"+
+                                    "<button id='all'>Show All</button><br>"+
+                                    "<button id='update'>Update Fields</button>"+
+                                    "<button id='ip6only'>Hide IPV6</button>"+
+                                    "</div>"
+                                   );
+
+      getcountry();
+      dotracker();
+
+      for(f in flags) {
+        if(flags[f]) { // if true
+          switch(f) {
+            case 'all':
+              showIt('all');
+              break;
+            case 'webmaster':
+              showIt('webmaster');
+              break;
+            case 'bots':
+              showIt('bots');
+              break;
+          }
+        }
+      }
+
+      // ShowHide all where js == 0
+
+      $("#all").on("click", function(e) {
+        if(flags.all) {
+          hideIt('all');
+        } else {
+          // Show
+          showIt('all');
+          showIt('webmaster');
+          showIt('bots');
+        }
+      });
+
+      // ShwoHide Webmaster
+
+      $("#webmaster").on("click", function(e) {
+        if(flags.webmaster) {
+          hideIt('webmaster');
+        } else {
+          // Show
+          showIt('webmaster');
+        }
+      });
+
+      // Ip6only
+
+      $("#ip6only").on("click", function(e) {
+        $("#tracker tbody tr td:nth-child(1)").each(function(i, v) {
+          if($(this).text().match(/:/) != null ) {
+            if(flags.ip6 === true) {
+              $(this).parent().show();
+            } else {
+              $(this).parent().hide();
+            }
+          }
+        });
+        if(flags.ip6 === false) {
+          $("#ip6only").text("Hide IPV6");
+        } else {
+          $("#ip6only").text("Show IPV6")
+        }
+        flags.ip6 = !flags.ip6;
+      });
+
+      // ShowHideBots
+
+      $("#bots").on("click", function() {
+        if(flags.bots) {
+          // hide
+          hideIt('bots');
+        } else {
+          // show
+          showIt('bots');
+        }
+      });
+
+      // Update the tracker info by getting the latest stuff.
+
+      $("#update").on("click", function() {
+        $("#beforetracker").remove();
+        gettracker();
+      });
+
+      // The refid field. Click bring up the refid info.
+      
+      $("body").on('click', '#tracker td:nth-of-type(9)', function() {
+        let ref = $(this).text();
+        if(ref == '') return;
+        
+        $.ajax(ajaxurl, {
+          //url: directory+'/webstats-ajax.php',
+          data: {page: 'getrefid', ref: ref}, // thesite is set in webstats via inlineScript
+          type: 'post',
+          success: function(data) {
+            $("#FindBot").remove();
+            $("<div id='FindBot' style='position: fixed;top: 10px; "+
+                "background-color: white; border: 5px solid black;padding: 10px; width: 98%;'>"+
+                data+"</div>").appendTo("body");
+          },
+          error: function(err) {
+            console.log("getrefid error: ", err);
+          }
+        });
+      });
+
+      $("body").on('mouseenter mouseleave', '#getrefid td:nth-of-type(9)', function(e) {
+        let type = e.type;
+        
+        let h = '';
+        let js = parseInt($(this).text(), 16);
+        let human = tracker;
+        let pos = $(this).position();
+        xpos = pos.left + $(this).width() + 17;
+        ypos = pos.top;
+        for(let [k, v] of Object.entries(human)) {
+          h += (js & k) ? v + "<br>" : '';
+        }
+        h = "<span id='human'><br>" + h + "</span>";
+        if(type == 'mouseenter') {
+          $(this).append(h);
+        } else {
+          $('span', this).remove();
+        }
+      });
+      
+      // Second field 'page' dbl clicked
+
+      $("body").on('dblclick', '#tracker td:nth-child(2)', function() { // This is 'page'
+        let msg;
+        
+        if(flags.page) { // if true
+          flags.page = false;
+
+          $("#tracker tr").removeClass('page');
+
+          for(let f in flags) {
+            if(flags[f] == true) {
+              $("."+f).show();
+            }
+          }
+          $(".normal").show();
+          msg = "Show Only Page";
+        } else {
+          flags.page = true;
+          let page = $(this).text();
+          $("#tracker td:nth-child(2)").each(function(i, v) {
+            if($(v).text() == page) {
+              $(v).parent().addClass('page');
+            }
+          });
+          $("#tracker tr").not(".page").hide();
+          msg = "Show All Page";
+        }
+        $("#page").text(msg);
+      });
+
+      $("#tracker td:first-child").on("click", function(e) {
+        ipaddress(e, this);
+      });
+      
+    }, error: function(err) {
+      console.log(err);
+    }
+  });
+}
+
 jQuery(document).ready(function($) {
-  const whichCodes = {"2": "robots.txt", "4": "Sitemap.xml", "8": "SiteClass", "16": "Zero"};
-  $("#robots2 td:nth-of-type(3)").each(function() {
+  $("#robots2 td:nth-of-type(4)").each(function() {
     let botCode = $(this).text();
-    $(this).text(botCode + ":" + whichCodes[botCode]);
+    $(this).text(botCode + ":" + robots[botCode]); // robots was set in webstats.php in inlineScript
   });
   
   $("#logip, #logagent, #counter, #counter2, #robots, #robots2").tablesorter({
@@ -182,213 +505,23 @@ jQuery(document).ready(function($) {
   $("#os1, #os2, #browser1, #browser2")
       .tablesorter({ headers: { 1: {sorter: 'strnum'}, 2: {sorter: false}, 3: {sorter: false}}, sortList: [[1,1]]});
 
-  // Set up tracker for tablesorter
-  
-  $("#tracker").tablesorter({theme: 'blue', headers: {6: {sorter: 'hex'}}});
-
   // Set up robots for tablesorter
   
   $("#robots").tablesorter({headers: {3: {sorter: 'hex'}}});
  
-  //$("#tracker, #robots").addClass('tablesorter');
-
-  // Function to do all the stuff for tracker when it is Ajaxed in
-  
-  function dotracker() {
-    // To start Webmaster is hidden
-    // BLP 2021-09-26 -- myIp also has all of the myip table.
-    // BLP 2016-11-27 -- myIp is now a string. It could be
-    // "123.123.123.123,12.3.4.4" or just a single entry. This is
-    // because $S->myUrl can now be an array and therefore $S->myIp can
-    // be either a string or an array. The Javascript variable myIp is
-    // made from $S->myIp, which is an array, by doing $myIp = implode(',',
-    // $S->myIP) and then in webstats.php adding it as a Javascript
-    // varible.
-
-    $("#logagent tbody td:nth-child(1)").each(function(i, v) {
-      if(myIp.indexOf($(v).text()) !== -1) {
-        if(homeIp === ($(v).text())) {
-          $(v).css({"color": "white", "background": "green"});
-        } else {
-          $(v).css({"color": "black", "background": "lightgreen"});
-        }
-      }
-    });
-
-    $("#logagent tbody td:nth-child(2)").each(function(i, v) {
-      v = $(v);
-      v.html((v.html().replaceAll(/</g, "&lt;")).replaceAll(/>/g, "&gt;"));
-    });
-    
-    $("#tracker tbody td:nth-child(1) span.co-ip").each(function(i, v) {
-      if(myIp.indexOf($(v).text()) !== -1) {
-        if(homeIp === ($(v).text())) {
-          $(v).parent().css({ "color":"white", "background":"green"}).parent().addClass("webmaster").hide();
-        } else {
-          $(v).parent().css({"color":"black", "background":"lightgreen"}).parent().addClass("webmaster").hide();
-        }
-      }
-    });
-
-    // To start bots are hidden
-
-    $(".bots td:nth-child(4)").css("color", "red").parent().hide();
-
-    // What ever is left is normal
-
-    $("#tracker tbody tr:not(:hidden)").addClass("normal");
-
-    calcAv();
-  }
-
-  // Put a couple of buttons before the tracker table
-
-  $("#tracker").parent().before("<p class='desktop'>Ctrl Click on the 'ip' items to <span id='ip'>Show Only ip</span>.<br>"+
-                                "Alt Click on the 'ip' items to <span class='red'>Show http://ipinfo.io info</span><br>"+
-                                "Double Click on the 'page' items to <span id='page'>Show Only page</span>.<br>"+
-                                "Ctrl Click on 'finger' to show only those items.<br>"+
-                                "Click on the 'js' items to see human readable info.<br>"+
-                                "Average stay time: <span id='average'></span> (times over two hours are discarded.)</p>"+
-                                "<button id='webmaster'>Show webmaster</button>"+
-                                "<button id='bots'>Show bots</button>"+
-                                "<button id='all'>Show All</button><br>"+
-                                "<button id='update'>Update Fields</button>"+
-                                "<button id='ip6only'>Hide IPV6</button>"                       
-                               );
-
   // Do this after the 'average' id is set.
 
-  getcountry();
-  dotracker();
-
-  // ShowHide all where js == 0
-
-  $("#all").on("click", function(e) {
-    if(flags.all) {
-      hideIt('all');
-    } else {
-      // Show
-      showIt('all');
-      showIt('webmaster');
-      showIt('bots');
-    }
-  });
-
-  // ShwoHide Webmaster clicked
-
-  $("#webmaster").on("click", function(e) {
-    if(flags.webmaster) {
-      hideIt('webmaster');
-    } else {
-      // Show
-      showIt('webmaster');
-    }
-  });
-
-  // Ip6only
-  
-  $("#ip6only").on("click", function(e) {
-    $("#tracker tbody tr td:nth-child(1)").each(function(i, v) {
-      if($(this).text().match(/:/) != null ) {
-        if(flags.ip6 === true) {
-          $(this).parent().show();
-        } else {
-          $(this).parent().hide();
-        }
-      }
-    });
-    if(flags.ip6 === false) {
-      $("#ip6only").text("Hide IPV6");
-    } else {
-      $("#ip6only").text("Show IPV6")
-    }
-    flags.ip6 = !flags.ip6;
-  });
-  
-  // ShowHideBots clicked
-
-  $("#bots").on("click", function() {
-    if(flags.bots) {
-      // hide
-      hideIt('bots');
-    } else {
-      // show
-      showIt('bots');
-    }
-  });
-
-  // Update the tracker info.
-  // BLP 2021-03-24 -- thesite ($S->siteName) and myIp are set in a script in webstats.php
-  
-  $("#update").on("click", function() {
-    $.ajax(ajaxurl, {
-      //url: directory+'/webstats-ajax.php',
-      data: {page: 'gettracker', site: thesite},
-      type: 'post',
-      success: function(data) {
-             $("#tracker").html(data);
-             $("#tracker").tablesorter({headers: {6: {sorter: 'hex'}}});
-
-             getcountry();
-             dotracker();
-
-             for(
-                 f in flags) {
-               if(flags[f]) { // if true
-                 switch(f) {
-                   case 'all':
-                     showIt('all');
-                     break;
-                   case 'webmaster':
-                     showIt('webmaster');
-                     break;
-                   case 'bots':
-                     showIt('bots');
-                     break;
-                 }
-               }
-             }
-           },
-      error: function(err) {
-        console.log(err);
-      }
-    });
-  });
-
-  // Second field 'page' dbl clicked
-
-  $("body").on('dblclick', '#tracker td:nth-child(2)', function() { // This is 'page'
-    if(flags.page) { // if true
-      flags.page = false;
-
-      $("#tracker tr").removeClass('page');
-
-      for(let f in flags) {
-        if(flags[f] == true) {
-          $("."+f).show();
-        }
-      }
-      $(".normal").show();
-      msg = "Show Only Page";
-    } else {
-      flags.page = true;
-      let page = $(this).text();
-      $("#tracker td:nth-child(2)").each(function(i, v) {
-        if($(v).text() == page) {
-          $(v).parent().addClass('page');
-        }
-      });
-      $("#tracker tr").not(".page").hide();
-      msg = "Show All Page";
-    }
-    $("#page").text(msg);
-  });
+  gettracker();
 
   // The robots tables doesn't need to be deligated.
   
-  $("#robots").parent().before("<p class='desktop'>Double Click the 'agent' items to <span class='botsshowhide'>Show Only</span> Agent<br>" +
-                      "Click the 'bots' items for human readable info.</p>");
-  $("#robots2").parent().before("<p class='desktop'>Double Click the 'agent' items to <span class='botsshowhide'>Show Only</span> Agent</p>");
+  $("#robots").parent().before("Double Click the 'agent' items to <span class='botsshowhide'>Show Only</span> Agent<br>" +
+                      "Click the 'bots' items for human readable info.");
+  $("#robots2").parent().before("Double Click the 'agent' items to <span class='botsshowhide'>Show Only</span> Agent");
+
+  // This is the agent fiels on both tables. If we double click it
+  // toggles between showing all and showing only the one you double
+  // clicked on.
   
   $("#robots td:nth-child(2), #robots2 td:nth-child(2)").on("dblclick", function() {
     let tr = $(this).closest('table').find('tr');
@@ -422,98 +555,16 @@ jQuery(document).ready(function($) {
   // Looks for altKey and does http://ipinfo.io via curl to get info on
   // ip.
 
-  $("#logagent, #tracker, #robots, #robots2").on("click", "td:first-child", function(e) {
-    if(e.ctrlKey) {
-      console.log("delegateTarget.id: " + e.delegateTarget.id);
-      
-      if(e.delegateTarget.id == 'tracker') {
-        if(flags.ip) {
-          flags.ip = false;
-          $(".ip").removeClass("ip").hide();
-          for(let f in flags) {
-            if(flags[f] == true) {
-              $("."+f).show();
-            }
-          }
-          $(".normal").show();
-          msg = "Show Only ID";
-        } else {
-          flags.ip = true;
-          let ip = $(this).text();
-          $("#tracker td:first-child").each(function(i, v) {
-            if($(v).text() == ip) {
-              $(v).parent().addClass('ip');
-            }
-          });
-          $("#tracker tbody tr").not(".ip").hide();
-          msg = "Show All ID";
-        }
-        $("#ip").text(msg);
-        flag0 = !flag0;
-        return;
-      }
-    }
-
-    let ip = $("span", this).text();
-    let pos = $(this).position();
-    let xpos = pos.left + $(this).width() + 10;
-    let ypos = pos.top;
-    let table = $(this).closest('table');
-    
-    console.log("IP: "+ip);
-
-    if(e.altKey) { // Alt key?
-      $.ajax(ajaxurl, {
-        //url: directory+"/webstats-ajax.php",
-        data: {page: 'curl', ip: ip},
-        type: "post",
-        success: function(data) {
-          console.log(data);
-          // For mobile devices there is NO ctrKey! so we don't
-          // need to worry about position fixed not working!
-
-          $("#FindBot").remove();
-          table.append("<div id='FindBot' style='position: absolute;top: "+ypos+"px;left:"+xpos+"px;"+
-              "background-color: white; border: 5px solid black;padding: 10px'>"+
-              data+"</div>");
-        },
-        error: function(err) {
-          console.log(err);
-        }
-      });
-    } else { // No alt.
-      let bottom = $(this).offset()['top'] + $(this).height();
-
-      $.ajax(ajaxurl, {
-        //url: directory+"/webstats-ajax.php",
-        data: {page: 'findbot', ip: ip},
-        type: "post",
-        success: function(data) {
-          $("#FindBot").remove();
-          $("<div id='FindBot' style='position: fixed;top: 10px; "+
-              "background-color: white; border: 5px solid black;padding: 10px'>"+
-              data+"</div>").appendTo("body");
-
-          if($("#FindBot").height() > window.innerHeight) {
-            $("#FindBot").remove();
-            $("<div id='FindBot' style='position: absolute;top: "+bottom+"px; "+
-                "background-color: white; border: 5px solid black;padding: 10px'>"+
-                data+"</div>").appendTo("body");
-          }
-        },
-        error: function(err) {
-          console.log(err);
-        }
-      });
-    }
-    e.stopPropagation();
+  $("#logagent, #robots, #robots2").on("click", "td:first-child", function(e) {
+    ipaddress(e, this);
   });
 
   // Popup a human version of 'isJavaScript'
 
   $("body").on("click", "#tracker td:nth-child(8), #robots td:nth-child(4)", function(e) {
     let js = parseInt($(this).text(), 16),
-    human, h = '', ypos, xpos;
+    h = '', ypos, xpos;
+    let human;
 
     let table = $(this).closest("table");
     let pos = $(this).position(); // get the top and left
@@ -525,22 +576,19 @@ jQuery(document).ready(function($) {
     if(id != 'tracker') {
       // Robots (bots table)
       
-      human = {3: "robots.txt", 0xc: "SiteClass", 0x30: "Sitemap.xml", 0x100: "Zero"};
+      human = robots; // robots was set in webstats.php in the inlineScript.
+      
       xpos = pos.left + $(this).width() + 17; // add the one border and one padding (15px) plus a mig.
     } else {
       // Tracker table.
       
-      human = {
-        1: "Start", 2: "Load", 4: "Script", 8: "Normal",
-        0x10: "NoScript", 0x20: "B-PageHide", 0x40: "B-Unload", 0x80: "B-BeforeUnload",
-        0x100: "T-BeforeUnload", 0x200: "T-Unload", 0x400: "T-PageHide",
-        0x1000: "Timer", 0x2000: "Bot", 0x4000: "Csstest", 0x8000: "isMe", 0x10000: "Proxy"
-      };
+      human = tracker; // tracker was set in webstats.php in the inlineScript
+      
       xpos = pos.left - 300; // Push this to the left so it will render full size
     }
     ypos = pos.top;
 
-    if(js == 0) {
+    if(js == 0) { // TRACKER_ZERO
       h = 'curl';
     } else {
       for(let [k, v] of Object.entries(human)) {
@@ -574,7 +622,9 @@ jQuery(document).ready(function($) {
       const txt = $(this).text();
       const pat = /(http.?:\/\/.*)[)]/;
       const found = txt.match(pat);
-      window.open(found[1], "bot");
+      if(found) {
+        window.open(found[1], "bot");
+      }
       console.log("found: "+found);
     }
   });

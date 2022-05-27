@@ -44,7 +44,7 @@ function bannershow() {
     
   var image = new Image;
   image.src = bannerImages[binx++];
-  $(image).load(function() {
+  $(image).on("load", function() {
     console.log(image.src);
     $("#show img").attr('src', image.src);
     setTimeout(function() { bannershow(); }, 5000);

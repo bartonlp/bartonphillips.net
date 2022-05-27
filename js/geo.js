@@ -3,6 +3,9 @@
 // This is called from the index.php in bartonphillips.com, tysonweb
 // and newbernzig.com.
 // Uses "https://bartonphillips.net/geoAjax.php"
+// Set up Google Maps:
+// https://console.cloud.google.com/google/maps-apis/credentials?_ga=2.54770411.1997560869.1651440370-597078353.1649556803&project=barton-1324
+// There you can set up the servers that can access google maps.
 
 'use strict';
 
@@ -11,17 +14,27 @@ console.log("URL: " + window.location.href);
 const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo"; // This is safe because only my site can use it.
 
 var visitorId;
-const geoAjax = "/geoAjax.php"; 
+const geoAjax = "https://bartonphillips.net/geoAjax.php"; 
 
 function getGeo() {
   if('geolocation' in navigator) {
+    let site = thesite;
+    let ip = theip;
+    
     navigator.geolocation.getCurrentPosition((position) => {
       console.log("lat: " + position.coords.latitude + ", lon: " + position.coords.longitude+ ", visitor: " + visitorId);
+
+      // '#geo i' is in index.i.php. It is the geo location at the top
+      // 'Your Location:' This is the only place it is used.
       $("#geo i").html(position.coords.latitude + ", " + position.coords.longitude);
+
+      if(typeof site === 'undefined') {
+        site = null;
+      }
 
       $.ajax({
         url: geoAjax, // This sets geo and Finger cookies and insert/update the geo table.
-        data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitorId },
+        data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitorId, id: lastId, site: site, ip: theip },
         type: 'post',
         success: function(data) {
           console.log("getGeo -- return: " + data);
@@ -45,7 +58,7 @@ function getGeo() {
           }
         });
       } else {
-        console.log("geo Errof: " + error.message);
+        console.log("geo Error: " + error.message);
       }
     });
   } else {
@@ -80,8 +93,8 @@ fpPromise
     data: { page: 'finger', visitor: visitorId, id: lastId },
     type: 'post',
     success: function(data) {
-      console.log("finger: " + data);
-      //console.log(window.location.pathname);
+      console.log("data: " + data);
+      console.log("path: ", window.location.pathname);
       const fname = window.location.pathname;
       if(fname == '/' || fname == "/index.php") {
         getGeo();

@@ -1,39 +1,27 @@
 <?php
 // All sites that have an "About Web Site" link should have a symlink
-// to /var/www/bartonphillips.com/bartonlp/aboutwebsite.php and should have a modified mysitemap.json that has
+// to /var/www/bartonphillipsnet/bartonlp/aboutwebsite.php and should have a modified mysitemap.json that has
 // these items in the $_site array: 1) 'copyright', 2 'className', 3 'siteName' etc.
 // The className is the name of the class for the site. Most sites just use 'SiteClass' but some
 // will have a seperate xxxClass in their 'includes' directory in which case 'className' should be
 // set to 'includes/xxxClass.php'. 'xxxClass' should be derived from 'SiteClass'.
   
 $_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setDevelopment(true);
 $S = new $_site->className($_site);
 
 // check for subdomain. This doesn't need to be rigorous as we will Never have a multiple
 // subdomain like en.test.domain.com. At most we might have www. or mpc.
 
-$webdomain = $S->siteDomain;
-
-// split it up into an array and then if the count is two that means there was no 'www' so add it.
-
-if(($n = count(explode(".", $webdomain))) == 2) {
-  $webdomain = "www." . $webdomain;
-}
-
-// is this https or not?
+$site = $_GET['site'];
+$webdomain = $_GET['domain'];
 
 $prefix = $_SERVER['HTTPS'] == "on" ? 'https://' : 'http://';
 
 $webdomain = $prefix . $webdomain;
 
-$copyright = isset($S->copyright) ? $S->copyright : (isset($S->siteName) ? date("Y") . " " . $S->siteName :
-             date("Y") . " " . get_class($S));
-
 $h->title = "About This Web Site and Server";
 $h->banner = "<h2 class='center'>About This Web Site and Server</h2>";
 $h->css = <<<EOF
-  <style>
 img { border: 0; }
 /* About this web site (aboutwebsite.php)  */
 #aboutWebSite {
@@ -82,10 +70,9 @@ img[alt="Best viewed with Mozilla or any other browser"] {
           margin: 0px;
         }
 }
-  </style>
 EOF;
 
-list($top, $footer) = $S->getPageTopBottom($h);
+[$top, $footer] = $S->getPageTopBottom($h);
 
 echo <<<EOF
 $top
@@ -93,7 +80,7 @@ $top
 <div id="runWith">
   <p>This site's designer is Barton L. Phillips<br/>
      at <a href="https://www.bartonphillips.com">www.bartonphillips.com</a><br>
-     Copyright &copy; $copyright<br>
+     Copyright &copy; $S->copyright<br>
      Your IP Address: $S->ip
   </p>
   
@@ -142,7 +129,7 @@ $top
     </a>
 	</p>
 </div>
-<p><a href="webstats.php?blp=8653">Web Statistics for $S->siteName</a></p>
+<p><a href="https://bartonphillips.net/webstats.php?blp=8653&site=$site">Web Statistics for $site</a></p>
 </div>
 $footer
 EOF;
