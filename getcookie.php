@@ -194,7 +194,7 @@ $h->title = "GetCookie";
 $T = new dbTables($S);
 
 if($S->siteName != "bartonhome") {
-  $sql = "select name, email, ip, agent, created, lasttime from bartonphillips.members";
+  $sql = "select name, email, count, created, lasttime from bartonphillips.members";
 
   [$members] = $T->maketable($sql, array('attr'=>array('border'=>'1', 'id'=>'members')));
   $members = <<<EOF
@@ -275,7 +275,7 @@ EOF;
 //$S->ip = "122.333.333.1"; // For testing only
 
 if($cookies['SiteId'] !== null) {
-  [$cookieIp, $cookieEmail] = explode(":", $cookies['SiteId']);
+  [$cookieFinger, $cookieEmail] = explode(":", $cookies['SiteId']);
 }
 
 if(!isMe($S) && $cookieEmail !== "bartonphillips@gmail.com") {

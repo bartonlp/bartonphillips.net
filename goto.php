@@ -83,7 +83,6 @@ $S->query("insert into $S->masterdb.counter (filename, site, count, realcnt, las
 
 $agent = $S->agent;
 $ip = $S->ip;
-//$refid = $S->escape($S->refid) ?? "NONE";
 
 $h->title = "GOTO";
 $h->banner = $err == "OK" ? "<h1>Redirect Page</h1>" : "<h1>You Did Not Come From My Home Page</h1>";
@@ -92,7 +91,7 @@ $h->css = "h1 { text-align: center }";
 // Set up javascript. Add the variables. Do the promise then do it and ajax to this file.
 
 $h->inlineScript = <<<EOF
-const tracker = "$trackersite", agent = "$agent", /*ref = "$refid",*/ ip = "$ip", err = "$err", query = "$query";
+const tracker = "$trackersite", agent = "$agent", ip = "$ip", err = "$err", query = "$query";
 const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo";
 
 const fpPromise = new Promise((resolve, reject) => {

@@ -123,9 +123,9 @@ jQuery(document).ready(function($) {
     $(window).on("visibilitychange pagehide unload beforeunload", function(e) {
       // Can we use beacon?
 
-      if(navigator.sendBeacon) {
+      if(navigator.sendBeacon) { // If beacon is supported by this client we will always do beacon.
         navigator.sendBeacon(beaconUrl, JSON.stringify({'id':lastId, 'type': e.type, 'site': thesite, 'ip': theip, 'visits': visits}));
-      } else {
+      } else { // This is only if beacon is not supported by the client (which is infrequently. This can happen with MS-Ie and old versions of others).
         console.log("Beacon NOT SUPPORTED");
 
         var type = e.type;
@@ -145,8 +145,8 @@ jQuery(document).ready(function($) {
 
     // Now lets try a timer to update the endtime
 
-    var cnt = 0;
-    var time = 0;
+    let cnt = 0;
+    let time = 0;
 
     function runtimer() {
       if(cnt++ < 50) {
@@ -159,6 +159,8 @@ jQuery(document).ready(function($) {
         type: 'post',
         success: function(data) {
           console.log(data);
+          // TrackerCount is only in bartonphillips.com/index.php
+          
           $("#TrackerCount").html("Tracker every " + time/1000 + " sec.<br>");
           setTimeout(runtimer, time)
         },

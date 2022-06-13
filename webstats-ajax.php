@@ -97,7 +97,7 @@ if($_POST['page'] == 'findbot') {
   
   $ip = $_POST['ip'];
 
-  $human = [BOTS_ROBOTS=>"robots", BOTS_SITECLASS=>"SiteClass",
+  $human = [BOTS_ROBOTS=>"robots", BOTS_SITECLASS=>"BOT",
             BOTS_SITEMAP=>"sitemap", BOTS_CRON_ZERO=>"Zero"];
 
   $S->query("select agent, site, robots, count, creation_time from $S->masterdb.bots where ip='$ip'");
@@ -194,24 +194,12 @@ if($_POST['page'] == 'gettracker') {
     $row['difftime'] = sprintf("%u:%02u:%02u", $hr, $min, $sec);
   } // End callback
 
-  $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, refid, id ".
+  $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, id ".
          "from $S->masterdb.tracker " .
-         "where site='$site' and starttime >= current_date() " .
+         "where site='$site' and lasttime >= current_date() " .
          "order by lasttime desc";
 
   $tracker = $T->maketable($sql, array('callback'=>'callback1', 'attr'=>array('id'=>'tracker', 'border'=>'1')))[0];
-  echo $tracker;
-  exit();
-}
-
-if($_POST['page'] == 'getrefid') {
-  $S = new Database($_site);
-  $T = new dbTables($S);
-
-  $id = $_POST['ref'];
-
-  $sql = "select id, ip, page, finger, agent, starttime as start, endtime as end, difftime as diff, hex(isJavaScript) as js from $S->masterdb.tracker where id=$id";
-  $tracker = $T->maketable($sql, array('attr'=>array('id'=>'getrefid', 'border'=>'1')))[0];
   echo $tracker;
   exit();
 }

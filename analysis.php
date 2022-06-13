@@ -11,12 +11,26 @@
 
 $_site = require_once(getenv("SITELOADNAME"));
 
+class MyClass extends SiteClass {
+  public function __construct($s) {
+    parent::__construct($s);
+    unset($this->myIp);
+    $this->myIp = array();
+  }
+
+  public function MyIsBot($agent) {
+    $this->agent = $agent;
+    $this->checkIfBot();
+    return $this->isBot;
+  }
+}
+
 // Ajax from CRON job /var/www/bartonlp/scrits/update-analysis.sh which is run via all-cron.sh
 
 if($thisSite = $_GET['siteupdate']) {
   //error_log("_site: " . print_r($_site, true));
   
-  $S = new $_site->className($_site);
+  $S = new MyClass($_site);
   getAnalysis($S, $thisSite);
   exit();
 }
@@ -131,25 +145,26 @@ function maketable2($sql, $S) {
   $r = $S->getResult();
 
   // Look at the records from logagent. This is done two time first with ALL of the records and
-  // then wit 60 days of records.
-  
-  while([$agent, $count, $ip] = $S->fetchrow($r, 'num')) {
-    // Do the same check as in SiteClass
-    $agent = $S->escape($agent);
+  // then wit 60 days of records: select agent, count, ip from $S->masterdb.logagent where ip not
+  // in($ips) site='..'
+  // The second time there is minus an interval of n days.
+  // The logagent table should have everyone who came to out site.
 
+  while([$agent, $count, $ip] = $S->fetchrow($r, 'num')) {
     // Now check the bots table. SiteClass looks at each record and determins if it thinks this is
     // a robot and if yes adds it to the bots table.
-    
-    if($S->query("select ip from $S->masterdb.bots where ip='$ip' and agent='$agent'") !== 0) {
-      $total['os'][0] += $count;
-      //$total['os'][1] += $count;
-      $total['browser'][0] += $count;
-      //$total['browser'][1] += $count;
+
+    $total['os'][0] += $count; // these are the total counts
+    $total['browser'][0] += $count;
+
+    if($S->MyIsBot($agent)) {
+      // Yes so this is a bot.
+
       $counts['os']['ROBOT'] += $count;
       $counts['browser']['ROBOT'] += $count;
       continue;
     }
-
+    
     $pat1 = "~blackberry|windows|android|ipad|iphone|darwin|macintosh|x11|linux|bsd|cros|msie~i";
 
     if(preg_match_all($pat1, $agent, $m)) {
@@ -195,16 +210,17 @@ function maketable2($sql, $S) {
           }
           break;
         default:
-          $val = 'Other';
-          break;
+          error_log("analysis: not in OS pattern: $mm[0]");
+          continue;
       }
       $counts['os'][$val] += $count;
     } else {
+      // Not one of the pattern so this is an 'Other'. Note it is NOT a bot.
       $counts['os']['Other'] += $count;
     }
 
-    $total['os'][0] += $count;
-
+    $total['os'][1] += $count;
+    
     $pat2 = "~firefox|chrome|safari|trident|msie| edge/|opera|konqueror~i";
 
     if(preg_match_all($pat2, $agent, $m)) {
@@ -234,14 +250,14 @@ function maketable2($sql, $S) {
           $name = 'Konqueror';
           break;
         default:
-          $name = 'Other';
-          break;
+          error_log("analysis: not in BROWSER pattern: $mm[0]");
+          continue;
       }
       $counts['browser'][$name] += $count;
     } else {
       $counts['browser'][$name] += $count;
     }
-    $total['browser'][0] += $count;
+    $total['browser'][1] += $count; // total for non-robots
   }
 
   return [$total, $counts, $n];
@@ -298,13 +314,12 @@ function getAnalysis($S, $site='ALL') {
 
   [$totals2, $counts2, $n[1]] = maketable2($sql, $S);
 
-  /*
-  vardump("totals", $totals);
-  vardump("counts", $counts);
-  vardump("totals2", $totals2);
-  vardump("counts2", $counts2);
-  vardump("n", $n);
-  */
+
+//  vardump("totals", $totals);
+//  vardump("counts", $counts);
+//  vardump("totals2", $totals2);
+//  vardump("counts2", $counts2);
+//  vardump("n", $n);
   
   // These two arrays will hold the html. The rows are added to ${$k} where $k is 'os' or 'browser'
   
@@ -340,8 +355,8 @@ EOF;
     // Take $v apart into $kk is name and $vv is count.
     
     foreach($v as $kk=>$vv) {
-      $percent = number_format($vv/$totals[$k][0]*100, 2); // Percent of count divided by totals (os or browser)
-      $percent2 = number_format($vv/($totals[$k][0] - $totals[$k][1])*100, 2); // Percent difference
+      $percent = number_format($vv/($totals[$k][0])*100, 2); // Percent of count divided by totals (os or browser)
+      $percent2 = number_format($vv/($totals[$k][1])*100, 2);
       $vv = number_format($vv, 0);
 
       // If this is ROBOT disregard the difference.
@@ -360,8 +375,8 @@ EOF;
   
   foreach($counts2 as $k=>$v) {
     foreach($v as $kk=>$vv) {
-      $percent = number_format($vv/$totals2[$k][0]*100, 2);
-      $percent2 = number_format($vv/($totals2[$k][0] - $totals2[$k][1])*100, 2);
+      $percent = number_format($vv/($totals2[$k][0])*100, 2);
+      $percent2 = number_format($vv/($totals2[$k][1])*100, 2);
       $vv = number_format($vv, 0);
       if($kk == "ROBOT") {
         $percent2 = '';

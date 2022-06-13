@@ -52,9 +52,6 @@ EOF;
   exit();  
 }
 
-$visitors = [];
-$jsEnabled = [];
-
 $h->link = <<<EOF
   <link rel="stylesheet" href="https://bartonphillips.net/css/newtblsort.css">
   <link rel="stylesheet" href="https://bartonphillips.net/css/webstats.css"> 
@@ -82,8 +79,7 @@ $zero = BOTS_CRON_ZERO;
 $h->inlineScript = <<<EOF
   var myIp = "$myIp"; 
   var homeIp = "$homeIp"; // my home ip
-  const whichCodes = {"$robots": "robots.txt", "$sitemap": "Sitemap.xml", "$siteclass": "SiteClass", "$zero": "Zero"};
-  const robots = {"$robots": "robots.txt", "$siteclass": "SiteClass", "$sitemap": "Sitemap.xml", "$zero": "Zero"};
+  const robots = {"$robots": "Robots", "$siteclass": "BOT", "$sitemap": "Sitemap", "$zero": "Zero"};
 EOF;
 
 $start = TRACKER_START;
@@ -111,7 +107,7 @@ $h->inlineScript .= <<<EOF
 "$start": "Start", "$load": "Load", "$script": "Script", "$normal": "Normal",
 "$noscript": "NoScript", "$bvisibilitychange": "B-VisChange", "$bpagehide": "B-PageHide", "$bunload": "B-Unload", "$bbeforeunload": "B-BeforeUnload",
 "$tbeforeunload": "T-BeforeUnload", "$tunload": "T-Unload", "$tpagehide": "T-PageHide", "$tvisibilitychange": "T-VisChange",
-"$timer": "Timer", "$bot": "Bot", "$css": "Csstest", "$me": "isMe", "$goto": "Proxy", "$goaway": "GoAway"
+"$timer": "Timer", "$bot": "BOT", "$css": "Csstest", "$me": "isMe", "$goto": "Proxy", "$goaway": "GoAway"
 };
 EOF;
 
@@ -346,56 +342,61 @@ $meIp = null;
 foreach($S->myIp as $v) { // myIp is always an IP.
   $meIp .= "'$v',";
 }
-$meIp .= "'" . DO_SERVER . "'";
-$meIp = "and ip not in ($meIp)";
+$meIp .= "'" . DO_SERVER . "'"; // 157.245.129.4
+$meIp = " and ip not in ($meIp)";
 
-// Get all of the ips and dates from tracker.
+// Get all of the dates from tracker grouped by ip and date(lasttime).
 
-$S->query("select ip, date(lasttime) ".
-"from $S->masterdb.tracker where lasttime>=current_date() - interval 6 day ".
-"and site='$S->siteName' $meIp");
-
-$Visitors = 0;
+$S->query("select date(lasttime) ".
+          "from $S->masterdb.tracker where lasttime>=current_date() - interval 6 day ".
+          "and site='$S->siteName' and not isJavaScript & ". TRACKER_BOT .
+          "$meIp group by ip,date(lasttime)"); // $meIp is ' and is not in($meIp)'
 
 // There should be ONE UNIQUE ip per row. So count them into the date.
 
-$tmp = [];
-  
-while([$ip, $date] = $S->fetchrow('num')) {
-  $tmp[$date][$ip] = '';
+$Visitors = 0;
+$visitorsAr = [];
+
+while($date = $S->fetchrow('num')[0]) {
+  ++$visitorsAr[$date];
+  ++$Visitors;
 }
 
-// $d is the date and $v is an array of ips
-
+/*
 foreach($tmp as $d=>$v) {
   // Make $visitors[{date}] = the count of the $v array. This is all of the IP addresses for that
   // day. Not the number of times that ip came back but the number of unique ip addresses.
-  $visitors[$d] = $n = count($v);
+
+  $visitorsAr[$d] = $n = $v; // this is always 1
   $Visitors += $n;
 }
+*/
 
 // I am looking for the number of 'AJAX'. The mask will be zero if these are the only things in
-// isJavaScript.
+// isJavaScript or isJavaScript == 0.
 // Looking for isJavaScript that does not have the bots, script, normal, noscript and csstest bits
 // set.
 
 $mask = TRACKER_BOT | TRACKER_SCRIPT | TRACKER_NORMAL | TRACKER_NOSCRIPT | TRACKER_CSS | TRACKER_ME | TRACKER_GOTO | TRACKER_GOAWAY;
 
+// What is left is 'start', 'load', beacon exits, tracker exits, and timer.
+
 $sql = "select date(lasttime) from $S->masterdb.tracker ".
        "where lasttime>=current_date() - interval 6 day and site='$S->siteName' ".
-       "and (isJavaScript&~$mask)!=0 ". // Not the above bits.
-       "$meIp"; // $meIp here is null unless $S->countMe === true.
+       "and (isJavaScript&~$mask)!=0". // Not the above bits.
+       "$meIp"; // $meIp is ' and is not in($meIp)'
   
 $S->query($sql);
 
-$jsenabled = 0;
+$jsvalue = 0;
+$jsEnabled = [];
 
 // For each date that has some AJAX info in isJavaScript add 1 to the date and add 1 to the
 // accumulator.
 
 while($date = $S->fetchrow('num')[0]) {
   ++$jsEnabled[$date]; // total per date
-  ++$jsenabled; // grand total
+  ++$jsvalue; // grand total
 }
 
 // Count, Real, Bots, Visits are from select for the footer. Visitors is from the
@@ -403,7 +404,7 @@ while($date = $S->fetchrow('num')[0]) {
 // jsenabled is from the select with the mask.
 
 $ftr = "<tr><th>Totals</th><th>$Visitors</th><th>$Count</th><th>$Real</th>".
-"<th>$jsenabled</th><th>$Bots</th><th>$Visits</th></tr>";
+"<th>$jsvalue</th><th>$Bots</th><th>$Visits</th></tr>";
 
 // Get the table lines
   
@@ -415,9 +416,9 @@ $sql = "select `date` as Date, 'Visitors', `real`+bots as Count, `real` as 'Real
 // callback for maketable daycount.
 
 function visit(&$row, &$rowdesc) { // callback from maketable()
-  global $visitors, $jsEnabled;
+  global $visitorsAr, $jsEnabled;
 
-  $row['Visitors'] = $visitors[$row['Date']];
+  $row['Visitors'] = $visitorsAr[$row['Date']];
   $row['AJAX'] = $jsEnabled[$row['Date']];
 }
 
@@ -430,15 +431,21 @@ $tbl = $T->maketable($sql, array('callback'=>'visit', 'footer'=>$ftr, 'attr'=>ar
 if(!$tbl) {
   $tbl = "<h3 class='noNewData'>No New Data Today</h2>";
 }
-    
-$page .= <<<EOF
+
+if($S->siteName == "Bartonphillipsnet") {
+  $page .= <<<EOF
+<h2 id="table6">We Do Not Count <i>daycount</i> For $S->siteName</h2>
+<a href="#table7">Next</a>
+EOF;
+} else {
+  $page .= <<<EOF
 <h2 id="table6">From table <i>daycount</i> for seven days</h2>
 <a href="#table7">Next</a>
 
 <h4>Showing $S->siteName for seven days</h4>
 <p>Webmaster (me) is not counted.</p>
 <ul>
-<li>'Visitors' is the number of distinct IP addresses (via 'tracker' table).
+<li>'Visitors' is the number of distinct (NON Bot) IP addresses (via 'tracker' table).
 <li>'Count' is the sum of 'Real' and 'Bots', the total number of HITS.
 <li>'Real' is the number of non-robots.
 <li>'AJAX' is the number of accesses with AJAX via tracker.js (from the 'tracker' table).
@@ -452,6 +459,7 @@ If you hit our site 5 time within 10 minutes you will have only one 'Visits'.<br
 If you hit our site again after 10 minutes you would have two 'Visits'.</p>
 $tbl
 EOF;
+}
 
 $analysis = file_get_contents("https://bartonphillips.net/analysis/$S->siteName-analysis.i.txt");
 
@@ -665,10 +673,11 @@ $tracker
 <div>The 'bots' field is hex.
 <ul>
 <li>The 'count' field is the total count since 'created'.
-<li>From 'rotots.txt': 1.
-<li>From 'Sitemap.xml': 2.
-<li>From 'SiteClass' scan: 4.
-<li>From CRON indicates a Zero (curl type) in the 'tracker' table: 0x100.
+<li>From 'rotots.php': Robots.
+<li>From 'Sitemap.php': Sitemap.
+<li>From 'SiteClass::checkIfBot(): BOT.
+<li>From 'crontab' indicates a Zero in the 'tracker' table: Zero.<br>
+This can be curl, wget, lynx and several others.
 </ul>
 $bots
 <h2 id="table9">From table <i>bots2</i> for Today</h2>
@@ -676,10 +685,11 @@ $botsnext
 <h4>Showing ALL <i>bots2</i> for today</h4>
 <div>The 'which' filed    
 <ul>
-<li>1 for 'robots.txt'
-<li>2 for 'Sitemap.xml'
-<li>4 for 'SiteClass'
-<li>0x100 for tracker value 0 (curl type).
+<li>'robots.txt': Robots
+<li>'Sitemap.xml': Sitemap
+<li>'SiteClass': BOT
+<li>'crontab': Zero<br>
+This can be curl, wget, lynx and several others.
 </ul>
 The 'count' field is the number of hits today.</div>
 $bots2

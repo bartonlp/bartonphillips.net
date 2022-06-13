@@ -12,7 +12,7 @@ const ajaxurl = 'https://bartonphillips.net/webstats-ajax.php'; // URL for all a
 
 // For 'tracker'
 // The .bots class is set in webstats-ajax.php.
-// homeIp, thesite, myIp, whichCodes, robots and tracker are set in
+// homeIp, thesite, myIp, robots and tracker are set in
 // webstats.php in the inlineScript.
 
 function hideIt(f) {
@@ -381,48 +381,6 @@ function gettracker() {
         gettracker();
       });
 
-      // The refid field. Click bring up the refid info.
-      
-      $("body").on('click', '#tracker td:nth-of-type(9)', function() {
-        let ref = $(this).text();
-        if(ref == '') return;
-        
-        $.ajax(ajaxurl, {
-          //url: directory+'/webstats-ajax.php',
-          data: {page: 'getrefid', ref: ref}, // thesite is set in webstats via inlineScript
-          type: 'post',
-          success: function(data) {
-            $("#FindBot").remove();
-            $("<div id='FindBot' style='position: fixed;top: 10px; "+
-                "background-color: white; border: 5px solid black;padding: 10px; width: 98%;'>"+
-                data+"</div>").appendTo("body");
-          },
-          error: function(err) {
-            console.log("getrefid error: ", err);
-          }
-        });
-      });
-
-      $("body").on('mouseenter mouseleave', '#getrefid td:nth-of-type(9)', function(e) {
-        let type = e.type;
-        
-        let h = '';
-        let js = parseInt($(this).text(), 16);
-        let human = tracker;
-        let pos = $(this).position();
-        xpos = pos.left + $(this).width() + 17;
-        ypos = pos.top;
-        for(let [k, v] of Object.entries(human)) {
-          h += (js & k) ? v + "<br>" : '';
-        }
-        h = "<span id='human'><br>" + h + "</span>";
-        if(type == 'mouseenter') {
-          $(this).append(h);
-        } else {
-          $('span', this).remove();
-        }
-      });
-      
       // Second field 'page' dbl clicked
 
       $("body").on('dblclick', '#tracker td:nth-child(2)', function() { // This is 'page'
@@ -467,7 +425,8 @@ function gettracker() {
 jQuery(document).ready(function($) {
   $("#robots2 td:nth-of-type(4)").each(function() {
     let botCode = $(this).text();
-    $(this).text(botCode + ":" + robots[botCode]); // robots was set in webstats.php in inlineScript
+    
+    $(this).text(robots[botCode]); // robots was set in webstats.php in inlineScript
   });
   
   $("#logip, #logagent, #counter, #counter2, #robots, #robots2").tablesorter({
@@ -566,6 +525,11 @@ jQuery(document).ready(function($) {
     h = '', ypos, xpos;
     let human;
 
+    // Make it look like a hex. Then and it with 0x100 if it is true
+    // then make js 0x1..
+    
+    //if('0x'+js & 0x100) js='0x'+js;
+    
     let table = $(this).closest("table");
     let pos = $(this).position(); // get the top and left
     let id = table.attr("id");
@@ -588,14 +552,10 @@ jQuery(document).ready(function($) {
     }
     ypos = pos.top;
 
-    if(js == 0) { // TRACKER_ZERO
-      h = 'curl';
-    } else {
-      for(let [k, v] of Object.entries(human)) {
-        h += (js & k) ? v + "<br>" : '';
-      }
+    for(let [k, v] of Object.entries(human)) {
+      h += (js & k) ? v + "<br>" : '';
     }
-
+    
     $("#FindBot").remove();
 
     // Now append FindBot to the table.

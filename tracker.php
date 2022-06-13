@@ -19,11 +19,12 @@ require_once(SITECLASS_DIR . "/defines.php"); // constants for TRACKER, BOTS, BE
 //$DEBUG5 = true; // JavaScript: timer
 //$DEBUG6 = true; // RewriteRule: csstest
 //$DEBUG7 = true; // show real+1 and real+1 bots-1
-$DEBUG10 = true; // ref info
-$DEBUG11 = true; // start with visits
+//$DEBUG10 = true; // ref info
+$DEBUG11 = true; // start and loat with visits
 
 function isMe($ip) {
   global $S;
+//  return false;
   return (array_intersect([$ip], $S->myIp)[0] === null) ? false : true;
 }
 
@@ -85,7 +86,7 @@ if($_POST['page'] == 'start') {
   if($DEBUG1) error_log("tracker DEBUG1 start, $id, $site, $ip -- visits=$visits, java=" . dechex($java));
   
   $S->query("update $S->masterdb.tracker set isJavaScript=$java, lasttime=now() where id='$id'");
-  echo "Start OK, visits=$visits, \$java=" . dechex($java);
+  echo "Start OK, bots: $bots, visits: $visits, java=" . dechex($java);
   exit();
 }
 
@@ -119,7 +120,7 @@ if($_POST['page'] == 'load') {
   $java |= TRACKER_LOAD;
   
   if(!isMe($ip) && $botAs != BOTAS_COUNTED) {
-    $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visit where date=current_date() and site='$site'");
+    $S->query("update $S->masterdb.daycounts set `real`=`real`+1, bots=bots+$bots, visits=visits+$visits where date=current_date() and site='$site'");
     if($DEBUG7 || $DEBUG11) error_log("tracker DEBUG7/11 load, $id, $site, $ip -- java=" . dechex($java) . ", real+1, bots: $bots, visits: $visits");
   }
 
@@ -128,11 +129,14 @@ if($_POST['page'] == 'load') {
   if($DEBUG1) error_log("tracker DEBUG1 load, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
 
   $S->query("update $S->masterdb.tracker set isJavaScript=$java, lasttime=now() where id='$id'");
-  echo "Load OK, \$java=" . dechex($java);
+  echo "Load OK, bots: $bots, visits: $visits, java=" . dechex($java);
   exit();
 }
 
 // ON EXIT FUNCTIONS
+// NOTE: There will be very few clients that do not support beacon. Only very old versions of
+// browsers and of course MS-Ie. Therefore these should not happen often.
+
 // Page hide is an ajax call from tracker.js
 
 if($_POST['page'] == 'pagehide') {
@@ -149,7 +153,10 @@ if($_POST['page'] == 'pagehide') {
   $S->query("select botAs, isJavaScript from $S->masterdb.tracker where id=$id");
   [$botAs, $java] = $S->fetchrow('num');
 
-  if(($java & BEACON_MASK) == 0) {
+  // NOTE: this check is really not necessary because if the client's browser supports beacon it is
+  // unlikey (really imposible) that the browser would change its mind.
+  
+  if(($java & BEACON_MASK) == 0) { // Not handled by BEACON
     $bots = 0;
 
     if($botAs != BOTAS_COUNTED) {
@@ -172,8 +179,11 @@ if($_POST['page'] == 'pagehide') {
 
     if($DEBUG2) error_log("tracker DEBUG2 Set pagehide, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
 
-    echo "Pagehide OK, \$java=" . dechex($java);
+    echo "Pagehide OK, bots: $bots, visits: $visits, java=" . dechex($java);
   } else {
+    // This will only happen if the client somehow stops supporting beacon (and I can't imagin how
+    // that could happen.
+    
     if($DEBUG3) error_log("tracker DEBUG3 pagehide Not Done $id, $site, $ip -- visits: $visits, java=" . dechex($java));
     echo "js: ".dechex($js)."\n";    
     echo "tracker, pagehide Not Done";
@@ -220,10 +230,9 @@ if($_POST['page'] == 'beforeunload') {
 
     if($DEBUG2) error_log("tracker DEBUG2 Set beforeunload, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
 
-    echo "Beforeunload OK, \$java=" . dechex($java);
+    echo "Beforeunload OK, bots: $bots, visits: $visits, java=" . dechex($java);
   } else {
     if($DEBUG3) error_log("tracker DEBUG3 beforeunload Not Done $id, $site, $ip -- visits: $visits, java=" . dechex($java));    
-    echo "js: ".dechex($js)."\n";
     echo "tracker, beforeunload Not Done";
   }
   exit();
@@ -268,10 +277,9 @@ if($_POST['page'] == 'unload') {
 
     if($DEBUG2) error_log("tracker DEBUG2 Set unload, $id, $site, $ip -- visits: $visits, java=" . dechex($java));
     
-    echo "Unload OK, \$java=" . dechex($java);
+    echo "Unload OK, bots: $bots, visits: $visits, java=" . dechex($java);
   } else {
     if($DEBUG3) error_log("tracker DEBUG3 unload Not Done $id, $site, $ip -- visits: $visits, java=" . dechex($java));    
-    echo "js: ".dechex($js)."\n";
     echo "tracker, Unload Not Done";
   }
   exit();
@@ -317,16 +325,12 @@ if($_POST['page'] == 'timer') {
   
   if($DEBUG5) error_log("tracker DEBUG5 timer: $id, $site, $ip -- visits: $visits, java=" . dechex($java));
   
-  try {
-    $sql = "update $S->masterdb.tracker set isJavaScript=$java, endtime=now(), ".
-           "difftime=timestampdiff(second, starttime, now()), lasttime=now() where id=$id";
+  $sql = "update $S->masterdb.tracker set isJavaScript=$java, endtime=now(), ".
+         "difftime=timestampdiff(second, starttime, now()), lasttime=now() where id=$id";
     
-    $S->query($sql);
-  } catch(Exception $e) {
-    error_log(print_r($e, true));
-  }
-
-  echo "Timer OK, \$java=" . dechex($java);
+  $S->query($sql);
+  
+  echo "Timer OK, bots: $bots, visits: $visits, java=" . dechex($java);
   exit();
 }
 
@@ -369,7 +373,7 @@ if($_GET['page'] == 'script') {
   }
   
   if(!$id) {
-    error_log("tracker script: NO ID, $ip");
+    error_log("tracker script: NO ID, $S->ip, $S->agent");
     exit();
   }
 
@@ -537,16 +541,23 @@ if(isset($_GET['csstest'])) {
 $id = $_GET['id'] ?? $_POST['id'];
 
 if($id) {
-  $S->query("update $S->masterdb.tracker set isJavaScript=isJavaScript|" . TRACKER_GOAWAY . " where id=$id");
+  // If this ID is not in the table add it with TRACKER_GOAWAY.
+  
+  $S->query("insert into $S->masterdb.tracker (id, site, ip, agent, isJavaScript, lasttime) ".
+            "values($id, '$S->siteName', '$S->ip', '$S->agent', " . TRACKER_GOAWAY . ", now()) ".
+            "on duplicate key update isJavaScript=isJavaScript|" . TRACKER_GOAWAY . ", lasttime=now()");
 }
+
+$id = $id ? ", id=$id" : '';
 
 // otherwise just go away!
 
 $sql = "select finger from tracker where ip='$S->ip'";
 $S->query($sql);
 $finger = $S->fetchrow('num')[0] ?? "NONE";
+$request = $_REQUEST ? ", \$_REQUEST: " . print_r($_REQUEST, true) : '';
 
-error_log("tracker GOAWAY $S->siteName, $S->ip, $S->agent, finger: $finger, id=$id");
+error_log("tracker GOAWAY $S->ip, $S->agent, finger: $finger{$id}{$request}");
 
 echo <<<EOF
 <!DOCTYPE html>

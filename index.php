@@ -1,9 +1,8 @@
 <?php
 $_site = require_once(getenv("SITELOADNAME"));
-ErrorClass::setNoEmailErrs(true);
 $S = new $_site->className($_site);
 
-$ip = $_SERVER['REMOTE_ADDR'];
+$ip = $S->ip;
 
 $h->title = "bartonphillips.net: $ip";
 $h->banner = "<h1>This Server is Only for Serving Content to My Sites<br>Please Go Away</h1>";
