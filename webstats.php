@@ -6,6 +6,9 @@
 // Once the site is setup by the GET we get $_site and set $_site->siteName to $site.
 // This file still uses webstats.js and webstats-ajax.php.
 
+// IMPORTANT: mysitemap.json sets 'noGeo' true so we do not load it in SiteClass::getPageHead()
+// We use map.js instead of geo.js
+
 //$DEBUG = true;
 
 if($_GET['site']) {
@@ -57,59 +60,69 @@ $h->link = <<<EOF
   <link rel="stylesheet" href="https://bartonphillips.net/css/webstats.css"> 
 EOF;
 
+// css for the gps location in ipinfo
+
+$h->css = ".location { cursor: pointer; }";
+
 // **********************
 // START inlineScript
 // Set up the JavaScript
 
-if(is_array($S->myIp)) {
-  $myIp = implode(",", $S->myIp);
-} else {
-  $myIp = $S->myIp;
-}
+$myIp = implode(",", $S->myIp); // BLP 2022-07-18 - $S->myIp is ALWAYS an array!
 
 $homeIp = gethostbyname("bartonphillips.dyndns.org");
 
+$mask = TRACKER_BOT | TRACKER_SCRIPT | TRACKER_NORMAL | TRACKER_NOSCRIPT | TRACKER_CSS | TRACKER_ME | TRACKER_GOTO | TRACKER_GOAWAY;
+
 // Set up the javascript variables it needs from PHP
 
-$robots = BOTS_ROBOTS;
-$sitemap = BOTS_SITEMAP;
-$siteclass = BOTS_SITECLASS;
-$zero = BOTS_CRON_ZERO;
+function setupjava($h) {
+  global $myIp, $homeIp, $mask;
+  
+  $robots = BOTS_ROBOTS;
+  $sitemap = BOTS_SITEMAP;
+  $siteclass = BOTS_SITECLASS;
+  $zero = BOTS_CRON_ZERO;
 
-$h->inlineScript = <<<EOF
-  var myIp = "$myIp"; 
-  var homeIp = "$homeIp"; // my home ip
-  const robots = {"$robots": "Robots", "$siteclass": "BOT", "$sitemap": "Sitemap", "$zero": "Zero"};
-EOF;
+  $h->inlineScript = <<<EOF
+    var myIp = "$myIp"; 
+    var homeIp = "$homeIp"; // my home ip
+    //var doState = true; // This can be set to show the State info. See tracker.js and tracker.php.
+    const robots = {"$robots": "Robots", "$siteclass": "BOT", "$sitemap": "Sitemap", "$zero": "Zero"};
+  EOF;
 
-$start = TRACKER_START;
-$load = TRACKER_LOAD;
-$script = TRACKER_SCRIPT;
-$normal = TRACKER_NORMAL;
-$noscript = TRACKER_NOSCRIPT;
-$bvisibilitychange = BEACON_VISIBILITYCHANGE;
-$bpagehide = BEACON_PAGEHIDE;
-$bunload = BEACON_UNLOAD;
-$bbeforeunload = BEACON_BEFOREUNLOAD;
-$tbeforeunload = TRACKER_BEFOREUNLOAD;
-$tunload = TRACKER_UNLOAD;
-$tpagehide = TRACKER_PAGEHIDE;
-$tvisibilitychange = TRACKER_VISIBILITYCHANGE;
-$timer = TRACKER_TIMER;
-$bot = TRACKER_BOT;
-$css = TRACKER_CSS;
-$me = TRACKER_ME;
-$goto = TRACKER_GOTO; // Proxy
-$goaway = TRACKER_GOAWAY; // unusal tracker.
+  $start = TRACKER_START;
+  $load = TRACKER_LOAD;
+  $script = TRACKER_SCRIPT;
+  $normal = TRACKER_NORMAL;
+  $noscript = TRACKER_NOSCRIPT;
+  $bvisibilitychange = BEACON_VISIBILITYCHANGE;
+  $bpagehide = BEACON_PAGEHIDE;
+  $bunload = BEACON_UNLOAD;
+  $bbeforeunload = BEACON_BEFOREUNLOAD;
+  $tbeforeunload = TRACKER_BEFOREUNLOAD;
+  $tunload = TRACKER_UNLOAD;
+  $tpagehide = TRACKER_PAGEHIDE;
+  $tvisibilitychange = TRACKER_VISIBILITYCHANGE;
+  $timer = TRACKER_TIMER;
+  $bot = TRACKER_BOT;
+  $css = TRACKER_CSS;
+  $me = TRACKER_ME;
+  $goto = TRACKER_GOTO; // Proxy
+  $goaway = TRACKER_GOAWAY; // unusal tracker.
 
-$h->inlineScript .= <<<EOF
-  const tracker = {
-"$start": "Start", "$load": "Load", "$script": "Script", "$normal": "Normal",
-"$noscript": "NoScript", "$bvisibilitychange": "B-VisChange", "$bpagehide": "B-PageHide", "$bunload": "B-Unload", "$bbeforeunload": "B-BeforeUnload",
-"$tbeforeunload": "T-BeforeUnload", "$tunload": "T-Unload", "$tpagehide": "T-PageHide", "$tvisibilitychange": "T-VisChange",
-"$timer": "Timer", "$bot": "BOT", "$css": "Csstest", "$me": "isMe", "$goto": "Proxy", "$goaway": "GoAway"
-};
-EOF;
+  $h->inlineScript .= <<<EOF
+    const tracker = {
+  "$start": "Start", "$load": "Load", "$script": "Script", "$normal": "Normal",
+  "$noscript": "NoScript", "$bvisibilitychange": "B-VisChange", "$bpagehide": "B-PageHide", "$bunload": "B-Unload", "$bbeforeunload": "B-BeforeUnload",
+  "$tbeforeunload": "T-BeforeUnload", "$tunload": "T-Unload", "$tpagehide": "T-PageHide", "$tvisibilitychange": "T-VisChange",
+  "$timer": "Timer", "$bot": "BOT", "$css": "Csstest", "$me": "isMe", "$goto": "Proxy", "$goaway": "GoAway"
+  };
+    const mask = $mask;
+  EOF;
+}
+
+setupjava($h);  
 
 // FINISH inlineScript
 // *******************
@@ -173,6 +186,7 @@ try {
 } catch(e) {}
 EOF;
 }
+// END $DEBUG
 
 $h->title = "Web Statistics";
 
@@ -183,11 +197,11 @@ $h->banner = "<h1>Web Stats For <b>$S->siteName</b></h1>";
 $T = new dbTables($S); // My table class
 
 function blphome(&$row, &$rowdesc) {
-  global $homeip;
+  global $homeIp;
 
   $ip = $row['myIp'];
 
-  if($row['myIp'] == $homeip) {
+  if($row['myIp'] == $homeIp) {
     $row['myIp'] = "<span class='home'>$ip</span>";
   } else {
     $row['myIp'] = "<span class='inmyip'>$ip</span>";
@@ -218,7 +232,7 @@ function logagentCallback(&$row, &$desc) {
   $row['IP'] = "<span>$ip</span>";
 }
 
-$sql = "select ip as IP, agent as Agent, count as Count, lasttime as LastTime " .
+$sql = "select ip as IP, agent as Agent, finger as Finger, count as Count, lasttime as LastTime " .
 "from $S->masterdb.logagent ".
 "where site='$S->siteName' and lasttime >= current_date() order by lasttime desc";
 
@@ -347,10 +361,11 @@ $meIp = " and ip not in ($meIp)";
 
 // Get all of the dates from tracker grouped by ip and date(lasttime).
 
-$S->query("select date(lasttime) ".
-          "from $S->masterdb.tracker where lasttime>=current_date() - interval 6 day ".
+$S->query("select date(starttime) ".
+          "from $S->masterdb.tracker where starttime>=current_date() - interval 6 day ".
           "and site='$S->siteName' and not isJavaScript & ". TRACKER_BOT .
-          "$meIp group by ip,date(lasttime)"); // $meIp is ' and is not in($meIp)'
+          " and isJavaScript != 0 ". // TRACKER_ZERO
+          "$meIp group by ip,date(starttime)"); // $meIp is ' and is not in($meIp)'
 
 // There should be ONE UNIQUE ip per row. So count them into the date.
 
@@ -362,28 +377,17 @@ while($date = $S->fetchrow('num')[0]) {
   ++$Visitors;
 }
 
-/*
-foreach($tmp as $d=>$v) {
-  // Make $visitors[{date}] = the count of the $v array. This is all of the IP addresses for that
-  // day. Not the number of times that ip came back but the number of unique ip addresses.
-
-  $visitorsAr[$d] = $n = $v; // this is always 1
-  $Visitors += $n;
-}
-*/
-
 // I am looking for the number of 'AJAX'. The mask will be zero if these are the only things in
 // isJavaScript or isJavaScript == 0.
 // Looking for isJavaScript that does not have the bots, script, normal, noscript and csstest bits
 // set.
 
-$mask = TRACKER_BOT | TRACKER_SCRIPT | TRACKER_NORMAL | TRACKER_NOSCRIPT | TRACKER_CSS | TRACKER_ME | TRACKER_GOTO | TRACKER_GOAWAY;
-
 // What is left is 'start', 'load', beacon exits, tracker exits, and timer.
 
-$sql = "select date(lasttime) from $S->masterdb.tracker ".
-       "where lasttime>=current_date() - interval 6 day and site='$S->siteName' ".
-       "and (isJavaScript&~$mask)!=0". // Not the above bits.
+$sql = "select date(starttime)".
+       "from $S->masterdb.tracker ".
+       "where starttime>=current_date() - interval 6 day and site='$S->siteName' ".
+       "and (isJavaScript&~$mask)!=0". // Not just the above bits.
        "$meIp"; // $meIp is ' and is not in($meIp)'
   
 $S->query($sql);
@@ -391,8 +395,8 @@ $S->query($sql);
 $jsvalue = 0;
 $jsEnabled = [];
 
-// For each date that has some AJAX info in isJavaScript add 1 to the date and add 1 to the
-// accumulator.
+// For each date that has some AJAX info in isJavaScript add 1 to the $jsEnabled[$date] and add
+// 1 to $jsvalue1 (the accumulator).
 
 while($date = $S->fetchrow('num')[0]) {
   ++$jsEnabled[$date]; // total per date
@@ -411,13 +415,12 @@ $ftr = "<tr><th>Totals</th><th>$Visitors</th><th>$Count</th><th>$Real</th>".
 $sql = "select `date` as Date, 'Visitors', `real`+bots as Count, `real` as 'Real', 'AJAX', ".
 "bots as 'Bots', visits as Visits ".
 "from $S->masterdb.daycounts where site='$S->siteName' and ".
-"date >= current_date() - interval 6 day order by lasttime desc";
+"date >= current_date() - interval 6 day order by date desc";
 
 // callback for maketable daycount.
 
 function visit(&$row, &$rowdesc) { // callback from maketable()
   global $visitorsAr, $jsEnabled;
-
   $row['Visitors'] = $visitorsAr[$row['Date']];
   $row['AJAX'] = $jsEnabled[$row['Date']];
 }
@@ -650,14 +653,14 @@ $page
 <li>4=Script, 8=Normal, 0x10=NoScript : via javascript (image in header)
 <li>0x20=B-PageHide, 0x40=B-Unload, 0x80=B-BeforeUnload : via javascript (beacon)
 <li>0x100=T-BeforeUnload, 0x200=T-Unload, 0x400=T-PageHide, 0x800=T-VisChange : via javascript (tracker)
-<li>0x1000=Timer hits once every 5 seconds via ajax : via javascript
+<li>0x1000=Timer hits once every 10 seconds via ajax : via javascript
 <li>0x2000=BOT : via SiteClass
 <li>0x4000=Csstest : via .htaccess RewriteRule (tracker)
 <li>0x8000=isMe : via SiteClass
 <li>0x10000=Proxy : via goto.php
 <li>0x20000=GoAway (Unexpected Tracker) : via tracker
-<li>0x40000=B-VisChange : via javascript
-<li>
+<li>0x40000=B-VisChange : 'visablilitychange', via javascript<br>
+This happens when the user moves to another tab or closes the site.
 </ul>
 <p>All of the items marked (via javascript) are events.<br>
 The 'starttime' is done by SiteClass (PHP) when the file is loaded.<br>
@@ -675,7 +678,7 @@ $tracker
 <li>The 'count' field is the total count since 'created'.
 <li>From 'rotots.php': Robots.
 <li>From 'Sitemap.php': Sitemap.
-<li>From 'SiteClass::checkIfBot(): BOT.
+<li>From 'Database::checkIfBot(): BOT.
 <li>From 'crontab' indicates a Zero in the 'tracker' table: Zero.<br>
 This can be curl, wget, lynx and several others.
 </ul>
@@ -687,7 +690,7 @@ $botsnext
 <ul>
 <li>'robots.txt': Robots
 <li>'Sitemap.xml': Sitemap
-<li>'SiteClass': BOT
+<li>'Database::checkIfBot()': BOT
 <li>'crontab': Zero<br>
 This can be curl, wget, lynx and several others.
 </ul>

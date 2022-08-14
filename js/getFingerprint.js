@@ -4,12 +4,12 @@
 // that called this).
 
 'use strict';
-   
-const url = window.location.pathname;
-const ajaxFile = url.substring(url.lastIndexOf('/') +1);
-                                         
-console.log(ajaxFile);
+
+const ajaxFile = window.location.pathname;
+
+console.log("ajaxFile: ", ajaxFile);
 console.log("lastId: "+lastId);
+
 //debugger; // BLP 2021-12-29 -- Force a breakpoint here
 
 const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo";

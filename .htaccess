@@ -7,6 +7,8 @@ Require all granted
 
 SetEnv SITELOADNAME /var/www/vendor/bartonlp/site-class/includes/siteload.php
 
+SetEnv session.use_cookies='0';
+
 Header unset Pragma
 FileETag None
 Header unset ETag
@@ -51,7 +53,7 @@ RewriteRule ^robots\.txt$ robots.php [L,NC]
 RewriteRule ^Sitemap\.xml$ sitemap.php [L,NC]
 
 # rewrite the address of csstest.css to tracker.php?csstest
-RewriteRule ^csstest-(.*)\.css$ tracker.php?id=$1&csstest [L,QSA]
+RewriteRule ^csstest-(.*)\.css$ tracker.php?id=$1&page=csstest [L,QSA]
 
 RewriteRule ^(\.git|other)/.*$ - [F,L]
 RewriteRule ^(\.gitignore|mysitemap\.json)$  - [F,L]

@@ -1,5 +1,6 @@
 <?php
 // This program is run from crontab via all-cron.sh in www/bartonlp/scripts.
+// BLP 2022-08-06 - Add isMeFalse to 'siteupdate'
 // BLP 2022-03-28 - If no $S then go away.
 // BLP 2021-03-24 -- removed links to yahoo pure stuff. Added webstats.css which has the pure
 // stuff we need. Removed extranious divs also.
@@ -11,31 +12,18 @@
 
 $_site = require_once(getenv("SITELOADNAME"));
 
-class MyClass extends SiteClass {
-  public function __construct($s) {
-    parent::__construct($s);
-    unset($this->myIp);
-    $this->myIp = array();
-  }
-
-  public function MyIsBot($agent) {
-    $this->agent = $agent;
-    $this->checkIfBot();
-    return $this->isBot;
-  }
-}
-
 // Ajax from CRON job /var/www/bartonlp/scrits/update-analysis.sh which is run via all-cron.sh
 
 if($thisSite = $_GET['siteupdate']) {
   //error_log("_site: " . print_r($_site, true));
   
-  $S = new MyClass($_site);
+  $S = new Database($_site);
+  $S->isMeFalse = true; // BLP 2022-08-06 - This is because isBot() does an isMe()
   getAnalysis($S, $thisSite);
   exit();
 }
 
-function goaway() {
+function goaway():void {
   global $_site, $S, $h;
 
   if(!$S) {
@@ -59,7 +47,8 @@ EOF;
   exit();
 }
   
-// POST from https://bartonphillips.net/analysis/$site-analysis.i.txt OR
+// POST from https://bartonphillips.net/analysis/{$site}-analysis.i.txt.
+// This uses the 'site' value to find another $site.
 
 if(isset($_POST['site'])) {
   if($_POST['blp'] != '8653') goaway();
@@ -129,15 +118,11 @@ EOF;
   exit();
 }
 
-if($S) {
-  return getAnalysis($S, $S->siteName);
-}
-
 goaway();
 
 // BLP 2022-03-27 - New version of maketable.
 
-function maketable2($sql, $S) {
+function maketable2(string $sql, dbAbstract $S):array {
   $total = [];
   $counts = [];
   
@@ -145,7 +130,7 @@ function maketable2($sql, $S) {
   $r = $S->getResult();
 
   // Look at the records from logagent. This is done two time first with ALL of the records and
-  // then wit 60 days of records: select agent, count, ip from $S->masterdb.logagent where ip not
+  // then with 60 days of records: select agent, count, ip from $S->masterdb.logagent where ip not
   // in($ips) site='..'
   // The second time there is minus an interval of n days.
   // The logagent table should have everyone who came to out site.
@@ -157,7 +142,7 @@ function maketable2($sql, $S) {
     $total['os'][0] += $count; // these are the total counts
     $total['browser'][0] += $count;
 
-    if($S->MyIsBot($agent)) {
+    if($S->isBot($agent)) {
       // Yes so this is a bot.
 
       $counts['os']['ROBOT'] += $count;
@@ -265,15 +250,9 @@ function maketable2($sql, $S) {
 
 // Main function to get analysis
 
-function getAnalysis($S, $site='ALL') {
-  $S->query("select myip from $S->masterdb.myip");
-
-  $ips = '';
-  
-  while([$myip] = $S->fetchrow('num')) {
-    $ips .= "'$myip',"; // the ips must be surrounded by single quotes (')
-  }
-  $ips = rtrim($ips, ',');
+function getAnalysis(dbAbstract $S, string $site='ALL'):void {
+  $ips = implode(",", preg_replace("~(\S+)~", "'$1'", $S->myIp));
+  //echo "<p>*****IPs: $ips</p>";
 
   $where1 = '';
 
@@ -288,8 +267,6 @@ function getAnalysis($S, $site='ALL') {
 
   $startDate = $S->fetchrow('num')[0];
 
-  //echo "startDate: $startDate<br>";
-  
   // Now select agent and count from logagent where it is not Me and the site if not ALL
   // This gets all of the records since the last time the table was truncated. Now it is truncated
   // in cleanuptables.php which is run from cron. See crontab -l and
@@ -531,7 +508,7 @@ EOF;
     }
   }
   
-  return $analysis;
+  //return $analysis;
 }
 
 // Debug function. send message to error_log() and exit.

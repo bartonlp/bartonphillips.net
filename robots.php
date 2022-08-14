@@ -32,17 +32,15 @@ require_once(SITECLASS_DIR . "/defines.php");
 
 $S = new Database($_site);
 
+if(!file_exists($S->path . "/robots.txt")) {
+  echo "<h1>404 - FILE NOT FOUND</h1>";
+  exit();
+}
+
 $robots = file_get_contents($S->path."/robots.txt");
 echo $robots;
 
-// Get info from myip. NOTE Database does not have isMe()!
-
-$S->query("select myIp from $S->masterdb.myip");
-while($myIp = $S->fetchrow('num')[0]) {
-  if($myIp == $S->ip) return;
-}
-
-if($S->ip == '157.245.129.4') return;
+if($S->isMe()) return;
 
 $agent = $S->agent;
 $ip = $S->ip;
@@ -77,4 +75,9 @@ try {
 
 $S->query("insert into $S->masterdb.bots2 (ip, agent, date, site, which, count, lasttime) ".
           "values('$ip', '$agent', now(), '$S->siteName', " . BOTS_ROBOTS . ", 1, now()) ".
+          "on duplicate key update count=count+1, lasttime=now()");
+
+// Insert or update logagent
+
+$S->query("insert into $S->masterdb.logagent (site, ip, agent, count, created, lasttime) values('$S->siteName', '$ip', '$agent', 1, now(), now()) ".
           "on duplicate key update count=count+1, lasttime=now()");

@@ -6,10 +6,12 @@
 // The key is restricted to our domains, see:
 // https://console.cloud.google.com/google/maps-apis/overview?project=barton-1324.
 
+// IMPORTANT: geo.js makes geoAjax. It is loaded via
+// SiteClass::getPageHead().
+
 'use strict';
 
 var map, marker;
-//var geoAjax = "https://bartonphillips.net/geoAjax.php";
 
 var uiheight, uiwidth, uitop, uileft, resized = false;
 
@@ -64,6 +66,43 @@ $("#geomsg").html("Click on table row to view map.<br>" +
 $(".OLD").closest("tr").hide(); // Hide OLD and
 $(".ME").closest("tr").hide(); // Hide me at start. Show only TODAY
 
+$("#location li:nth-of-type(2) i.green:first-of-type, #location i, #geo i").on("click", function(e) {
+  let gps = ($(this).text()).split(",");
+  const pos = {
+    lat: parseFloat(gps[0]),
+    lng: parseFloat(gps[1])
+  }
+  
+  marker.setOptions( {
+    position: pos,
+    map,
+    visible: true
+  });
+
+  map.setOptions( {center: pos, zoom: 9, mapTypeId: google.maps.MapTypeId.HYBRID} );
+  let t = $(this).offset().top + $(this).height() + 10;
+
+  let h, w, l;
+
+  if(resized) {
+    h = uiheight;
+    w = uiwidth;
+    t = uitop;
+    l = uileft;
+  } else {
+    if(isMobile()) {
+      h = "360px";
+      w = "360px";
+      l= "25%";
+    } else {
+      h = "500px";
+      w = "500px";
+      l = "50%";
+    }
+  }
+  $("#outer").css({top: t, left: l, width: w, height: h}).show();
+});
+
 // If the row is clicked show the map
 
 $("#mygeo tbody tr").on("click", function(e) {
@@ -107,26 +146,26 @@ $("#mygeo tbody tr").on("click", function(e) {
   $("#outer").css({top: t, left: l, width: w, height: h}).show();
 });
 
-function drag(ui) {
-  uitop = ui.position.top;
-  uileft = ui.position.left;
-  resized = true;
-}
+// I don't want to have the drag be remembered!
+//$("#outer").on("drag", function(e, ui) {
+//  drag(ui);
+//});
+//function drag(ui) {
+//  uitop = ui.position.top;
+//  uileft = ui.position.left;
+//  resized = true;
+//}
 
 function rsize(ui) {
   uiheight = ui.size.height;
   uiwidth = ui.size.width;
   uitop = ui.position.top;
   uileft = ui.position.left;
-  resized = true;
+  resized = true; // I do want the resize to be remembered!
 }
 
 $("#outer").on("resize", function(e, ui) {
   rsize(ui);
-});
-
-$("#outer").on("drag", function(e, ui) {
-  drag(ui);
 });
 
 // Two helper functions

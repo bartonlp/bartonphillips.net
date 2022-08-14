@@ -80,11 +80,10 @@ if($_POST['page'] == 'curl') {
   $ip_address = "$ip";
   $loc = $client->getDetails($ip_address);
 
-  //error_log("loc: " . print_r($loc, true));
+  //$loc = json_decode(file_get_contents("https://ipinfo.io/$ip")); // this works too if I lose the
+  //class ipinfo\ipinfo\IPinfo; 
 
-  //$loc = json_decode(file_get_contents("https://ipinfo.io/$ip"));
-
-  $locstr = "Hostname: $loc->hostname<br>$loc->city, $loc->region $loc->postal $loc->country<br>Location: $loc->loc<br>ISP: $loc->org<br>Timezone: $loc->timezone<br>";
+  $locstr = "Hostname: $loc->hostname<br>$loc->city, $loc->region $loc->postal $loc->country<br>Location: <span class='location'>$loc->loc</span><br>ISP: $loc->org<br>Timezone: $loc->timezone<br>";
 
   echo $locstr;
   exit();
@@ -160,13 +159,16 @@ if($_POST['page'] == 'gettracker') {
   $S = new Database($_site);
   $T = new dbTables($S);
   $site = $_POST['site'];
+  $mask = $_POST['mask'];
+
+  $mask = (int)$mask; // This is passed as a string
 
   // Callback function for maketable()
 
   $me = json_decode(file_get_contents("https://bartonphillips.net/myfingerprints.json"));
 
   function callback1(&$row, &$desc) {
-    global $S, $me;
+    global $S, $me, $mask;
 
     foreach($me as $key=>$val) {
       if($row['finger'] == $key) {
@@ -178,10 +180,20 @@ if($_POST['page'] == 'gettracker') {
 
     $row['ip'] = "<span class='co-ip'>$ip</span>";
 
-    if($row['js'] != TRACKER_GOTO && $row['js'] != TRACKER_ME && ($row['js'] == TRACKER_ZERO || ($row['js'] & TRACKER_BOT) == TRACKER_BOT)) {
+    if($row['js'] != TRACKER_GOTO && $row['js'] != TRACKER_ME && ($row['js'] == TRACKER_ZERO || $row['js'] & TRACKER_BOT)) {
       $desc = preg_replace("~<tr>~", "<tr class='bots'>", $desc);
     }
-    $row['js'] = dechex($row['js']);
+
+    // Show in AJAX
+
+    $x = (int)$row['js']; // $row['js'] is a string make it an int for test below.
+    
+    if(($x &~ $mask) != 0) {
+      $row['js'] = "<span id='ajax'>" . dechex($row['js']) . "</span>";
+    } else {
+      $row['js'] = dechex($row['js']);
+    }
+    
     $t = $row['difftime'];
     if(is_null($t)) {
       return;
@@ -194,7 +206,7 @@ if($_POST['page'] == 'gettracker') {
     $row['difftime'] = sprintf("%u:%02u:%02u", $hr, $min, $sec);
   } // End callback
 
-  $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, id ".
+  $sql = "select ip, page, finger, agent, starttime, endtime, difftime, isJavaScript as js, id, botAs ".
          "from $S->masterdb.tracker " .
          "where site='$site' and lasttime >= current_date() " .
          "order by lasttime desc";
@@ -203,3 +215,21 @@ if($_POST['page'] == 'gettracker') {
   echo $tracker;
   exit();
 }
+
+if($_POST['page'] == "fingerToGps") {
+  $S = new Database($_site);
+  $finger = $_POST['finger'];
+  $ip = $_POST['ip'];
+  $site = $_POST['site'];
+
+  if($S->query("select lat, lon from $S->masterdb.geo where finger='$finger' and site='$site' and ip='$ip' order by lasttime")) {
+    while([$lat, $lon] = $S->fetchrow('num')) {
+      $ar[] = "$lat,$lon";
+    }
+    echo json_encode($ar);
+    exit();
+  }
+  echo "NOT FOUND";
+  exit();
+}
+

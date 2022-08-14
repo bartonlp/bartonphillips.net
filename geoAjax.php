@@ -1,7 +1,7 @@
 <?php
 // This is the Ajax for webstats.js and geo.js
-// This needs to be symlinked into each directory where it will be run along with getcookie.php and
-// webstats.php. The symlink is needed so $S will have the information form the local
+// **** INPORTANT: This needs to be symlinked into each directory where it will be run along with getcookie.php.
+// The symlink is needed so $S will have the information form the local
 // mysitemap.json. This is needed for setSiteCookie().
 // *** Remember, this does not happen untill the entire page has been rendored so the
 // fingerprint and tracker info are not available for the PHP files!
@@ -9,6 +9,8 @@
 $_site = require_once(getenv("SITELOADNAME"));
 $_site->noTrack = true;
 $S = new $_site->className($_site);
+
+//error_log("geoAjax.php \$S: " . print_r($S, true));
 
 //$DEBUG = true;
 
@@ -24,6 +26,7 @@ if($_POST['page'] == 'reset') {
     //error_log("geoAjax.php: remove cookie OK");
     echo "geoAjax.php: remove cookie OK";
   }
+  //error_log("cookie: $cookie");
   exit();
 }
 
@@ -85,7 +88,7 @@ if($_POST['page'] == 'geo') {
     }
     if($found) {
       if($DEBUG) error_log("geoAjax $id, $site, $ip -- geo Updated: found=$found");
-      echo "geo Update: $id, $site, $ip";
+      echo "Update: $id, $site, $ip";
       exit();
     }
   }
@@ -96,7 +99,7 @@ if($_POST['page'] == 'geo') {
   $S->query($sql);
 
   if($DEBUG) error_log("geoAjax $id, $site, $ip -- geo Insert");
-  echo "geo Insert: $id, $site, $ip";
+  echo "Insert: $id, $site, $ip";
   exit();
 }
 
@@ -125,12 +128,21 @@ if($_POST['page'] == 'finger') {
     exit();
   }
 
+  // Get the ip, site and agent so we can update logagent with the finger.
+  
+  $S->query("select ip, site, agent from $S->masterdb.tracker where id=$id");
+  [$ip, $site, $agent] = $S->fetchrow('num');
+  
   // tracker table was created in SiteClass
 
   $sql = "update $S->masterdb.tracker set finger='$visitor' where id=$id";
   $S->query($sql);
 
+  // Update logagent with finger.
+  
+  $S->query("update $S->masterdb.logagent set finger='$visitor' where ip='$ip' and site='$site' and agent='$agent'");
+  
   if($DEBUG) error_log("geoAjax $id, $visitor -- finger Updated");
-  echo "finger Updated: $id, $visitor"; // Returned to the javascript.
+  echo "Updated: $id, $visitor"; // Returned to the javascript.
   exit();
 }

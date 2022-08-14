@@ -63,12 +63,6 @@ if(isset($_POST['submit'])) {
   exit();
 } 
 
-// Look to see if this ip in in myIp array.
-
-function isMe($S) {
-  return (array_intersect([$S->ip], $S->myIp)[0] !== null) ? true : false;
-}
-
 $h->banner = <<<EOF
 <h1>Reset Cookie<br>
 $S->siteName</h1>
@@ -194,7 +188,7 @@ $h->title = "GetCookie";
 $T = new dbTables($S);
 
 if($S->siteName != "bartonhome") {
-  $sql = "select name, email, count, created, lasttime from bartonphillips.members";
+  $sql = "select name, email, finger, count, created, lasttime from bartonphillips.members";
 
   [$members] = $T->maketable($sql, array('attr'=>array('border'=>'1', 'id'=>'members')));
   $members = <<<EOF
@@ -278,10 +272,10 @@ if($cookies['SiteId'] !== null) {
   [$cookieFinger, $cookieEmail] = explode(":", $cookies['SiteId']);
 }
 
-if(!isMe($S) && $cookieEmail !== "bartonphillips@gmail.com") {
+if($S->isMe() && $cookieEmail !== "bartonphillips@gmail.com") {
   $msg = "<h1>No Cookie and Wrong IP</h1>"; // Just go away
-  error_log("bartonphillips.net/getcookie.php: ip=$S->ip, cookie=" . print_r($cookies, true) . ", agent=$S->agent :: Go Away");
-} elseif(!$_COOKIE['SiteId']) {
+  error_log("bartonphillips.net/getcookie.php: ip=$S->ip, cookieEmail=$cookieEmail : Go Away\ncookie=" . print_r($cookies, true) . ", agent=$S->agent");
+} elseif(!$cookies['SiteId']) {
   $msg = <<<EOF
 <h1>No SiteId Cookie</h1>
 EOF;
@@ -293,7 +287,7 @@ $all = '';
   
 foreach($cookies as $key=>$cookie) {
   if($key == "mytime") {
-    $cookie = date("Y-m-d H:i:s", $cookie);
+    $cookie = date("Y-m-d H:i:s", strtotime($cookie));
   }
   $all .= "<li><button class='reset'>Reset: <span>$key</span></button>$cookie</li>";
 }

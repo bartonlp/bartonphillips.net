@@ -3,7 +3,8 @@
 {
     "siteDomain": "bartonphillips.net",
     "siteName": "Bartonphillipsnet",
-    "mainTitle": "Server For nocookies",
+    "title": "Go Away",
+    "mainTitle": "<h1>Server For nocookies</h1>",
     "path": "/var/www/bartonphillipsnet",
     "className": "SiteClass",
     "copyright": "Barton L. Phillips",
@@ -32,6 +33,7 @@
       "noHtml": false,
       "noOutput": false
     },
+    "meta" : "<meta name='robots' content='noindex'>", // don't index anything in bartonphillips.net
     "trackerImg1": "/images/blp-image.png", // /image/.. will get the image from bartonphillips.net.
     "headFile": "/var/www/bartonphillips.com/includes/head.i.php",
     "bannerFile": "/var/www/bartonphillips.com/includes/banner.i.php",

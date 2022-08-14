@@ -42,6 +42,8 @@ th, td {
 }
 /* 'tables' is not a real HTML tag but css allows it. See <tables> in code */  
 tables ul { margin-top: 0; }
+/* #ajax is for isJavaScript that has done ajax */
+#ajax { color: red; }
 /* For the human readable information.
    We need these two relative so the pop up is in the right place.
 */

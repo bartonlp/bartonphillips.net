@@ -4,7 +4,7 @@ $S = new $_site->className($_site);
 
 $ip = $S->ip;
 
-$h->title = "bartonphillips.net: $ip";
+$h->title = "CookieLess";
 $h->banner = "<h1>This Server is Only for Serving Content to My Sites<br>Please Go Away</h1>";
 $h->keywords = "CookieLess Domain";
 $h->desc = "This is a cookieless domain used to feed css, images and js to my other domains";

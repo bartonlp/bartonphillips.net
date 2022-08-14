@@ -1,9 +1,10 @@
 // Geo from bartonphillips.net. This has the getGeo() function and the
 // fpPromise logic for FingerpringJS.
-// This is called from the index.php in bartonphillips.com, tysonweb
-// and newbernzig.com.
+// IMPORTANT: geo.js is loaded via SiteClass::getPageHead(). It sets
+// geoAjax here as a constant.
 // Uses "https://bartonphillips.net/geoAjax.php"
-// Set up Google Maps:
+//
+// How to set up Google Maps:
 // https://console.cloud.google.com/google/maps-apis/credentials?_ga=2.54770411.1997560869.1651440370-597078353.1649556803&project=barton-1324
 // There you can set up the servers that can access google maps.
 
@@ -13,8 +14,14 @@ console.log("URL: " + window.location.href);
 
 const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo"; // This is safe because only my site can use it.
 
-var visitorId;
-const geoAjax = "https://bartonphillips.net/geoAjax.php"; 
+let visitorId;
+
+// The php program can do: $h or $b->inlineScript = "var doGeo = true;";
+// This will cause getGeo() to be performed.
+
+var doGeo = true; // do geo for everyone that isn't a robot or zero
+
+const geoAjax = document.location.origin + "/geoAjax.php"; // Create it using the location.origin which will be the site that includes this.
 
 function getGeo() {
   if('geolocation' in navigator) {
@@ -37,7 +44,8 @@ function getGeo() {
         data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitorId, id: lastId, site: site, ip: theip },
         type: 'post',
         success: function(data) {
-          console.log("getGeo -- return: " + data);
+          console.log("getGeo: " + data);
+          $("#geomessage").html("Thank you for allowing GEO location");
         },
         error: function(err) {
           console.log(err);
@@ -51,7 +59,8 @@ function getGeo() {
           data: { page: 'geoFail', visitor: visitorId, id: lastId },
           type: 'post',
           success: function(data) {
-            console.log("geoFail -- return: " + data);
+            console.log("geoFail data: " + data);
+            $("#geomessage").html("<span style='color: red'>Not using GEO location</span>");
           },
           error: function(err) {
             console.log("geoFail err: " + err);
@@ -81,6 +90,8 @@ const fpPromise = new Promise((resolve, reject) => {
 
 // Get the visitor identifier (fingerprint) when you need it.
 
+var VID;
+
 fpPromise
 .then(fp => fp.get())
 .then(result => {
@@ -88,15 +99,49 @@ fpPromise
   visitorId = result.visitorId;
   $("#finger i").html(visitorId);
   console.log("visitor: " + visitorId);
+  VID = visitorId;
+  
+  const doc = document.location;
+
+  if((doc.origin == "https://www.bartonphillips.com" || doc.origin == "https://bartonphillips.com") &&
+     (doc.pathname == '/' || doc.pathname == '/index.php'))
+  {
+    let properties = JSON.parse(fingers);
+
+    for(let property in properties) {
+      if(visitorId == property) {
+        $.ajax({
+          url: "https://www.bartonphillips.com/register.php",
+          data: {page: 'finger', visitor: visitorId, email: 'bartonphillips@gmail.com', name: 'Barton Phillips'},
+          type: 'post',
+          success: function(data) {
+            console.log("getGeo: ", data);
+            if(data == "Register OK") {
+              $("#geomessage").css({color: "green"});
+            }
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });
+              
+        break;
+      }
+    }
+  }
+  
   $.ajax({
     url: geoAjax, // This sets geo and Finger cookies and insert/update the geo table.
     data: { page: 'finger', visitor: visitorId, id: lastId },
     type: 'post',
     success: function(data) {
-      console.log("data: " + data);
-      console.log("path: ", window.location.pathname);
+      console.log("finger " + data);
       const fname = window.location.pathname;
-      if(fname == '/' || fname == "/index.php") {
+
+      // doGeo is undefined unless the PHP program does $h or
+      // $b->inlineScript = "var doGeo = true;"
+      
+      if(doGeo || fname == '/' || fname == "/index.php") {
         getGeo();
       }
     },

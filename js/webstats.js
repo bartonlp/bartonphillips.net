@@ -189,10 +189,11 @@ function dotracker() {
 function ipaddress(e, self) {
   if(e.ctrlKey) {
     let msg;
-    
-    console.log("delegateTarget.id: " + e.delegateTarget.id);
 
-    if(e.delegateTarget.id == 'tracker') {
+    const id = $(self).closest("table").attr('id');
+    console.log("id: " + id);
+
+    if(id == 'tracker') {
       if(flags.ip) {
         flags.ip = false;
         $(".ip").removeClass("ip").hide();
@@ -215,7 +216,6 @@ function ipaddress(e, self) {
         msg = "Show All ID";
       }
       $("#ip").text(msg);
-      flag0 = !flag0;
       return;
     }
   }
@@ -251,7 +251,6 @@ function ipaddress(e, self) {
     let bottom = $(self).offset()['top'] + $(self).height();
 
     $.ajax(ajaxurl, {
-        //url: directory+"/webstats-ajax.php",
       data: {page: 'findbot', ip: ip},
       type: "post",
       success: function(data) {
@@ -278,7 +277,7 @@ function ipaddress(e, self) {
 function gettracker() {
   $.ajax(ajaxurl, {
     //url: directory+'/webstats-ajax.php',
-    data: {page: 'gettracker', site: thesite}, // thesite is set in webstats via inlineScript
+    data: {page: 'gettracker', site: thesite, mask: mask}, // thesite is set in webstats via inlineScript
     type: 'post',
     success: function(data) {
       $("#trackerdiv").html(data);
@@ -587,5 +586,105 @@ jQuery(document).ready(function($) {
       }
       console.log("found: "+found);
     }
+  });
+
+/*  
+  // Get the finger and use ajax to get the lat, log from the gps table
+  // if the finger exists.
+  
+  $("body").on("click", "#tracker tbody tr td:nth-of-type(3)", function(e) {
+    let finger = ($(this).text()).split(' :')[0];
+    let ip = $(this).closest('tr').find('.co-ip').text();
+    let pos = $(this).position();
+    let xpos = pos.left + $(this).width() + 17;
+    let ypos = pos.top;
+    let table = $(this).closest("table");
+    pos = $(this).offset();
+    let xxpos = pos.left;
+    let yypos = pos.top;
+    
+    $.ajax(ajaxurl, {
+      type: 'post',
+      data: {page: 'fingerToGps', finger: finger, site: thesite, ip: ip},
+      success: function(data) {
+        console.log("data: ", data);
+        const ar = JSON.parse(data).sort();
+        let items = '';
+        let last = '';
+        for(let item in ar) {
+          if(last == ar[item]) {
+            continue;
+          }
+          last = ar[item];
+          items += "<span>"+ar[item]+"</span><br>";
+        }
+        table.append("<div id='FindBot' style='position: absolute;top: "+ypos+"px;left:"+xpos+"px;"+
+                     "background-color: white; border: 5px solid black;padding: 10px'>"+
+                     items+"<div id='it'></div></div>");
+
+        $("body").on("click", "#FindBot span", function(e) {
+          map = new google.maps.Map(document.getElementById("it"));
+          let geo = $(this).text();
+          let [xlat, xlon] = geo.split(',');
+          const pos = {
+            lat: parseFloat(xlat),
+            lon: parseFloat(xlon)
+          }
+          marker.setOptions( {
+            position: pos,
+            map,
+            visible: true
+          });
+
+          map.setOptions( {center: pos, zoom: 9, mapTypeId: google.maps.MapTypeId.HYBRID} );
+          $("#it").css({top: yypos, left: xxpos, width: '500px', height: '500px'}).show();
+          e.stopPropagation();
+        });
+      },
+      error: function(err) {
+        console.log("ERROR:", err);
+      }
+    });
+  });
+*/
+
+  // ipinfo. Get gps and display the google map.
+
+  $("body").on("click", "#FindBot .location", function(e) {
+    let gps = ($(this).text()).split(",");
+    const pos = {
+      lat: parseFloat(gps[0]),
+      lng: parseFloat(gps[1])
+    }
+
+    marker.setOptions( {
+      position: pos,
+      map,
+      visible: true
+    });
+
+    map.setOptions( {center: pos, zoom: 9, mapTypeId: google.maps.MapTypeId.HYBRID} );
+    let t = $(this).offset().top + $(this).height() + 10;
+
+    let h, w, l;
+
+    if(resized) {
+      h = uiheight;
+      w = uiwidth;
+      t = uitop;
+      l = uileft;
+    } else {
+      if(isMobile()) {
+        h = "360px";
+        w = "360px";
+        l= "25%";
+      } else {
+        h = "500px";
+        w = "500px";
+        l = "50%";
+      }
+    }
+    $("#outer").css({top: t, left: l, width: w, height: h}).show();
+    e.stopPropagation();
   });
 });
