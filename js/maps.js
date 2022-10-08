@@ -66,6 +66,8 @@ $("#geomsg").html("Click on table row to view map.<br>" +
 $(".OLD").closest("tr").hide(); // Hide OLD and
 $(".ME").closest("tr").hide(); // Hide me at start. Show only TODAY
 
+// #location is ONLY in bartonphillips.com/index.i.php
+
 $("#location li:nth-of-type(2) i.green:first-of-type, #location i, #geo i").on("click", function(e) {
   let gps = ($(this).text()).split(",");
   const pos = {
@@ -119,6 +121,10 @@ $("#mygeo tbody tr").on("click", function(e) {
     visible: true
   });
 
+  if($("#tracker tbody #outer").length) {
+    $("#geotable").append($("#outer"));
+  }
+  
   map.setOptions( {center: pos, zoom: 9, mapTypeId: google.maps.MapTypeId.HYBRID} );
 
   $(this).closest("tr").css({"background-color": "green", color: "white"});
@@ -144,6 +150,7 @@ $("#mygeo tbody tr").on("click", function(e) {
     }
   }
   $("#outer").css({top: t, left: l, width: w, height: h}).show();
+  e.stopPropagation();
 });
 
 // I don't want to have the drag be remembered!
@@ -169,11 +176,6 @@ $("#outer").on("resize", function(e, ui) {
 });
 
 // Two helper functions
-
-// Make the container for geo dragagle and resizable.
-
-$("#outer").draggable();
-$("#outer").resizable();
 
 // Display finger toggle
 

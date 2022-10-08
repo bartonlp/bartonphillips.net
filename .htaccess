@@ -53,7 +53,9 @@ RewriteRule ^robots\.txt$ robots.php [L,NC]
 RewriteRule ^Sitemap\.xml$ sitemap.php [L,NC]
 
 # rewrite the address of csstest.css to tracker.php?csstest
-RewriteRule ^csstest-(.*)\.css$ tracker.php?id=$1&page=csstest [L,QSA]
+#RewriteRule ^csstest-(.*)\.css$ tracker.php?id=$1&page=csstest [L,QSA]
+
+RewriteRule ^(aboutwebsite\.php|webstats\.php|webstats-ajax\.php|geoAjax\.php|getcookie\.php|robots\.php|sitemap\.php|js/webstats\.js|js/tracker\.js)(.*)$ https://bartonlp.com/otherpages/$1$2 [L]
 
 RewriteRule ^(\.git|other)/.*$ - [F,L]
 RewriteRule ^(\.gitignore|mysitemap\.json)$  - [F,L]

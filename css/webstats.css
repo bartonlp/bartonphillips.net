@@ -8,6 +8,7 @@
 main {
         width: 100%;
 }
+#select { font-size: 1.2em; }
 button {
         border-radius: .5rem;
         font-size: 1.2em;
@@ -74,12 +75,10 @@ body { margin: 10px; }
   cursor: pointer;
 }
 #geocontainer {
-  width: 500px;
-  height: 500px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  height: 100%;
   border: 5px solid black;
-  z-index: 20;
+  z-index: 100;
 }
 #showMe, #showAll {
   border-radius: 5px;
@@ -92,12 +91,14 @@ body { margin: 10px; }
   background: red;
   border-radius: 5px;
   padding: 2px;
+  margin: 2px 0 2px 2px;
+  z-index: 100;
 }
 #outer {
   display: none;
-  position:
-  absolute;
-  z-index: 20;
+  position: absolute;
+  background: white;
+  z-index: 99;
   padding-bottom: 30px;
 }
 /* make the 'count' and 'bots' row as small as posible. It will be as big as the elements in it. */
@@ -161,7 +162,8 @@ body { margin: 10px; }
 /*#tracker td:nth-of-type(9) {
         width: 12rem;
 }*/
-#tracker td:nth-of-type(9):hover {
+/* 8=js */
+#tracker td:nth-of-type(8):hover {
   cursor: pointer;
 }
 div {

@@ -1,11 +1,14 @@
 <?php
 $_site = require_once(getenv("SITELOADNAME"));
+$_site->noTrack = true;
+$_site->noGeo = true;
+$_site->nofooter = true;
 $S = new $_site->className($_site);
 
 $ip = $S->ip;
 
 $h->title = "CookieLess";
-$h->banner = "<h1>This Server is Only for Serving Content to My Sites<br>Please Go Away</h1>";
+//$h->banner = "<h1>This Server is Only for Serving Content to My Sites<br>Please Go Away</h1>";
 $h->keywords = "CookieLess Domain";
 $h->desc = "This is a cookieless domain used to feed css, images and js to my other domains";
 
@@ -27,6 +30,10 @@ list($top, $footer) = $S->getPageTopBottom($h);
 
 echo <<<EOF
 $top
+<header>
+<img src='https://bartonphillips.net/images/blp-image.png'>
+<h1>This Server is Only for Serving Content to My Sites</h1>
+</header>
 <div id="form">
 <form action="https://www.bartonphillips.com/showmarkdown.php" method="post">
 <input type='hidden' name='filename' value="https://bartonphillips.net/README.md">

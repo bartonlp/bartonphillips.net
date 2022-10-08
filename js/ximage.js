@@ -1,6 +1,11 @@
 /*
- * For the image slideshow at http://bartonphillips.dyndns.org:8080/index.php on rpi2.
- *  This uses glob.proxy.php on www.bartonphillips.dyndns.org:8080.
+ * BLP 2022-09-28 - This now works for all of my sites:
+ * https://bartonphillips.org:8080 on rpi
+ * https://bartonphillips.org on HPenvy
+ * https://bartonlp.org on this server at /ver/www/html
+ * 
+ * For the image slideshow at http://bartonphillips.org:8080/index.php on rpi2.
+ *  This uses glob.proxy.php on www.bartonphillips.org:8080.
  *  glob.proxy.php returns a list of files in the 'path' of dobanner()
  *  The bannershow() function uses the 'bannerImages' array created by dobanner().
  *  'bannershow() displayes the images in "#show"
@@ -17,16 +22,15 @@ var bannerImages = new Array, binx = 0;
 function dobanner(path, name, obj) {
   // obj has three members: size, recursive, mode.
 
+  console.log(path, name, obj);
+  
   let recursive = obj.recursive;
   let size = obj.size;
   let mode = obj.mode;
   //console.log("obj: " +obj+", recursive: "+recursive);
 
   $.ajax({
-    // Note this must be http NOT https
-    //url: 'http://www.bartonphillips.dyndns.org:8080/glob.proxy.php',
-    // or it can be bartonphillips.org:8080/...
-    url: 'http://www.bartonphillips.dyndns.org:8080/glob.proxy.php',
+    url: 'https://bartonphillips.net/glob.proxy.php',
     type: 'get',
     data: {path: path, recursive: recursive, size: size, mode: mode},
     success: function(data) {
@@ -39,9 +43,6 @@ function dobanner(path, name, obj) {
     }
   });
 }
-
-// This is from /js/random.js which MUST be loaded by 'index.php'
-//var m = new MersenneTwister();
 
 // Called from above. It displayes the image in "#show" and then sets a
 // timer and does it again and again.
