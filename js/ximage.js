@@ -30,7 +30,7 @@ function dobanner(path, name, obj) {
   //console.log("obj: " +obj+", recursive: "+recursive);
 
   $.ajax({
-    url: 'https://bartonphillips.net/glob.proxy.php',
+    url: 'https://bartonphillips.net/glob.proxy.php', // this file can stay in bartonphillips.net as it does NOTHING with cookies!
     type: 'get',
     data: {path: path, recursive: recursive, size: size, mode: mode},
     success: function(data) {
