@@ -7,6 +7,7 @@
 // How to set up Google Maps:
 // https://console.cloud.google.com/google/maps-apis/credentials?_ga=2.54770411.1997560869.1651440370-597078353.1649556803&project=barton-1324
 // There you can set up the servers that can access google maps.
+// BLP 2023-01-18 - add workaround for node server.js
 
 'use strict';
 
@@ -21,7 +22,17 @@ let visitorId;
 
 var doGeo = true; // do geo for everyone that isn't a robot or zero
 
-const geoAjax = document.location.origin + "/geoAjax.php"; // Create it using the location.origin which will be the site that includes this.
+// BLP 2023-01-18 - This is a workaround for node server.js
+let doc = document.location.origin;
+
+if(doc.includes(":")) {
+  doc = "https://bartonphillips.com/examples/node-programs";
+}
+
+const geoAjax = doc + "/geoAjax.php"; // Create it using the location.origin which will be the site that includes this.
+// BLP 2023-01-18 - end workaround.
+
+console.log("geoAjax: ", geoAjax);
 
 function getGeo() {
   if('geolocation' in navigator) {
@@ -100,9 +111,11 @@ fpPromise
   $("#finger i").html(visitorId);
   console.log("visitor: " + visitorId);
   VID = visitorId;
-  
-  const doc = document.location;
 
+  // doc is from 'let doc ' at start.
+  
+  console.log("doc (document.location) in fpPromise: ", doc); // may have used workaround.
+  
   if((doc.origin == "https://www.bartonphillips.com" || doc.origin == "https://bartonphillips.com") &&
      (doc.pathname == '/' || doc.pathname == '/index.php'))
   {
@@ -146,7 +159,7 @@ fpPromise
       }
     },
     error: function(err) {
-      console.log(err);
+      console.log("ERR: ", err);
     }
   });
 })

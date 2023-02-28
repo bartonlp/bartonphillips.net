@@ -1,4 +1,4 @@
-// JavaScript for localstorage.html
+// JavaScript for localstorage.php
 // Start main jQuery logic after document ready
 
 if(window.localStorage && !localStorage.length) {

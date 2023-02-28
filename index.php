@@ -7,13 +7,12 @@ $S = new $_site->className($_site);
 
 $ip = $S->ip;
 
-$h->title = "CookieLess";
+$S->title = "CookieLess";
 //$h->banner = "<h1>This Server is Only for Serving Content to My Sites<br>Please Go Away</h1>";
-$h->keywords = "CookieLess Domain";
-$h->desc = "This is a cookieless domain used to feed css, images and js to my other domains";
+$S->keywords = "CookieLess Domain";
+$S->desc = "This is a cookieless domain used to feed css, images and js to my other domains";
 
-$h->css =<<<EOF
-  <style>
+$S->css =<<<EOF
 input[type='submit'] {
   font-size: 1rem;
   padding: .5rem;
@@ -23,10 +22,9 @@ input[type='submit'] {
 #form {
   text-align: center;
 }
-  </style>
 EOF;
 
-list($top, $footer) = $S->getPageTopBottom($h);
+[$top, $footer] = $S->getPageTopBottom();
 
 echo <<<EOF
 $top
