@@ -1,13 +1,15 @@
 // JavaScript for localstorage.php
 // Start main jQuery logic after document ready
 
-if(window.localStorage && !localStorage.length) {
+function loadImage() {
   // Load the big image. This is about 1.6 Meg. Even when this is cached it still is a big load!
   // So this first time we load the full 1.6 Meg but on subsequent loads the base64 URI is much
   // smaller. The product of the width and height is about 8 Meg.
 
-  var image = new Image;
-  var d = new Date(); 
+  console.log("**** localStorage: ", window.localStorage, " length: ", localStorage.length);
+
+  const image = new Image;
+  let d = new Date(); 
   // This is NEEDED to be able to do a toDataUrl() on an image that is
   // not on our site!
   image.crossOrigin = "Anonymous";
@@ -19,7 +21,7 @@ if(window.localStorage && !localStorage.length) {
   $(image).on('load', function() {
     localStorage.orgsize = this.width * this.height;
 
-    var ratio = 500 / this.width;
+    let ratio = 500 / this.width;
     this.width = this.width * ratio;
     this.height = this.height * ratio;
 
@@ -27,39 +29,31 @@ if(window.localStorage && !localStorage.length) {
 
     // Now use a canvas to get the URI image
 
-    var canvas = document.createElement("canvas");
-
+    let canvas = document.createElement("canvas");
+    console.log("**** canvas: ", canvas);
+    
     // make the canvas big enough for our image
 
     canvas.width = this.width;
     canvas.height = this.height;
 
-    var ctx = canvas.getContext("2d");
+    let ctx = canvas.getContext("2d");
     ctx.drawImage(this, 0, 0, this.width, this.height);
 
     // Some ancient browsers (like IE) have a small limit to the URI size.
     
     try {
-      var dataUri = canvas.toDataURL();
+      let dataUri = canvas.toDataURL();
       localStorage.base64size = dataUri.length;
-      var img = $('#image');
+      let img = $('#image');
       img.css({'width': this.width, 'height': this.height});
       img.attr('src', dataUri);
+      localStorage.setItem('img', dataUri);
+      img = localStorage.getItem('img');
+      $("#image").attr('src', img);
     } catch(e) {
       localStorage.warnings += "<br>dataUri problem1: " + e + "<br>\n";
     }
-
-    // Local Storage is only 5 Meg so we could get an error if the resized image is too big.
-
-    try {
-      localStorage.setItem('img', dataUri);
-    } catch (e) {
-      localStorage.warnings += " localStorage Problem: " + e + "<br>\n";
-    }
-
-    img = localStorage.getItem('img');
-    
-    $("#image").attr('src', img);
   }); // End of load image
 }
 
@@ -72,6 +66,8 @@ jQuery(document).ready(function($) {
   var img, msg, xhr;
 
   //alert("ready");
+
+  $("#image").attr('src', img);
   
   // Do we have loalStorage?
 
@@ -84,7 +80,7 @@ jQuery(document).ready(function($) {
   } else {
     // Have we already resized the image?
 
-    if(localStorage.length) {
+    if(window.localStorage && localStorage.length) {
       // Yes the clickcount is set so we have the image already
       
       localStorage.clickcount = Number(localStorage.clickcount) + 1;
@@ -128,7 +124,7 @@ jQuery(document).ready(function($) {
     } else {
       // This is the first time we have been to this page so initialize the local storage with the
       // resized image.
-
+      
       localStorage.clickcount = '1'; // init clickcount
       
 // ********************************************
@@ -152,9 +148,10 @@ jQuery(document).ready(function($) {
       $.ajax({
         url: "localstorage.php?page=source", //"localstorage.html",
         success: function(data) {
-               localStorage.page = data;
-               $("<pre class='brush: xml'></pre>").appendTo("#showsource").text(localStorage.page);
-             }
+          //console.log("date: ", data);
+          localStorage.page = data;
+          $("<pre class='brush: xml'></pre>").appendTo("#showsource").text(localStorage.page);
+        }
       });
 
       // Get the JavaScript source
@@ -168,7 +165,8 @@ jQuery(document).ready(function($) {
                $("<pre class='brush: js'></pre>").appendTo("#showjs").text(localStorage.js);
              }
       });
-      
+
+      loadImage();
     } // End of the if/then/else on clickcount
 
     // If there were warnings display them

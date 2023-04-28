@@ -3,11 +3,15 @@ Options -Indexes
 Header set Access-Control-Allow-Origin "*"
 Header set Access-Control-Expose-Headers: Content-Length
 
-Require all granted
+<RequireAll>
+ Require all granted
+ Require not ip 193.42.33.5
+</RequireAll>
 
 SetEnv SITELOADNAME /var/www/vendor/bartonlp/site-class/includes/siteload.php
+setEnv SITECLASS_DIR /var/www/vendor/bartonlp/site-class/includes
 
-SetEnv session.use_cookies='0';
+SetEnv session.use_cookies '0'
 
 Header unset Pragma
 FileETag None
@@ -47,6 +51,7 @@ AddDefaultCharset UTF-8
 RewriteEngine on
 RewriteCond %{HTTP_USER_AGENT} "baiduspider" [NC]
 RewriteRule (.*) - [F,L]
+
 
 # BLP 2014-09-14 -- track robots that look at robots.txt
 RewriteRule ^robots\.txt$ robots.php [L,NC]

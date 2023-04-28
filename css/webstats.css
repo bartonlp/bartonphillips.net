@@ -146,24 +146,24 @@ body { margin: 10px; }
         width: 40rem;
         word-break: break-all;
 }
-/* 5=starttime, 6=endtime */
-#tracker td:nth-child(5), #tracker td:nth-child(6) {
+/* 6=starttime, 7=endtime */
+#tracker td:nth-child(6), #tracker td:nth-child(6) {
         width: 10rem;
 }
-/* 7=difftime */
-#tracker td:nth-child(7) {
+/* 8=difftime */
+#tracker td:nth-child(8) {
         width: 5rem;
 }
-/* 8=js */
-#tracker td:nth-child(8) {
+/* 9=js */
+#tracker td:nth-child(9) {
         width: 1rem;
 }
-/* 9=refid */
-/*#tracker td:nth-of-type(9) {
+/* 10=id */
+/*#tracker td:nth-of-type(10) {
         width: 12rem;
 }*/
-/* 8=js */
-#tracker td:nth-of-type(8):hover {
+/* 9=js */
+#tracker td:nth-of-type(9):hover {
   cursor: pointer;
 }
 div {

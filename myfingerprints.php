@@ -15,4 +15,5 @@ return [
         'mUQurQMLPE4rk0mjhamh' => "HPFox",   // HP using Firefox
         'Sf0RS3RfRhY8vke1a5uN' => "BIpad",   // Bonnie's iPad
         'J4C3rOAXmbicnj3XFlGB' => "Acer",    // Acer Spin 3
+        'Q4WRvPoV0BGeHfl58k9h' => "maybe Roger",
        ];
