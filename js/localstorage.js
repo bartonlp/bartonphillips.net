@@ -65,8 +65,6 @@ jQuery(document).ready(function($) {
   
   var img, msg, xhr;
 
-  //alert("ready");
-
   $("#image").attr('src', img);
   
   // Do we have loalStorage?
@@ -127,8 +125,8 @@ jQuery(document).ready(function($) {
       
       localStorage.clickcount = '1'; // init clickcount
       
-// ********************************************
-// The rest of this is putting up messages etc.        
+      // ********************************************
+      // The rest of this is putting up messages etc.        
 
       msg = "This is your first time at this site using this browser.";
 

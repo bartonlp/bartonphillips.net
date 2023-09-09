@@ -2,18 +2,16 @@
 // BLP 2021-11-11 -- These are my fingerprints. This file is used by getcookie.php and webstats.php
 // I 'require_once()'.
 
+// f16f1ed7599d8c3bf1ffe30bcb3d3f8b Jana?
+
 return [
-        'hFBzuVRDeIWdbhXmhZv7' => "HP",      // HP using Chrome
-        'e30hJHxUeaToTAB6g4Zv' => "TAB",     // My tablet
-        'agvmgLtbOej09pGw27ZF' => "Inspiron",// My laptop
-        'Z1Kx9vql4QxiMB9brOd2' => "i12",     // my iPhone
-        'm2cNTf0BaASn5Z2rLrGa' => "Jana",    // Jana's phone/computer?
-        'kSQmLodejUtIv65Ff7BF' => "SAMj320", // Old Phone (android)
-        'FPc5lLUsrf46OK6mkste' => "SAMa10e", // New Phone (android)
-        'AP8Pbm3GSxShU92ozThM' => "BWindows",// bonnie's Windows Machine
-        'kh05wAVtBzacoRZD0ZUG' => "BiPhone", // bonnie's iPhone
-        'mUQurQMLPE4rk0mjhamh' => "HPFox",   // HP using Firefox
-        'Sf0RS3RfRhY8vke1a5uN' => "BIpad",   // Bonnie's iPad
-        'J4C3rOAXmbicnj3XFlGB' => "Acer",    // Acer Spin 3
-        'Q4WRvPoV0BGeHfl58k9h' => "maybe Roger",
+        '5dc447f34877ab12f337306b7d8b77cc' => "HP",      // HP using Chrome
+        '59e64000697ffc9ef2c4652e7361236d' => "i14",     // my iPhone
+        'e4e1a1ded6fa497d5375479a69c64758' => "SAMa10e", // New Phone (android)
+        '72aa77b8ad0937941d0e101818494961' => "AcerAlpineWindows",   // Bonnie's Windows
+        'b3ec17f5da7d3d3da453f39c2f3618e1' => "Jana Iphone",
+        '' => "AcerSpinWindows",
+        '' => "TAB",     // My tablet
+        '' => "BiPhone", // bonnie's iPhone
+        '' => "AcerSpinUbuntu",    // Acer Spin 3 Ubuntu
        ];

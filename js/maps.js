@@ -23,7 +23,7 @@ function initMap() {
 // Is this a mobile device? Only for webstats and getcookie
 
 function isMobile() {
-  return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+  return window.matchMedia("(hover: none) and (pointer: coarse)").matches; // matches is ether true or false.
 }
 
 // If we have done initMap then we should check to see if this is a
@@ -41,7 +41,7 @@ $(".reset").on("click", function() {
 
   $.ajax({
     url: geoAjax,
-    data: { page: 'reset', name: cookieName },
+    data: { page: 'reset', name: cookieName, mysitemap: mysitemap },
     type: 'post',
     success: function(data) {
       console.log("return: " + data);

@@ -13,26 +13,17 @@
 
 console.log("URL: " + window.location.href);
 
-const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo"; // This is safe because only my site can use it.
-
 let visitorId;
 
-// The php program can do: $h or $b->inlineScript = "var doGeo = true;";
+// The php program can do: $S->{h,b}_inlineScript = "var doGeo = true;";
 // This will cause getGeo() to be performed.
 
 var doGeo = true; // do geo for everyone that isn't a robot or zero
 
-// BLP 2023-01-18 - This is a workaround for node server.js
-let doc = document.location.origin;
+let doc = document.location;
 
-if(doc.includes(":")) {
-  doc = "https://bartonphillips.com/examples/node-programs";
-}
-
-const geoAjax = doc + "/geoAjax.php"; // Create it using the location.origin which will be the site that includes this.
-// BLP 2023-01-18 - end workaround.
-
-console.log("geoAjax: ", geoAjax);
+const geoAjax = "https://bartonlp.com/otherpages/geoAjax.php";
+console.log("geo.js: geoAjax=", geoAjax);
 
 function getGeo() {
   if('geolocation' in navigator) {
@@ -52,7 +43,8 @@ function getGeo() {
 
       $.ajax({
         url: geoAjax, // This sets geo and Finger cookies and insert/update the geo table.
-        data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitorId, id: lastId, site: site, ip: theip },
+        data: { page: 'geo', lat: position.coords.latitude, lon: position.coords.longitude, visitor: visitorId,
+                id: lastId, site: site, ip: theip, mysitemap: mysitemap }, // BLP 2023-08-12 - add mysitemap
         type: 'post',
         success: function(data) {
           console.log("getGeo: " + data);
@@ -67,7 +59,7 @@ function getGeo() {
         console.log("geo Error: " + error.message);
         $.ajax({
           url: geoAjax,
-          data: { page: 'geoFail', visitor: visitorId, id: lastId },
+          data: { page: 'geoFail', visitor: visitorId, id: lastId, mysitemap: mysitemap },
           type: 'post',
           success: function(data) {
             console.log("geoFail data: " + data);
@@ -88,16 +80,25 @@ function getGeo() {
 
 // Initialize the agent at application startup and getGeo.
 
-const fpPromise = new Promise((resolve, reject) => {
+/*const fpPromise = new Promise((resolve, reject) => {
   const script = document.createElement('script');
   script.onload = resolve;
   script.onerror = reject;
   script.async = true;
-  script.src = 'https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs-pro@3/dist/fp.min.js';                 
+  //script.src =
+  //'https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs-pro@3/dist/fp.min.js';
+  script.src = 'https://bartonphillips.com/fp_agent.js';
   //               + '@fingerprintjs/fingerprintjs@3/dist/fp.min.js';
-  document.head.appendChild(script)
+  document.head.appendChild(script);
 })
-.then(() => FingerprintJS.load({ token: FINGER_TOKEN, endpoint: 'https://fp.bartonphillips.com'}));
+//.then(() => FingerprintJS.load({ apiKey: FINGER_TOKEN, endpoint: 'https://fp.bartonphillips.com', scriptUrlPattern: 'https://bartonphillips.com/fp_agent.js' }));
+.then(() => FingerprintJS.load({ token: FINGER_TOKEN, endpoint: 'https://fp.bartonphillips.com' }));
+*/
+
+//const fpPromise = import('https://bartonphillips.net/js/fp_agent.js')
+//.then(FingerprintJS=> FingerprintJS.load({endpoint: 'https://fp.bartonphillips.com'}));
+const fpPromise = import('https://openfpcdn.io/fingerprintjs/v3')
+.then(FingerprintJS => FingerprintJS.load());
 
 // Get the visitor identifier (fingerprint) when you need it.
 
@@ -112,40 +113,9 @@ fpPromise
   console.log("visitor: " + visitorId);
   VID = visitorId;
 
-  // doc is from 'let doc ' at start.
-  
-  console.log("doc (document.location) in fpPromise: ", doc); // may have used workaround.
-  
-  if((doc.origin == "https://www.bartonphillips.com" || doc.origin == "https://bartonphillips.com") &&
-     (doc.pathname == '/' || doc.pathname == '/index.php'))
-  {
-    let properties = JSON.parse(fingers);
-
-    for(let property in properties) {
-      if(visitorId == property) {
-        $.ajax({
-          url: "https://www.bartonphillips.com/register.php",
-          data: {page: 'finger', visitor: visitorId, email: 'bartonphillips@gmail.com', name: 'Barton Phillips'},
-          type: 'post',
-          success: function(data) {
-            console.log("getGeo: ", data);
-            if(data == "Register OK") {
-              $("#geomessage").css({color: "green"});
-            }
-          },
-          error: function(err) {
-            console.log(err);
-          }
-        });
-              
-        break;
-      }
-    }
-  }
-  
   $.ajax({
     url: geoAjax, // This sets geo and Finger cookies and insert/update the geo table.
-    data: { page: 'finger', visitor: visitorId, id: lastId },
+    data: { page: 'finger', visitor: visitorId, id: lastId, mysitemap: mysitemap },
     type: 'post',
     success: function(data) {
       console.log("finger " + data);
@@ -162,4 +132,5 @@ fpPromise
       console.log("ERR: ", err);
     }
   });
-})
+});
+

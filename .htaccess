@@ -5,7 +5,6 @@ Header set Access-Control-Expose-Headers: Content-Length
 
 <RequireAll>
  Require all granted
- Require not ip 193.42.33.5
 </RequireAll>
 
 SetEnv SITELOADNAME /var/www/vendor/bartonlp/site-class/includes/siteload.php

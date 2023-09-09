@@ -4,7 +4,7 @@ This is set up to use *http* and *https* and serve data to my websites. It is us
 *images*, *css* and *javascript* file.
 This is a **COOKIEless** domain.
 
-There is three PHP file here: *glob-proxy.php*, *myfingerprint.php* and *index.php*. These PHP files do not instantiate SiteClass
+There are three PHP file here: *glob-proxy.php*, *myfingerprint.php* and *index.php*. These PHP files do not instantiate SiteClass
 and do no cookie activity!
 
 These files and directories remain here:

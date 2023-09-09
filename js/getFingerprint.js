@@ -5,25 +5,19 @@
 
 'use strict';
 
-const ajaxFile = window.location.pathname;
+const ajaxFile = window.location.pathname; // Get the current file that uses this js.
+
+// BLP 2023-08-12 - ajaxFile will be the URL of the parent that uses
+// getFingerprint.js
 
 console.log("ajaxFile: ", ajaxFile);
 console.log("lastId: "+lastId);
 
-//debugger; // BLP 2021-12-29 -- Force a breakpoint here
+// BLP 2023-08-12 - I have to use the open source version since
+// FingerPrintJs decided to charge $200/mo!
 
-const FINGER_TOKEN = "QpC5rn4jiJmnt8zAxFWo";
-
-const fpPromise = new Promise((resolve, reject) => {
-  const script = document.createElement('script');
-  script.onload = resolve;
-  script.onerror = reject;
-  script.async = true;
-  script.src = 'https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs-pro@3/dist/fp.min.js';                 
-  //               + '@fingerprintjs/fingerprintjs@3/dist/fp.min.js';
-  document.head.appendChild(script)
-})
-.then(() => FingerprintJS.load({ token: FINGER_TOKEN, endpoint: 'https://fp.bartonphillips.com'}));
+const fpPromise = import('https://openfpcdn.io/fingerprintjs/v3')
+.then(FingerprintJS => FingerprintJS.load()); // also it seems I don't need the endpoint BLP 2023-07-23 - 
 
 // Get the visitor identifier (fingerprint) when you need it.
 
