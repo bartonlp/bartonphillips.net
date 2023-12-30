@@ -6,8 +6,6 @@
 // The index.php file on the rpi uses the local mysitemap.json but all of the other resources are
 // on this server. Therefore, I can load the page with fromrpi.php as a secure resource from
 // https://www.bartonphillips.com/fromrpi.php.
-// The page will also load as http://bartonphillips.org:8080 but chrome will issure a warrning
-// about an insecure site.
 
 // A function to do a recursive glob()
 
@@ -24,7 +22,7 @@ if (!function_exists('glob_recursive')) {
 }
 
 $path = $_GET['path'];
-
+//error_log("glob.proxy.php: $path");
 if(empty($path)) error_log("glob.proxy.php: N0 PATH");
 
 if($_GET['recursive'] == 'yes') {

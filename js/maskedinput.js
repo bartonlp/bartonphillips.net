@@ -13,7 +13,7 @@
  * <script>
  * Everything after the ? (if there is one) is optional. In this case we will accept an extension.
  * There are more posibilities so check out the website http://digitalbrush.com/projects/masked-input-plugin/ for more info.
- */
+     */
 
 !function(factory) {
     "function" == typeof define && define.amd ? define([ "jquery" ], factory) : factory("object" == typeof exports ? require("jquery") : jQuery);

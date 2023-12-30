@@ -1,6 +1,6 @@
 // Javascript for google maps API
-// This is only used by getcookie.php and webstats.php
-// We do this at the bottom of the above two pages:
+// This is only used by index.php, index.i.php, getcookie.php and webstats.php
+// We do this at the bottom of the above four pages:
 // <script src="https://bartonphillips.net/js/maps.js"></script>
 // <script src="https://maps.googleapis.com/maps/api/js?key=theAPIKEY&callback=initMap&v=weekly" async></script>
 // The key is restricted to our domains, see:
@@ -15,12 +15,16 @@ var map, marker;
 
 var uiheight, uiwidth, uitop, uileft, resized = false;
 
+// This initializes gooble maps. We use the Element with id
+// 'geocontainer' to hold the maps.
+
 function initMap() {
   map = new google.maps.Map(document.getElementById("geocontainer"));
   marker = new google.maps.Marker();
 }
 
-// Is this a mobile device? Only for webstats and getcookie
+// Is this a mobile device? Only for index.php, webstats.php and
+// getcookie.php
 
 function isMobile() {
   return window.matchMedia("(hover: none) and (pointer: coarse)").matches; // matches is ether true or false.
@@ -28,32 +32,13 @@ function isMobile() {
 
 // If we have done initMap then we should check to see if this is a
 // mobile device.
+// This will set viewport for index.php, webstats.php and getcookie.php
 
 if(isMobile()) {
   $("meta[name*='viewport']").attr({"content":"width=device-width initial-scale=.7"});
 }
 
-// Only getcookie uses reset
-
-$(".reset").on("click", function() {
-  let cookieName = $('span', this).text();
-  let self = this; // pass this into the ajax
-
-  $.ajax({
-    url: geoAjax,
-    data: { page: 'reset', name: cookieName, mysitemap: mysitemap },
-    type: 'post',
-    success: function(data) {
-      console.log("return: " + data);
-      $(self).parent().remove();
-    },
-    error: function(err) {
-      console.log(err);
-    }
-  });
-});
-
-// Both webstats and getcookie use the following
+// Both webstats and getcookie use the following (not index.php)
 // Add the geomsg.
 
 $("#geomsg").html("Click on table row to view map.<br>" +
@@ -68,13 +53,13 @@ $(".ME").closest("tr").hide(); // Hide me at start. Show only TODAY
 
 // #location is ONLY in bartonphillips.com/index.i.php
 
-$("#location li:nth-of-type(2) i.green:first-of-type, #location i, #geo i").on("click", function(e) {
+$("#location i, #geo i").on("click", function(e) { // BLP 2023-10-12 - removed meaningless: #location li:nth-of-type(2) i.green:first-of-type, 
   let gps = ($(this).text()).split(",");
   const pos = {
     lat: parseFloat(gps[0]),
     lng: parseFloat(gps[1])
   }
-  
+
   marker.setOptions( {
     position: pos,
     map,
@@ -82,6 +67,7 @@ $("#location li:nth-of-type(2) i.green:first-of-type, #location i, #geo i").on("
   });
 
   map.setOptions( {center: pos, zoom: 9, mapTypeId: google.maps.MapTypeId.HYBRID} );
+
   let t = $(this).offset().top + $(this).height() + 10;
 
   let h, w, l;
@@ -103,9 +89,31 @@ $("#location li:nth-of-type(2) i.green:first-of-type, #location i, #geo i").on("
     }
   }
   $("#outer").css({top: t, left: l, width: w, height: h}).show();
+  e.stopPropagation();
+});
+
+// Only used in getcookie.php
+
+$(".reset").on("click", function() {
+  let cookieName = $('span', this).text();
+  let self = this; // pass this into the ajax
+
+  $.ajax({
+    url: geoAjax,
+    data: { page: 'reset', name: cookieName, mysitemap: mysitemap },
+    type: 'post',
+    success: function(data) {
+      console.log("return: " + data);
+      $(self).parent().remove();
+    },
+    error: function(err) {
+      console.log(err);
+    }
+  });
 });
 
 // If the row is clicked show the map
+// #mygeo is in getcookie.php and webstat.php
 
 $("#mygeo tbody tr").on("click", function(e) {
   let lat = parseFloat($("td:first-of-type", this).text());
@@ -253,9 +261,14 @@ $("#mygeo, #tracker").on("click", " tbody td:nth-of-type(3)", function(e) {
   }
 });
 
+// #removemsg is in everywhere we have a map displayed. It is part of
+// the #outer div.
+
 $("#removemsg").on("click", function() {
   $("#outer").hide();
 });
+
+// Only in webstats.php
 
 $("#showMe").on("click", function() {
   if(!flagShowMe) {
@@ -268,6 +281,8 @@ $("#showMe").on("click", function() {
   flagShowMe = !flagShowMe;
   $("#outer").hide();
 });
+
+// Only in webstats.php
 
 $("#showAll").on("click", function() {
   if(!flagShowAll) {

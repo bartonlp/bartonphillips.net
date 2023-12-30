@@ -2,7 +2,7 @@
 // fpPromise logic for FingerpringJS.
 // IMPORTANT: geo.js is loaded via SiteClass::getPageHead(). It sets
 // geoAjax here as a constant.
-// Uses "https://bartonphillips.net/geoAjax.php"
+// Uses "https://bartonlp.com/otherpages/geoAjax.php"
 //
 // How to set up Google Maps:
 // https://console.cloud.google.com/google/maps-apis/credentials?_ga=2.54770411.1997560869.1651440370-597078353.1649556803&project=barton-1324
@@ -48,7 +48,9 @@ function getGeo() {
         type: 'post',
         success: function(data) {
           console.log("getGeo: " + data);
-          $("#geomessage").html("Thank you for allowing GEO location");
+          // BLP 2023-10-13 - #geomessage is only in
+          // bartonphillips.com/index.php
+          $("#geomessage").html("Thank you for allowing GEO location.");
         },
         error: function(err) {
           console.log(err);
@@ -74,6 +76,11 @@ function getGeo() {
       }
     });
   } else {
+    // If geo was allowed then tracker 'nogeo' will be 0. If it was
+    // denied by the user it will be 1.
+    // If we get here 'nogeo' will be NULL which means that the browser
+    // does not support geolocation.
+    
     console.log("Not Available");
   }
 }
@@ -121,6 +128,11 @@ fpPromise
       console.log("finger " + data);
       const fname = window.location.pathname;
 
+      // BLP 2023-10-18 - just a test. This id is only in getcookie.php
+
+      let tmp = data.split(", ");
+      $("#getcookie").html("The current finger is: " + tmp[1]);
+      
       // doGeo is undefined unless the PHP program does $h or
       // $b->inlineScript = "var doGeo = true;"
       

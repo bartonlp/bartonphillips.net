@@ -1,17 +1,19 @@
 <?php
 // BLP 2021-11-11 -- These are my fingerprints. This file is used by getcookie.php and webstats.php
+// (maybe more).
 // I 'require_once()'.
 
-// f16f1ed7599d8c3bf1ffe30bcb3d3f8b Jana?
+// BLP 2023-10-18 - I think I will always have $S by the time I call this.
+
+if(!class_exists("Database")) header("location: https://bartonlp.com/otherpages/NotAuthorized.php");
 
 return [
-        '5dc447f34877ab12f337306b7d8b77cc' => "HP",      // HP using Chrome
+        '4cd66330bccc25864cbf353a7ba37c6a' => "HP",      // BLP 2023-09-23 - new kernel
         '59e64000697ffc9ef2c4652e7361236d' => "i14",     // my iPhone
-        'e4e1a1ded6fa497d5375479a69c64758' => "SAMa10e", // New Phone (android)
-        '72aa77b8ad0937941d0e101818494961' => "AcerAlpineWindows",   // Bonnie's Windows
-        'b3ec17f5da7d3d3da453f39c2f3618e1' => "Jana Iphone",
-        '' => "AcerSpinWindows",
-        '' => "TAB",     // My tablet
-        '' => "BiPhone", // bonnie's iPhone
-        '' => "AcerSpinUbuntu",    // Acer Spin 3 Ubuntu
+        'e4e1a1ded6fa497d5375479a69c64758' => "SAMa10e", // my Phone (android)
+        '083f355e8f14ce4479ab8982bb758dc1' => "BonnieWindows",
+        '3a189795dcd46d0c7e85e9b9cc9356c3' => "TAB",     // My tablet
+        //'' => "BiPhone", // bonnie's iPhone
+        //'' => "AcerSpinUbuntu",    // Acer Spin 3 Ubuntu
        ];
+
