@@ -22,7 +22,7 @@
        * saved to github.com
        */
       "database": "barton",
-      "engine": "mysqli"
+      "engine": "mysql"
     },
     "errorMode": {
       "development": false, // development automatically sets email to true.
